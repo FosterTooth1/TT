@@ -208,6 +208,9 @@ def ejecutar_algoritmo(num_pob, num_gen, pm, m, num_competidores, hijos_crossove
     return mejor_aptitud_historico
 
 def main():
+
+    tiempo_algoritmo = time.time()
+    
     # Carga de datos
     try:
         distancias = np.loadtxt('Distancias_no_head.csv', delimiter=',')
@@ -216,12 +219,12 @@ def main():
         return
 
     param_ranges = [
-        [20, 50, 100],     # Population size
-        [50, 100, 200],    # Generations
-        [0.05, 0.1, 0.2],  # Mutation probability
-        [2, 3, 5],         # Heuristic m
-        [2, 3, 5],         # Tournament competitors
-        [1, 2]             # Crossover offspring
+        [50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500],     # Population size
+        [50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500],    # Generations
+        [0.05, 0.1, 0.15, 0.2, 0.25],  # Mutation probability
+        [2, 3, 4, 5],         # Heuristic m
+        [2, 3, 4, 5],         # Tournament competitors
+        [1, 2]             # Crossover 
     ]
 
     combinaciones = [
@@ -259,6 +262,9 @@ def main():
     output_file = "resultados_generales_numba_aleatoriedad.xlsx"
     resultados_df.to_excel(output_file, index=False)
     print(f"Results saved to: {output_file}")
+    
+    tiempo_algoritmo_total = time.time() - tiempo_algoritmo
+    print(tiempo_algoritmo_total)
 
 if __name__ == "__main__":
     main()
