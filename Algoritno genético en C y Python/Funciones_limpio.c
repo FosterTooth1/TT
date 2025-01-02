@@ -2,15 +2,15 @@
 
 poblacion *crear_poblacion(int tamano, int longitud_genotipo){
     // Reservar memoria para la población
-    poblacion *poblacion = malloc(sizeof(poblacion));
-    poblacion->tamano = tamano;
-    poblacion->individuos = malloc(tamano * sizeof(individuo));
+    poblacion *Poblacion = malloc(sizeof(poblacion));
+    Poblacion->tamano = tamano;
+    Poblacion->individuos = malloc(tamano * sizeof(individuo));
     // Reservar memoria para los individuos
     for(int i = 0; i < tamano; i++){
-        poblacion->individuos[i].genotipo = malloc(longitud_genotipo * sizeof(int));
-        poblacion->individuos[i].fitness = 0;
+        Poblacion->individuos[i].genotipo = malloc(longitud_genotipo * sizeof(int));
+        Poblacion->individuos[i].fitness = 0;
     }
-    return poblacion;
+    return Poblacion;
 }
 
 void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
