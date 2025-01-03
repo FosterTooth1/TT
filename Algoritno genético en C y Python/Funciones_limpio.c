@@ -401,20 +401,19 @@ void cycle_crossover(int *padre1, int *padre2, int *hijo, int num_ciudades) {
 void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_competidores, int longitud_genotipo) {
     // Inicializamos un array para los índices de los competidores
     int tamano_poblacion = Poblacion->tamano;
-    int tamano_padres = padres->tamano;
     int *indices_torneo = malloc(num_competidores * sizeof(int));
 
-    
+    // Realizamos un torneo para seleccionar a un padre
     for (int i = 0; i < tamano_poblacion; i++) {
-        // Seleccionar al azar los competidores del torneo
+
+        // Seleccionamos al azar los competidores del torneo
         for (int j = 0; j < num_competidores; j++) {
             indices_torneo[j] = rand() % tamano_poblacion;
         }
 
-        // Encontrar el ganador del torneo (menor fitness)
+        // Encontramos el ganador del torneo evaluando su fitness
         int indice_ganador = indices_torneo[0];
         double mejor_fitness = Poblacion->individuos[indices_torneo[0]].fitness;
-
         for (int j = 1; j < num_competidores; j++) {
             int indice_actual = indices_torneo[j];
             double fitness_actual = Poblacion->individuos[indice_actual].fitness;
@@ -425,31 +424,39 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
             }
         }
 
-        // Copiar el individuo ganador a la población de padres
+        // Copiamos el individuo ganador a la población de padres
         for (int j = 0; j < longitud_genotipo; j++) {
             padres->individuos[i].genotipo[j] = Poblacion->individuos[indice_ganador].genotipo[j];
         }
 
-        // Copiar el fitness del ganador
+        // Copiamos el fitness del ganador
         padres->individuos[i].fitness = Poblacion->individuos[indice_ganador].fitness;
     }
 
-    // Liberar memoria usada para los índices
+    // Liberamos la memoria usada para los índices
     free(indices_torneo);
 }
 
 // Función auxiliar para heapsort
+// Recibe un array de individuos, el tamaño del array y un índice
+// No devuelve nada (todo se hace por referencia)
 void heapify(individuo *arr, int n, int i) {
+    // Inicializamos el mayor como el indice actual
     int mayor = i;
+
+    // Calculamos los indices de los hijos izquierdo y derecho
     int izquierda = 2 * i + 1;
     int derecha = 2 * i + 2;
 
+    // Si el hijo izquierdo es mayor que el padre actualizamos el mayor
     if (izquierda < n && arr[izquierda].fitness > arr[mayor].fitness)
         mayor = izquierda;
 
+    // Si el hijo derecho es mayor que el padre actualizamos el mayor
     if (derecha < n && arr[derecha].fitness > arr[mayor].fitness)
         mayor = derecha;
 
+    // Si el mayor no es el padre, intercambiamos y aplicamos heapify al subárbol
     if (mayor != i) {
         individuo temp = arr[i];
         arr[i] = arr[mayor];
@@ -458,13 +465,15 @@ void heapify(individuo *arr, int n, int i) {
     }
 }
 
-// Implementación de heapsort
+// Heapsort para ordenar a los individuos por fitness
+// Recibe un array de individuos y el tamaño del array
+// No devuelve nada (todo se hace por referencia)
 void heapsort(individuo *arr, int n) {
-    // Construir el montón
+    // Construimos el montón (heapify)
     for (int i = n / 2 - 1; i >= 0; i--)
         heapify(arr, n, i);
 
-    // Extraer elementos del montón uno por uno
+    // Extraemos los elementos del montón uno por uno
     for (int i = n - 1; i > 0; i--) {
         individuo temp = arr[0];
         arr[0] = arr[i];
@@ -474,28 +483,40 @@ void heapsort(individuo *arr, int n) {
 }
 
 // Ordenamiento por inserción para arreglos pequeños
+// Recibe un array de individuos, el índice izquierdo y derecho
+// No devuelve nada (todo se hace por referencia)
 void insertion_sort(individuo *arr, int izquierda, int derecha) {
+    // Recorremos el array de izquierda a derecha
     for (int i = izquierda + 1; i <= derecha; i++) {
+        // Insertamos el elemento actual en la posición correcta
         individuo clave = arr[i];
         int j = i - 1;
         
+        // Movemos los elementos mayores que la clave a una posición adelante
         while (j >= izquierda && arr[j].fitness > clave.fitness) {
             arr[j + 1] = arr[j];
             j--;
         }
+
+        // Insertamos la clave en la posición correcta
         arr[j + 1] = clave;
     }
 }
 
 // Función para intercambiar dos elementos
+// Recibe dos punteros a individuos
+// No devuelve nada (todo se hace por referencia)
 void intercambiar_individuos(individuo *a, individuo *b) {
     individuo temp = *a;
     *a = *b;
     *b = temp;
 }
 
-// Función para encontrar la mediana de tres elementos
+// Función para encontrar la mediana de tres elementos (usado en quicksort para mejorar el balanceo)
+// Recibe un array de individuos y tres índices
+// Devuelve el índice de la mediana
 int mediana_de_tres(individuo *arr, int a, int b, int c) {
+    // Se realizan comparaciones lógicas para encontrar la mediana
     if (arr[a].fitness <= arr[b].fitness) {
         if (arr[b].fitness <= arr[c].fitness)
             return b;
@@ -514,25 +535,41 @@ int mediana_de_tres(individuo *arr, int a, int b, int c) {
 }
 
 // Partición de quicksort usando la mediana de tres como pivote
+// Recibe un array de individuos, los índices bajo y alto
+// Devuelve el índice del pivote
 int particion(individuo *arr, int bajo, int alto) {
+    // Encontramos el índice del pivote usando la mediana de tres
     int medio = bajo + (alto - bajo) / 2;
     int indice_pivote = mediana_de_tres(arr, bajo, medio, alto);
-    intercambiar_individuos(&arr[indice_pivote], &arr[alto]);
     
+    // Movemos el pivote seleccionado al final del rango para facilitar partición
+    intercambiar_individuos(&arr[indice_pivote], &arr[alto]);
+
+    // Guardamos el elemento del pivote para comparación
     individuo pivote = arr[alto];
+
+    // i indica la última posición donde los elementos son menores o iguales al pivote
     int i = bajo - 1;
 
+    // Recorremos el rango desde `bajo` hasta `alto - 1` (excluyendo el pivote)
     for (int j = bajo; j < alto; j++) {
+        // Si el elemento actual es menor o igual al pivote
         if (arr[j].fitness <= pivote.fitness) {
-            i++;
-            intercambiar_individuos(&arr[i], &arr[j]);
+            i++; // Avanzamos `i` para marcar la posición de intercambio
+            intercambiar_individuos(&arr[i], &arr[j]); // Intercambiamos el elemento menor al pivote
         }
     }
+
+    // Finalmente, colocamos el pivote en su posición correcta
     intercambiar_individuos(&arr[i + 1], &arr[alto]);
+
+    // Retornamos la posición del pivote
     return i + 1;
 }
 
-// Calcular el logaritmo base 2 de n
+// Función para calcular el logaritmo en base 2 de un número entero (parte entera)
+// Recibe un número entero
+// Devuelve el logaritmo en base 2 (parte entera)
 int log2_suelo(int n) {
     int log = 0;
     while (n > 1) {
@@ -543,22 +580,25 @@ int log2_suelo(int n) {
 }
 
 // Implementación de ordenamiento introspectivo
+// Recibe un array de individuos, la profundidad máxima de recursión, el índice de inicio y fin
+// No devuelve nada (todo se hace por referencia)
 void introsort_util(individuo *arr, int *profundidad_max, int inicio, int fin) {
+    // Calculamos el tamaño de la partición
     int tamano = fin - inicio;
     
-    // Si el tamaño de la partición es pequeño, usar ordenamiento por inserción
+    // Si el tamaño de la partición es pequeño, usamos el ordenamiento por inserción
     if (tamano < 16) {
         insertion_sort(arr, inicio, fin - 1);
         return;
     }
     
-    // Si la profundidad máxima es cero, cambiar a heapsort
+    // Si la profundidad máxima es cero, cambiamos a heapsort (para evitar peor caso de quicksort)
     if (*profundidad_max == 0) {
         heapsort(arr + inicio, tamano);
         return;
     }
     
-    // En caso contrario, usar quicksort
+    // En caso contrario, usamos quicksort
     (*profundidad_max)--;
     int pivote = particion(arr, inicio, fin - 1);
     introsort_util(arr, profundidad_max, inicio, pivote);
@@ -566,13 +606,18 @@ void introsort_util(individuo *arr, int *profundidad_max, int inicio, int fin) {
 }
 
 // Función principal de ordenamiento para la población
+// Recibe un puntero a la población
+// No devuelve nada (todo se hace por referencia)
 void ordenar_poblacion(poblacion *poblacion) {
+    // Obtenemos el tamaño de la población
     int n = poblacion->tamano;
+    
+    // Si la población igual o menor a 1, no se hace nada
     if (n <= 1) return;
     
-    // Calcular la profundidad máxima de recursión
+    // Calculamos la profundidad máxima de recursión
     int profundidad_max = 2 * log2_suelo(n);
     
-    // Llamar a la función auxiliar de ordenamiento introspectivo
+    // Llamamos a la función auxiliar de ordenamiento introspectivo
     introsort_util(poblacion->individuos, &profundidad_max, 0, n);
 }
