@@ -39,14 +39,31 @@ int main(int argc, char** argv){
             columna++;
         }
         fila++;
+        free(token);
     }
-
     fclose(archivo);
 
     // Crear población inicial
     poblacion *Poblacion = crear_poblacion(tamano_poblacion, longitud_genotipo);
+    if (Poblacion == NULL) {
+        printf("Error al crear población inicial\n");
+        return 1;
+    }
+    
     poblacion *padres = crear_poblacion(tamano_poblacion, longitud_genotipo);
+    if (padres == NULL) {
+        liberar_poblacion(Poblacion);
+        printf("Error al crear población de padres\n");
+        return 1;
+    }
+    
     poblacion *hijos = crear_poblacion(tamano_poblacion, longitud_genotipo);
+    if (hijos == NULL) {
+        liberar_poblacion(Poblacion);
+        liberar_poblacion(padres);
+        printf("Error al crear población de hijos\n");
+        return 1;
+    }
     crear_permutaciones(Poblacion, longitud_genotipo);
     evaluar_poblacion(Poblacion, distancias, longitud_genotipo);
     ordenar_poblacion(Poblacion);
@@ -100,17 +117,25 @@ int main(int argc, char** argv){
     puts("Fin del programa");
 
     // Liberar memoria
-    liberar_poblacion(Poblacion);
-    puts("Poblacion liberada");
-    liberar_poblacion(padres);
-    puts("Padres liberados");
-    liberar_poblacion(hijos);
-    puts("Hijos liberados");
+    if (Poblacion != NULL) {
+        liberar_poblacion(Poblacion);
+        puts("Población liberadaaaaaaaaaaaaaaaaa");
+    }
+    if (padres != NULL) {
+        liberar_poblacion(padres);
+        puts("Padres liberadooooooooooooooooos");
+    }
+    if (hijos != NULL) {
+        liberar_poblacion(hijos);
+        puts("Hijos liberadoooooooooooooooos");
+    }
     for (int i = 0; i < longitud_genotipo; i++) {
         free(distancias[i]);
     }
     free(distancias);
     puts("Distancias liberadas");
+    free(Mejor_Individuo->genotipo);
+    Mejor_Individuo->genotipo = NULL;
     free(Mejor_Individuo);
     puts("Mejor Individuo liberado");
     return 0;

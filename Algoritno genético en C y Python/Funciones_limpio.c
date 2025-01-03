@@ -1,16 +1,78 @@
 #include "Biblioteca_c_limpio.h"
 
-poblacion *crear_poblacion(int tamano, int longitud_genotipo){
-    // Reservar memoria para la población
+poblacion *crear_poblacion(int tamano, int longitud_genotipo) {
     poblacion *Poblacion = malloc(sizeof(poblacion));
+    if (Poblacion == NULL) return NULL;
+    
     Poblacion->tamano = tamano;
     Poblacion->individuos = malloc(tamano * sizeof(individuo));
-    // Reservar memoria para los individuos
-    for(int i = 0; i < tamano; i++){
+    if (Poblacion->individuos == NULL) {
+        free(Poblacion);
+        return NULL;
+    }
+    
+    for(int i = 0; i < tamano; i++) {
         Poblacion->individuos[i].genotipo = malloc(longitud_genotipo * sizeof(int));
+        if (Poblacion->individuos[i].genotipo == NULL) {
+            // Liberar toda la memoria asignada hasta ahora
+            for(int j = 0; j < i; j++) {
+                free(Poblacion->individuos[j].genotipo);
+            }
+            free(Poblacion->individuos);
+            free(Poblacion);
+            return NULL;
+        }
         Poblacion->individuos[i].fitness = 0;
     }
     return Poblacion;
+}
+
+void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_genotipo) {
+    if (destino == NULL || origen == NULL) return;
+    
+    // Crear una población temporal nueva
+    poblacion *nueva = crear_poblacion(origen->tamano, longitud_genotipo);
+    if (nueva == NULL) return;
+    
+    // Copiar los datos
+    for (int i = 0; i < origen->tamano; i++) {
+        for (int j = 0; j < longitud_genotipo; j++) {
+            nueva->individuos[i].genotipo[j] = origen->individuos[i].genotipo[j];
+        }
+        nueva->individuos[i].fitness = origen->individuos[i].fitness;
+    }
+    
+    // Liberar la población antigua si existe
+    if (*destino != NULL) {
+        for (int i = 0; i < (*destino)->tamano; i++) {
+            if ((*destino)->individuos[i].genotipo != NULL) {
+                free((*destino)->individuos[i].genotipo);
+            }
+        }
+        if ((*destino)->individuos != NULL) {
+            free((*destino)->individuos);
+        }
+        free(*destino);
+    }
+    
+    // Asignar la nueva población
+    *destino = nueva;
+}
+
+void liberar_poblacion(poblacion *pob) {
+    if (pob == NULL) return;
+    
+    if (pob->individuos != NULL) {
+        for (int i = 0; i < pob->tamano; i++) {
+            if (pob->individuos[i].genotipo != NULL) {
+                free(pob->individuos[i].genotipo);
+                pob->individuos[i].genotipo = NULL;
+            }
+        }
+        free(pob->individuos);
+        pob->individuos = NULL;
+    }
+    free(pob);
 }
 
 void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
@@ -27,38 +89,6 @@ void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
             poblacion->individuos[i].genotipo[j] = poblacion->individuos[i].genotipo[k];
             poblacion->individuos[i].genotipo[k] = temp;
         }
-    }
-}
-
-void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_genotipo) {
-    // Liberar memoria anterior si existe
-    if (*destino != NULL) {
-        liberar_poblacion(*destino);
-    }
-    
-    // Crear nueva población
-    *destino = crear_poblacion(origen->tamano, longitud_genotipo);
-    
-    // Copiar datos
-    for (int i = 0; i < origen->tamano; i++) {
-        memcpy((*destino)->individuos[i].genotipo, 
-               origen->individuos[i].genotipo, 
-               longitud_genotipo * sizeof(int));
-        (*destino)->individuos[i].fitness = origen->individuos[i].fitness;
-    }
-}
-
-void liberar_poblacion(poblacion *pob) {
-    if (pob != NULL) {
-        if (pob->individuos != NULL) {
-            for (int i = 0; i < pob->tamano; i++) {
-                free(pob->individuos[i].genotipo);
-                pob->individuos[i].genotipo = NULL;
-            }
-            free(pob->individuos);
-            pob->individuos = NULL;
-        }
-        free(pob);
     }
 }
 
@@ -494,13 +524,15 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
             exit(1);
         }
     }
+    
     int tamano_poblacion = Poblacion->tamano;
     int tamano_padres = padres->tamano;
     int *indices_torneo = malloc(num_competidores * sizeof(int));
-    
+
     // Asegurarse de que la población de padres tiene espacio suficiente
     if (tamano_padres != tamano_poblacion) {
         fprintf(stderr, "Error: La población de padres debe tener el mismo tamaño que la población inicial.\n");
+        free(indices_torneo);
         return;
     }
 
@@ -516,7 +548,6 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
         }
 
         // Encontrar el ganador del torneo (menor fitness)
-
         int indice_ganador = indices_torneo[0];
         double mejor_fitness = Poblacion->individuos[indices_torneo[0]].fitness;
 
@@ -530,13 +561,19 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
             }
         }
 
-        // Copiar al individuo ganador a la población de padres
-        padres->individuos[i] = Poblacion->individuos[indice_ganador];
+        // Copiar el individuo ganador a la población de padres
+        // Crear una nueva copia del genotipo
+        for (int j = 0; j < longitud_genotipo; j++) {
+            padres->individuos[i].genotipo[j] = Poblacion->individuos[indice_ganador].genotipo[j];
+        }
 
+        // Copiar el fitness del ganador
+        padres->individuos[i].fitness = Poblacion->individuos[indice_ganador].fitness;
     }
 
     // Liberar memoria usada para los índices
-        free(indices_torneo);
+    free(indices_torneo);
+
     // Verificar población de padres
     for (int i = 0; i < tamano_poblacion; i++) {
         if (!verificar_si_es_permutacion(padres->individuos[i].genotipo, longitud_genotipo)) {
@@ -546,6 +583,7 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
         }
     }
 }
+
 
 // Función para verificar si un arreglo es una permutación válida
 int verificar_si_es_permutacion(int *arreglo, int longitud) {
