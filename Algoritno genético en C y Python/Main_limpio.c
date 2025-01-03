@@ -7,7 +7,7 @@ int main(int argc, char** argv){
     srand(time(NULL));
     int tamano_poblacion = 50;
     int longitud_genotipo = 32;
-    int num_generaciones = 1000;
+    int num_generaciones = 100;
     int num_competidores = 2;
     int m = 3;
     double probabilidad_mutacion = 0.15;
@@ -45,25 +45,8 @@ int main(int argc, char** argv){
 
     // Crear población inicial
     poblacion *Poblacion = crear_poblacion(tamano_poblacion, longitud_genotipo);
-    if (Poblacion == NULL) {
-        printf("Error al crear población inicial\n");
-        return 1;
-    }
-    
-    poblacion *padres = crear_poblacion(tamano_poblacion, longitud_genotipo);
-    if (padres == NULL) {
-        liberar_poblacion(Poblacion);
-        printf("Error al crear población de padres\n");
-        return 1;
-    }
-    
+    poblacion *padres = crear_poblacion(tamano_poblacion, longitud_genotipo);    
     poblacion *hijos = crear_poblacion(tamano_poblacion, longitud_genotipo);
-    if (hijos == NULL) {
-        liberar_poblacion(Poblacion);
-        liberar_poblacion(padres);
-        printf("Error al crear población de hijos\n");
-        return 1;
-    }
     crear_permutaciones(Poblacion, longitud_genotipo);
     evaluar_poblacion(Poblacion, distancias, longitud_genotipo);
     ordenar_poblacion(Poblacion);
@@ -114,15 +97,9 @@ int main(int argc, char** argv){
     printf("Tiempo de ejecución: %.2f segundos\n", tiempo_ejecucion);
 
     // Liberar memoria
-    if (Poblacion != NULL) {
-        liberar_poblacion(Poblacion);
-    }
-    if (padres != NULL) {
-        liberar_poblacion(padres);
-    }
-    if (hijos != NULL) {
-        liberar_poblacion(hijos);
-    }
+    liberar_poblacion(Poblacion);
+    liberar_poblacion(padres);
+    liberar_poblacion(hijos);
     for (int i = 0; i < longitud_genotipo; i++) {
         free(distancias[i]);
     }

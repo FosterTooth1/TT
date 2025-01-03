@@ -92,19 +92,6 @@ void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
     }
 }
 
-void imprimir_poblacion(poblacion *poblacion, int longitud_genotipo){
-    for (int i = 0; i < poblacion->tamano; i++) {
-        printf("Individuo %d: ", i);
-        // Imprimir el genotipo del individuo
-        for (int j = 0; j < longitud_genotipo; j++) {
-            printf("%d ", poblacion->individuos[i].genotipo[j]);
-        }
-        // Imprimir el fitness del individuo
-        printf(" Fitness: %f\n", poblacion->individuos[i].fitness);
-    }
-}
-
-
 // Función para evaluar un individuo
 double evaluar_individuo(int *genotipo, double **distancias, int longitud_genotipo) {
     double total_cost = 0.0;
@@ -207,12 +194,6 @@ void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int lon
     }
 }
 
-void copiar_arreglo(int *destino, int *origen, int longitud) {
-    for (int i = 0; i < longitud; i++) {
-        destino[i] = origen[i];
-    }
-}
-
 // Función de comparación para qsort
 int comparar_distancias(const void* a, const void* b) {
     DistanciaOrdenada* da = (DistanciaOrdenada*)a;
@@ -239,26 +220,11 @@ void eliminar_de_posicion(int* array, int longitud, int posicion) {
 
 // Heurística optimizada de remoción de abruptos
 void heuristica_abruptos(int* ruta, int longitud_genotipo, int m, double** distancias) {
-    // Verificar validez de la ruta inicial
-    if (!verificar_si_es_permutacion(ruta, longitud_genotipo)) {
-        fprintf(stderr, "Error: Ruta inicial inválida en heurística\n");
-        return;
-    }
-
     // Arreglo temporal para manipulación de rutas
     int* ruta_temp = malloc(longitud_genotipo * sizeof(int));
-    if (!ruta_temp) {
-        fprintf(stderr, "Error: No se pudo asignar memoria para ruta temporal\n");
-        return;
-    }
 
     // Estructura para ordenar distancias
     DistanciaOrdenada* dist_ordenadas = malloc(longitud_genotipo * sizeof(DistanciaOrdenada));
-    if (!dist_ordenadas) {
-        free(ruta_temp);
-        fprintf(stderr, "Error: No se pudo asignar memoria para distancias ordenadas\n");
-        return;
-    }
 
     // Para cada ciudad en la ruta
     for (int i = 0; i < longitud_genotipo; i++) {
@@ -335,11 +301,6 @@ void heuristica_abruptos(int* ruta, int longitud_genotipo, int m, double** dista
     // Liberar memoria
     free(ruta_temp);
     free(dist_ordenadas);
-
-    // Verificar validez de la ruta final
-    if (!verificar_si_es_permutacion(ruta, longitud_genotipo)) {
-        fprintf(stderr, "Error: Ruta final inválida en heurística\n");
-    }
 }
 
 // Cycle crossover
@@ -351,10 +312,6 @@ void cycle_crossover(int *padre1, int *padre2, int *hijo, int longitud_genotipo)
 
     // Array para marcar posiciones visitadas
     int *visitado = calloc(longitud_genotipo, sizeof(int));
-    if (!visitado) {
-        fprintf(stderr, "Error: No se pudo asignar memoria para el array visitado\n");
-        exit(1);
-    }
 
     int ciclo = 0;
     int posiciones_restantes = longitud_genotipo;
@@ -399,45 +356,14 @@ void cycle_crossover(int *padre1, int *padre2, int *hijo, int longitud_genotipo)
             actual = siguiente;
         }
     }
-
     free(visitado);
-
-    // Verificar que el resultado sea una permutación válida
-    if (!verificar_si_es_permutacion(hijo, longitud_genotipo)) {
-        printf("Error en hijo después del crossover:\n");
-        imprimir_arreglo_debug(hijo, longitud_genotipo, "Hijo");
-        imprimir_arreglo_debug(padre1, longitud_genotipo, "Padre1");
-        imprimir_arreglo_debug(padre2, longitud_genotipo, "Padre2");
-        exit(1);
-    }
 }
 
 
 void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_competidores, int longitud_genotipo) {
-    // Verificar población inicial
-    for (int i = 0; i < Poblacion->tamano; i++) {
-        if (!verificar_si_es_permutacion(Poblacion->individuos[i].genotipo, longitud_genotipo)) {
-            printf("Error en población inicial, individuo %d:\n", i);
-            imprimir_arreglo_debug(Poblacion->individuos[i].genotipo, longitud_genotipo, "Individuo");
-            exit(1);
-        }
-    }
-    
     int tamano_poblacion = Poblacion->tamano;
     int tamano_padres = padres->tamano;
     int *indices_torneo = malloc(num_competidores * sizeof(int));
-
-    // Asegurarse de que la población de padres tiene espacio suficiente
-    if (tamano_padres != tamano_poblacion) {
-        fprintf(stderr, "Error: La población de padres debe tener el mismo tamaño que la población inicial.\n");
-        free(indices_torneo);
-        return;
-    }
-
-    if (!indices_torneo) {
-        fprintf(stderr, "Error: No se pudo asignar memoria para los índices del torneo.\n");
-        exit(EXIT_FAILURE);
-    }
 
     for (int i = 0; i < tamano_poblacion; i++) {
         // Seleccionar al azar los competidores del torneo
@@ -460,7 +386,6 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
         }
 
         // Copiar el individuo ganador a la población de padres
-        // Crear una nueva copia del genotipo
         for (int j = 0; j < longitud_genotipo; j++) {
             padres->individuos[i].genotipo[j] = Poblacion->individuos[indice_ganador].genotipo[j];
         }
@@ -471,66 +396,6 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
 
     // Liberar memoria usada para los índices
     free(indices_torneo);
-
-    // Verificar población de padres
-    for (int i = 0; i < tamano_poblacion; i++) {
-        if (!verificar_si_es_permutacion(padres->individuos[i].genotipo, longitud_genotipo)) {
-            printf("Error en población de padres, individuo %d:\n", i);
-            imprimir_arreglo_debug(padres->individuos[i].genotipo, longitud_genotipo, "Individuo");
-            exit(1);
-        }
-    }
-}
-
-
-// Función para verificar si un arreglo es una permutación válida
-int verificar_si_es_permutacion(int *arreglo, int longitud) {
-    // Crear un arreglo para marcar números encontrados
-    int *encontrados = calloc(longitud, sizeof(int));
-    if (!encontrados) {
-        fprintf(stderr, "Error: No se pudo asignar memoria para verificación.\n");
-        return 0;
-    }
-    
-    // Verificar que cada número aparezca una vez y esté en el rango correcto
-    for (int i = 0; i < longitud; i++) {
-        // Verificar rango
-        if (arreglo[i] < 0 || arreglo[i] >= longitud) {
-            printf("Error: Número fuera de rango en posición %d: %d\n", i, arreglo[i]);
-            free(encontrados);
-            return 0;
-        }
-        
-        // Verificar duplicados
-        if (encontrados[arreglo[i]] == 1) {
-            printf("Error: Número duplicado encontrado: %d\n", arreglo[i]);
-            free(encontrados);
-            return 0;
-        }
-        
-        encontrados[arreglo[i]] = 1;
-    }
-    
-    // Verificar que todos los números estén presentes
-    for (int i = 0; i < longitud; i++) {
-        if (encontrados[i] != 1) {
-            printf("Error: Falta el número %d en la permutación\n", i);
-            free(encontrados);
-            return 0;
-        }
-    }
-    
-    free(encontrados);
-    return 1;
-}
-
-// Función de ayuda para imprimir el arreglo cuando se encuentra un error
-void imprimir_arreglo_debug(int *arreglo, int longitud, const char *mensaje) {
-    printf("%s: ", mensaje);
-    for (int i = 0; i < longitud; i++) {
-        printf("%d ", arreglo[i]);
-    }
-    printf("\n");
 }
 
 // Función auxiliar para heapsort
