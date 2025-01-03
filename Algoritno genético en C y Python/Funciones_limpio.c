@@ -105,25 +105,24 @@ void imprimir_poblacion(poblacion *poblacion, int longitud_genotipo){
 }
 
 
+// Función para evaluar un individuo
+double evaluar_individuo(int *genotipo, double **distancias, int longitud_genotipo) {
+    double total_cost = 0.0;
+    for (int i = 0; i < longitud_genotipo - 1; i++) {
+        total_cost += distancias[genotipo[i]][genotipo[i + 1]];
+    }
+    total_cost += distancias[genotipo[longitud_genotipo - 1]][genotipo[0]];
+    return total_cost;
+}
+
+// Función para evaluar una población
 void evaluar_poblacion(poblacion *poblacion, double **distancias, int longitud_genotipo) {
     // Evaluar cada individuo de la población
     for (int i = 0; i < poblacion->tamano; i++) {
-        evaluar_individuo(&poblacion->individuos[i], distancias, longitud_genotipo);
+        poblacion->individuos[i].fitness = evaluar_individuo(
+            poblacion->individuos[i].genotipo, distancias, longitud_genotipo);
     }
 }
-
-void evaluar_individuo(individuo *individuo, double **distancias, int longitud_genotipo) {
-    // Calcular el fitness del individuo
-    double total_cost = 0.0;
-    for (int i = 0; i < longitud_genotipo - 1; i++) {
-        total_cost += distancias[individuo->genotipo[i]][individuo->genotipo[i + 1]];
-    }
-    total_cost += distancias[individuo->genotipo[longitud_genotipo - 1]][individuo->genotipo[0]];
-
-    individuo->fitness = total_cost;
-}
-
-
 
 void mutar_individuo(individuo *individuo, double **distancias, double probabilidad_mutacion, int longitud_genotipo) {
     // Generar un número aleatorio y determinar si se realiza la mutación
@@ -140,8 +139,8 @@ void mutar_individuo(individuo *individuo, double **distancias, double probabili
         individuo->genotipo[idx1] = individuo->genotipo[idx2];
         individuo->genotipo[idx2] = temp;
 
-        // Recalcular el fitness del individuo
-        evaluar_individuo(individuo, distancias, longitud_genotipo);
+        // Recalcular el fitness del individuo usando la nueva evaluar_individuo
+        individuo->fitness = evaluar_individuo(individuo->genotipo, distancias, longitud_genotipo);
     }
 }
 
@@ -169,7 +168,7 @@ void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int lon
             individuo temp_hijos[4];
             for (int j = 0; j < 4; j++) {
                 temp_hijos[j].genotipo = individuos[j];
-                evaluar_individuo(&temp_hijos[j], distancias, longitud_genotipo);
+                temp_hijos[j].fitness = evaluar_individuo(individuos[j], distancias, longitud_genotipo);
             }
 
             // Seleccionar los mejores dos individuos
@@ -238,16 +237,6 @@ void eliminar_de_posicion(int* array, int longitud, int posicion) {
     }
 }
 
-// Función para calcular el costo de una ruta
-double calcular_costo_ruta(int* ruta, double** distancias, int longitud) {
-    double costo = 0;
-    for (int i = 0; i < longitud - 1; i++) {
-        costo += distancias[ruta[i]][ruta[i + 1]];
-    }
-    costo += distancias[ruta[longitud - 1]][ruta[0]];
-    return costo;
-}
-
 // Heurística optimizada de remoción de abruptos
 void heuristica_abruptos(int* ruta, int longitud_genotipo, int m, double** distancias) {
     // Verificar validez de la ruta inicial
@@ -291,7 +280,7 @@ void heuristica_abruptos(int* ruta, int longitud_genotipo, int m, double** dista
             }
         }
 
-        double mejor_costo = calcular_costo_ruta(ruta, distancias, longitud_genotipo);
+        double mejor_costo = evaluar_individuo(ruta, distancias, longitud_genotipo);
         int mejor_posicion = pos_actual;
         int mejor_vecino = -1;
 
@@ -323,7 +312,7 @@ void heuristica_abruptos(int* ruta, int longitud_genotipo, int m, double** dista
                     
                     insertar_en_posicion(ruta_temp, longitud_genotipo, ciudad_actual, nueva_pos);
                     
-                    double nuevo_costo = calcular_costo_ruta(ruta_temp, distancias, longitud_genotipo);
+                    double nuevo_costo = evaluar_individuo(ruta_temp, distancias, longitud_genotipo);
                     
                     if (nuevo_costo < mejor_costo) {
                         mejor_costo = nuevo_costo;
@@ -671,7 +660,7 @@ void introsort_util(individuo *arr, int *profundidad_max, int inicio, int fin) {
     introsort_util(arr, profundidad_max, pivote + 1, fin);
 }
 
-// Función principal de ordenamiento para reemplazar ordenar_poblacion existente
+// Función principal de ordenamiento para la población
 void ordenar_poblacion(poblacion *poblacion) {
     int n = poblacion->tamano;
     if (n <= 1) return;

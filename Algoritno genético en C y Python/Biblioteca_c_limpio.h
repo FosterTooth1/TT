@@ -26,7 +26,7 @@ void liberar_poblacion(poblacion *poblacion);
 void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_genotipo);
 void imprimir_poblacion(poblacion *poblacion, int longitud_genotipo);
 void evaluar_poblacion(poblacion *poblacion, double **distancias, int longitud_genotipo);
-void evaluar_individuo(individuo *individuo, double **distancias, int longitud_genotipo);
+double evaluar_individuo(int *individuo, double **distancias, int longitud_genotipo);
 void mutar_individuo(individuo *individuo, double **distancias, double probabilidad_mutacion, int longitud_genotipo);
 void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int longitud_genotipo, int m, double **distancias, double probabilidad_cruce);
 void copiar_arreglo(int *destino, int *origen, int longitud);

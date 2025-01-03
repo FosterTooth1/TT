@@ -1,13 +1,13 @@
-#include "Biblioteca_c.h"
+#include "Biblioteca_c_limpio.h"
 
 int main(int argc, char** argv){
     // Iniciar medición del tiempo
     time_t inicio = time(NULL);
 
     srand(time(NULL));
-    int tamano_poblacion = 500;
+    int tamano_poblacion = 50;
     int longitud_genotipo = 32;
-    int num_generaciones = 200;
+    int num_generaciones = 1000;
     int num_competidores = 2;
     int m = 3;
     double probabilidad_mutacion = 0.15;
@@ -34,19 +34,36 @@ int main(int argc, char** argv){
         char *token = strtok(linea, ",");
         int columna = 0;
         while (token && columna < longitud_genotipo) {
-            distancias[fila][columna] = atof(token); // Convertir texto a double
+            distancias[fila][columna] = atof(token);
             token = strtok(NULL, ",");
             columna++;
         }
         fila++;
+        free(token);
     }
-
     fclose(archivo);
 
     // Crear población inicial
     poblacion *Poblacion = crear_poblacion(tamano_poblacion, longitud_genotipo);
+    if (Poblacion == NULL) {
+        printf("Error al crear población inicial\n");
+        return 1;
+    }
+    
     poblacion *padres = crear_poblacion(tamano_poblacion, longitud_genotipo);
+    if (padres == NULL) {
+        liberar_poblacion(Poblacion);
+        printf("Error al crear población de padres\n");
+        return 1;
+    }
+    
     poblacion *hijos = crear_poblacion(tamano_poblacion, longitud_genotipo);
+    if (hijos == NULL) {
+        liberar_poblacion(Poblacion);
+        liberar_poblacion(padres);
+        printf("Error al crear población de hijos\n");
+        return 1;
+    }
     crear_permutaciones(Poblacion, longitud_genotipo);
     evaluar_poblacion(Poblacion, distancias, longitud_genotipo);
     ordenar_poblacion(Poblacion);
@@ -56,27 +73,13 @@ int main(int argc, char** argv){
         Mejor_Individuo->genotipo[i] = Poblacion->individuos[0].genotipo[i];
     }
     Mejor_Individuo->fitness = Poblacion->individuos[0].fitness;
-    //imprimir_poblacion(Poblacion, longitud_genotipo);
-    /*
-    printf("Mejor Individuo: ");
-    for (int i = 0; i < longitud_genotipo; i++) {
-        printf("%d  ", Mejor_Individuo->genotipo[i]);
-    }
-    printf(" Fitness: %f\n", Mejor_Individuo->fitness);
-    */
-
+    
     for(int generacion=0; generacion<num_generaciones; generacion++){
         // Seleccionar padres
         seleccionar_padres_torneo(Poblacion, padres, num_competidores, longitud_genotipo);
 
-        //puts("Padres");
-        //imprimir_poblacion(padres, longitud_genotipo);
-
         // Cruzar padres
         cruzar_individuos(padres, hijos, tamano_poblacion, longitud_genotipo, m, distancias, probabilidad_cruce);
-
-        //puts("Hijos");
-        //imprimir_poblacion(hijos, longitud_genotipo);
 
         // Mutar hijos
         for (int i = 0; i < tamano_poblacion; i++) {
@@ -84,8 +87,7 @@ int main(int argc, char** argv){
         }
 
         //Reemplazar la población
-        //liberar_poblacion(Poblacion);
-        Poblacion = hijos;
+        actualizar_poblacion(&Poblacion, hijos, longitud_genotipo);
 
         // Evaluar hijos
         evaluar_poblacion(Poblacion, distancias, longitud_genotipo);
@@ -97,17 +99,7 @@ int main(int argc, char** argv){
             Mejor_Individuo->genotipo[i] = Poblacion->individuos[0].genotipo[i];
         }
         Mejor_Individuo->fitness = Poblacion->individuos[0].fitness;
-            //printf("Mejor Individuo: ");
-            //for (int i = 0; i < longitud_genotipo; i++) {
-            //    printf("%d  ", Mejor_Individuo->genotipo[i]);
-            //}
-            //printf(" Fitness: %f\n", Mejor_Individuo->fitness);
-            //printf("Generacion %d\n", generacion);
         }
-        //liberar_poblacion(padres);
-        //liberar_poblacion(hijos);
-        //
-        //imprimir_poblacion(Poblacion, longitud_genotipo);
     }
     // Imprimir el mejor individuo
     printf("Mejor Individuo: ");
@@ -120,24 +112,23 @@ int main(int argc, char** argv){
     time_t fin = time(NULL);
     double tiempo_ejecucion = difftime(fin, inicio);
     printf("Tiempo de ejecución: %.2f segundos\n", tiempo_ejecucion);
-    //fflush(stdout);
-    puts("Fin del programa");
 
     // Liberar memoria
-    liberar_poblacion(Poblacion);
-    puts("Poblacion liberada");
-    liberar_poblacion(padres);
-    puts("Padres liberados");
-    liberar_poblacion(hijos);
-    puts("Hijos liberados");
+    if (Poblacion != NULL) {
+        liberar_poblacion(Poblacion);
+    }
+    if (padres != NULL) {
+        liberar_poblacion(padres);
+    }
+    if (hijos != NULL) {
+        liberar_poblacion(hijos);
+    }
     for (int i = 0; i < longitud_genotipo; i++) {
         free(distancias[i]);
     }
     free(distancias);
-    puts("Distancias liberadas");
+    free(Mejor_Individuo->genotipo);
+    Mejor_Individuo->genotipo = NULL;
     free(Mejor_Individuo);
-    puts("Mejor Individuo liberado");
-
-
     return 0;
 }

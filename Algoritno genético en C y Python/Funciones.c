@@ -1,16 +1,78 @@
-#include "Biblioteca_c.h"
+#include "Biblioteca_c_limpio.h"
 
-poblacion *crear_poblacion(int tamano, int longitud_genotipo){
-    // Reservar memoria para la población
-    poblacion *poblacion = malloc(sizeof(poblacion));
-    poblacion->tamano = tamano;
-    poblacion->individuos = malloc(tamano * sizeof(individuo));
-    // Reservar memoria para los individuos
-    for(int i = 0; i < tamano; i++){
-        poblacion->individuos[i].genotipo = malloc(longitud_genotipo * sizeof(int));
-        poblacion->individuos[i].fitness = 0;
+poblacion *crear_poblacion(int tamano, int longitud_genotipo) {
+    poblacion *Poblacion = malloc(sizeof(poblacion));
+    if (Poblacion == NULL) return NULL;
+    
+    Poblacion->tamano = tamano;
+    Poblacion->individuos = malloc(tamano * sizeof(individuo));
+    if (Poblacion->individuos == NULL) {
+        free(Poblacion);
+        return NULL;
     }
-    return poblacion;
+    
+    for(int i = 0; i < tamano; i++) {
+        Poblacion->individuos[i].genotipo = malloc(longitud_genotipo * sizeof(int));
+        if (Poblacion->individuos[i].genotipo == NULL) {
+            // Liberar toda la memoria asignada hasta ahora
+            for(int j = 0; j < i; j++) {
+                free(Poblacion->individuos[j].genotipo);
+            }
+            free(Poblacion->individuos);
+            free(Poblacion);
+            return NULL;
+        }
+        Poblacion->individuos[i].fitness = 0;
+    }
+    return Poblacion;
+}
+
+void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_genotipo) {
+    if (destino == NULL || origen == NULL) return;
+    
+    // Crear una población temporal nueva
+    poblacion *nueva = crear_poblacion(origen->tamano, longitud_genotipo);
+    if (nueva == NULL) return;
+    
+    // Copiar los datos
+    for (int i = 0; i < origen->tamano; i++) {
+        for (int j = 0; j < longitud_genotipo; j++) {
+            nueva->individuos[i].genotipo[j] = origen->individuos[i].genotipo[j];
+        }
+        nueva->individuos[i].fitness = origen->individuos[i].fitness;
+    }
+    
+    // Liberar la población antigua si existe
+    if (*destino != NULL) {
+        for (int i = 0; i < (*destino)->tamano; i++) {
+            if ((*destino)->individuos[i].genotipo != NULL) {
+                free((*destino)->individuos[i].genotipo);
+            }
+        }
+        if ((*destino)->individuos != NULL) {
+            free((*destino)->individuos);
+        }
+        free(*destino);
+    }
+    
+    // Asignar la nueva población
+    *destino = nueva;
+}
+
+void liberar_poblacion(poblacion *pob) {
+    if (pob == NULL) return;
+    
+    if (pob->individuos != NULL) {
+        for (int i = 0; i < pob->tamano; i++) {
+            if (pob->individuos[i].genotipo != NULL) {
+                free(pob->individuos[i].genotipo);
+                pob->individuos[i].genotipo = NULL;
+            }
+        }
+        free(pob->individuos);
+        pob->individuos = NULL;
+    }
+    free(pob);
 }
 
 void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
@@ -30,21 +92,6 @@ void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
     }
 }
 
-void liberar_poblacion(poblacion *poblacion){
-    // Liberar memoria de los individuos
-    for(int i = 0; i < poblacion->tamano; i++){
-        free(poblacion->individuos[i].genotipo);
-    }
-    // Liberar memoria de la población
-    free(poblacion->individuos);
-    free(poblacion);
-}
-
-void liberar_individuo(individuo *individuo){
-    // Liberar memoria del genotipo
-    free(individuo->genotipo);
-}
-
 void imprimir_poblacion(poblacion *poblacion, int longitud_genotipo){
     for (int i = 0; i < poblacion->tamano; i++) {
         printf("Individuo %d: ", i);
@@ -58,25 +105,24 @@ void imprimir_poblacion(poblacion *poblacion, int longitud_genotipo){
 }
 
 
+// Función para evaluar un individuo
+double evaluar_individuo(int *genotipo, double **distancias, int longitud_genotipo) {
+    double total_cost = 0.0;
+    for (int i = 0; i < longitud_genotipo - 1; i++) {
+        total_cost += distancias[genotipo[i]][genotipo[i + 1]];
+    }
+    total_cost += distancias[genotipo[longitud_genotipo - 1]][genotipo[0]];
+    return total_cost;
+}
+
+// Función para evaluar una población
 void evaluar_poblacion(poblacion *poblacion, double **distancias, int longitud_genotipo) {
     // Evaluar cada individuo de la población
     for (int i = 0; i < poblacion->tamano; i++) {
-        evaluar_individuo(&poblacion->individuos[i], distancias, longitud_genotipo);
+        poblacion->individuos[i].fitness = evaluar_individuo(
+            poblacion->individuos[i].genotipo, distancias, longitud_genotipo);
     }
 }
-
-void evaluar_individuo(individuo *individuo, double **distancias, int longitud_genotipo) {
-    // Calcular el fitness del individuo
-    double total_cost = 0.0;
-    for (int i = 0; i < longitud_genotipo - 1; i++) {
-        total_cost += distancias[individuo->genotipo[i]][individuo->genotipo[i + 1]];
-    }
-    total_cost += distancias[individuo->genotipo[longitud_genotipo - 1]][individuo->genotipo[0]];
-
-    individuo->fitness = total_cost;
-}
-
-
 
 void mutar_individuo(individuo *individuo, double **distancias, double probabilidad_mutacion, int longitud_genotipo) {
     // Generar un número aleatorio y determinar si se realiza la mutación
@@ -93,8 +139,8 @@ void mutar_individuo(individuo *individuo, double **distancias, double probabili
         individuo->genotipo[idx1] = individuo->genotipo[idx2];
         individuo->genotipo[idx2] = temp;
 
-        // Recalcular el fitness del individuo
-        evaluar_individuo(individuo, distancias, longitud_genotipo);
+        // Recalcular el fitness del individuo usando la nueva evaluar_individuo
+        individuo->fitness = evaluar_individuo(individuo->genotipo, distancias, longitud_genotipo);
     }
 }
 
@@ -122,7 +168,7 @@ void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int lon
             individuo temp_hijos[4];
             for (int j = 0; j < 4; j++) {
                 temp_hijos[j].genotipo = individuos[j];
-                evaluar_individuo(&temp_hijos[j], distancias, longitud_genotipo);
+                temp_hijos[j].fitness = evaluar_individuo(individuos[j], distancias, longitud_genotipo);
             }
 
             // Seleccionar los mejores dos individuos
@@ -167,196 +213,134 @@ void copiar_arreglo(int *destino, int *origen, int longitud) {
     }
 }
 
-// Heurística de mejora para rutas
-void heuristica_abruptos(int *ruta, int longitud_genotipo, int m, double **distancias) {
-    // Verificar ruta inicial
-    if (!verificar_si_es_permutacion(ruta, longitud_genotipo)) {
-        printf("Error en ruta inicial de heurística abruptos:\n");
-        imprimir_arreglo_debug(ruta, longitud_genotipo, "Ruta inicial");
-        exit(1);
-    }
+// Función de comparación para qsort
+int comparar_distancias(const void* a, const void* b) {
+    DistanciaOrdenada* da = (DistanciaOrdenada*)a;
+    DistanciaOrdenada* db = (DistanciaOrdenada*)b;
+    if (da->distancia < db->distancia) return -1;
+    if (da->distancia > db->distancia) return 1;
+    return 0;
+}
 
-    int *mejor_ruta = malloc(longitud_genotipo * sizeof(int));
-    copiar_arreglo(mejor_ruta, ruta, longitud_genotipo);
-    
-    for (int i = 0; i < longitud_genotipo; i++) {
-        // Crear array para almacenar las distancias y sus índices
-        typedef struct {
-            double distancia;
-            int indice;
-        } DistanciaIndice;
-        
-        DistanciaIndice *dist_ordenadas = malloc(longitud_genotipo * sizeof(DistanciaIndice));
-        
-        // Llenar el array con las distancias desde la ciudad i
-        for (int j = 0; j < longitud_genotipo; j++) {
-            dist_ordenadas[j].distancia = distancias[i][j];
-            dist_ordenadas[j].indice = j;
-        }
-        
-        // Ordenar las distancias (bubble sort simple para m elementos)
-        for (int j = 0; j < m + 1; j++) {
-            for (int k = 0; k < longitud_genotipo - 1 - j; k++) {
-                if (dist_ordenadas[k].distancia > dist_ordenadas[k + 1].distancia) {
-                    DistanciaIndice temp = dist_ordenadas[k];
-                    dist_ordenadas[k] = dist_ordenadas[k + 1];
-                    dist_ordenadas[k + 1] = temp;
-                }
-            }
-        }
-        
-        // Calcular el costo actual
-        individuo temp_individuo = { .genotipo = mejor_ruta, .fitness = 0.0 };
-        evaluar_individuo(&temp_individuo, distancias, longitud_genotipo);
-        double mejor_costo_actual = temp_individuo.fitness;
-        
-        // Probar intercambios con los m vecinos más cercanos
-        for (int j = 1; j <= m && j < longitud_genotipo; j++) {  // Empezamos desde 1 para saltar la propia ciudad
-            int vecino = dist_ordenadas[j].indice;
-            
-            // Encontrar las posiciones de las ciudades en la ruta
-            int idx_ciudad = -1, idx_vecino = -1;
-            for (int k = 0; k < longitud_genotipo; k++) {
-                if (mejor_ruta[k] == i) idx_ciudad = k;
-                if (mejor_ruta[k] == vecino) idx_vecino = k;
-            }
-            
-            if (idx_ciudad != -1 && idx_vecino != -1) {
-                // Crear ruta temporal y hacer el intercambio
-                int *ruta_temp = malloc(longitud_genotipo * sizeof(int));
-                copiar_arreglo(ruta_temp, mejor_ruta, longitud_genotipo);
-                
-                ruta_temp[idx_ciudad] = mejor_ruta[idx_vecino];
-                ruta_temp[idx_vecino] = mejor_ruta[idx_ciudad];
-                
-                // Evaluar la nueva ruta
-                temp_individuo.genotipo = ruta_temp;
-                evaluar_individuo(&temp_individuo, distancias, longitud_genotipo);
-                
-                // Actualizar si mejora
-                if (temp_individuo.fitness < mejor_costo_actual) {
-                    copiar_arreglo(mejor_ruta, ruta_temp, longitud_genotipo);
-                    mejor_costo_actual = temp_individuo.fitness;
-                }
-                
-                free(ruta_temp);
-            }
-        }
-        
-        free(dist_ordenadas);
+// Función para insertar un elemento en una posición específica del array
+void insertar_en_posicion(int* array, int longitud, int elemento, int posicion) {
+    for (int i = longitud - 1; i > posicion; i--) {
+        array[i] = array[i - 1];
     }
-    
-    // Actualizar la ruta original con la mejor encontrada
-    copiar_arreglo(ruta, mejor_ruta, longitud_genotipo);
-    free(mejor_ruta);
-    if (!verificar_si_es_permutacion(ruta, longitud_genotipo)) {
-        printf("Error en ruta final de heurística abruptos:\n");
-        imprimir_arreglo_debug(ruta, longitud_genotipo, "Ruta final");
-        exit(1);
+    array[posicion] = elemento;
+}
+
+// Función para eliminar un elemento de una posición específica
+void eliminar_de_posicion(int* array, int longitud, int posicion) {
+    for (int i = posicion; i < longitud - 1; i++) {
+        array[i] = array[i + 1];
     }
 }
-/*
-void heuristica_abruptos(int *Hijo, int longitud_genotipo, int m, double **distancias) {
+
+// Heurística optimizada de remoción de abruptos
+void heuristica_abruptos(int* ruta, int longitud_genotipo, int m, double** distancias) {
+    // Verificar validez de la ruta inicial
+    if (!verificar_si_es_permutacion(ruta, longitud_genotipo)) {
+        fprintf(stderr, "Error: Ruta inicial inválida en heurística\n");
+        return;
+    }
+
+    // Arreglo temporal para manipulación de rutas
+    int* ruta_temp = malloc(longitud_genotipo * sizeof(int));
+    if (!ruta_temp) {
+        fprintf(stderr, "Error: No se pudo asignar memoria para ruta temporal\n");
+        return;
+    }
+
+    // Estructura para ordenar distancias
+    DistanciaOrdenada* dist_ordenadas = malloc(longitud_genotipo * sizeof(DistanciaOrdenada));
+    if (!dist_ordenadas) {
+        free(ruta_temp);
+        fprintf(stderr, "Error: No se pudo asignar memoria para distancias ordenadas\n");
+        return;
+    }
+
+    // Para cada ciudad en la ruta
     for (int i = 0; i < longitud_genotipo; i++) {
-        // Selección de las m ciudades más cercanas
-        int *idx = malloc(longitud_genotipo * sizeof(int));
-        for (int j = 0; j < longitud_genotipo; j++) {
-            idx[j] = j;
-        }
+        int ciudad_actual = ruta[i];
         
-        // Ordenamos las ciudades por distancia
-        for (int j = 0; j < longitud_genotipo - 1; j++) {
-            for (int k = j + 1; k < longitud_genotipo; k++) {
-                if (distancias[Hijo[i]][idx[j]] > distancias[Hijo[i]][idx[k]]) {
-                    int temp = idx[j];
-                    idx[j] = idx[k];
-                    idx[k] = temp;
-                }
+        // Obtener y ordenar las m ciudades más cercanas
+        for (int j = 0; j < longitud_genotipo; j++) {
+            dist_ordenadas[j].distancia = distancias[ciudad_actual][j];
+            dist_ordenadas[j].indice = j;
+        }
+        qsort(dist_ordenadas, longitud_genotipo, sizeof(DistanciaOrdenada), comparar_distancias);
+
+        // Encontrar posición actual
+        int pos_actual = -1;
+        for (int j = 0; j < longitud_genotipo; j++) {
+            if (ruta[j] == ciudad_actual) {
+                pos_actual = j;
+                break;
             }
         }
-        
-        // Seleccionar las m más cercanas (excluyendo la ciudad actual)
-        int *ciudades_cercanas = malloc(m * sizeof(int));
-        int count = 0;
-        for (int j = 1; j < m + 1 && j < longitud_genotipo; j++) {
-            ciudades_cercanas[count++] = idx[j];
-        }
-        
-        // Seleccionar una ciudad aleatoria entre las m cercanas
-        if (count > 0) {
-            int ciudad_elegida = ciudades_cercanas[rand() % count];
+
+        double mejor_costo = evaluar_individuo(ruta, distancias, longitud_genotipo);
+        int mejor_posicion = pos_actual;
+        int mejor_vecino = -1;
+
+        // Probar inserción con las m ciudades más cercanas
+        for (int j = 1; j <= m && j < longitud_genotipo; j++) {
+            int ciudad_cercana = dist_ordenadas[j].indice;
             
-            // Encontrar las posiciones actual y siguiente
-            int pos_actual = -1;
-            for (int j = 0; j < longitud_genotipo; j++) {
-                if (Hijo[j] == ciudad_elegida) {
-                    pos_actual = j;
+            // Encontrar posición de la ciudad cercana
+            int pos_cercana = -1;
+            for (int k = 0; k < longitud_genotipo; k++) {
+                if (ruta[k] == ciudad_cercana) {
+                    pos_cercana = k;
                     break;
                 }
             }
-            
-            if (pos_actual != -1) {
-                // Crear copias temporales de la ruta
-                int *Ruta1 = malloc(longitud_genotipo * sizeof(int));
-                int *Ruta2 = malloc(longitud_genotipo * sizeof(int));
-                memcpy(Ruta1, Hijo, longitud_genotipo * sizeof(int));
-                memcpy(Ruta2, Hijo, longitud_genotipo * sizeof(int));
-                
-                // Remover y reinsertar la ciudad en dos posiciones diferentes
-                for (int j = pos_actual; j < longitud_genotipo - 1; j++) {
-                    Ruta1[j] = Ruta1[j + 1];
-                    Ruta2[j] = Ruta2[j + 1];
+
+            if (pos_cercana != -1) {
+                // Probar inserción antes y después de la ciudad cercana
+                for (int offset = 0; offset <= 1; offset++) {
+                    memcpy(ruta_temp, ruta, longitud_genotipo * sizeof(int));
+                    
+                    // Eliminar de posición actual
+                    eliminar_de_posicion(ruta_temp, longitud_genotipo, pos_actual);
+                    
+                    // Insertar en nueva posición
+                    int nueva_pos = pos_cercana + offset;
+                    if (nueva_pos > pos_actual) nueva_pos--;
+                    if (nueva_pos >= longitud_genotipo) nueva_pos = longitud_genotipo - 1;
+                    
+                    insertar_en_posicion(ruta_temp, longitud_genotipo, ciudad_actual, nueva_pos);
+                    
+                    double nuevo_costo = evaluar_individuo(ruta_temp, distancias, longitud_genotipo);
+                    
+                    if (nuevo_costo < mejor_costo) {
+                        mejor_costo = nuevo_costo;
+                        mejor_posicion = nueva_pos;
+                        mejor_vecino = ciudad_cercana;
+                    }
                 }
-                
-                // Insertar en dos posiciones distintas y evaluar
-                int pos1 = (pos_actual + 1) % longitud_genotipo;
-                int pos2 = (pos_actual + 2) % longitud_genotipo;
-                
-                // Insertar en primera posición
-                for (int j = longitud_genotipo - 1; j > pos1; j--) {
-                    Ruta1[j] = Ruta1[j - 1];
-                }
-                Ruta1[pos1] = ciudad_elegida;
-                
-                // Insertar en segunda posición
-                for (int j = longitud_genotipo - 1; j > pos2; j--) {
-                    Ruta2[j] = Ruta2[j - 1];
-                }
-                Ruta2[pos2] = ciudad_elegida;
-                
-                // Evaluar las tres rutas
-                double fitness_original = 0;
-                double fitness_ruta1 = 0;
-                double fitness_ruta2 = 0;
-                
-                for (int j = 0; j < longitud_genotipo - 1; j++) {
-                    fitness_original += distancias[Hijo[j]][Hijo[j + 1]];
-                    fitness_ruta1 += distancias[Ruta1[j]][Ruta1[j + 1]];
-                    fitness_ruta2 += distancias[Ruta2[j]][Ruta2[j + 1]];
-                }
-                
-                // Añadir la distancia de regreso al inicio
-                fitness_original += distancias[Hijo[longitud_genotipo - 1]][Hijo[0]];
-                fitness_ruta1 += distancias[Ruta1[longitud_genotipo - 1]][Ruta1[0]];
-                fitness_ruta2 += distancias[Ruta2[longitud_genotipo - 1]][Ruta2[0]];
-                
-                // Seleccionar la mejor ruta
-                if (fitness_ruta1 < fitness_original && fitness_ruta1 < fitness_ruta2) {
-                    memcpy(Hijo, Ruta1, longitud_genotipo * sizeof(int));
-                } else if (fitness_ruta2 < fitness_original && fitness_ruta2 < fitness_ruta1) {
-                    memcpy(Hijo, Ruta2, longitud_genotipo * sizeof(int));
-                }
-                
-                free(Ruta1);
-                free(Ruta2);
             }
         }
-        
-        free(idx);
-        free(ciudades_cercanas);
+
+        // Aplicar el mejor movimiento encontrado
+        if (mejor_vecino != -1 && mejor_posicion != pos_actual) {
+            memcpy(ruta_temp, ruta, longitud_genotipo * sizeof(int));
+            eliminar_de_posicion(ruta_temp, longitud_genotipo, pos_actual);
+            insertar_en_posicion(ruta_temp, longitud_genotipo, ciudad_actual, mejor_posicion);
+            memcpy(ruta, ruta_temp, longitud_genotipo * sizeof(int));
+        }
+    }
+
+    // Liberar memoria
+    free(ruta_temp);
+    free(dist_ordenadas);
+
+    // Verificar validez de la ruta final
+    if (!verificar_si_es_permutacion(ruta, longitud_genotipo)) {
+        fprintf(stderr, "Error: Ruta final inválida en heurística\n");
     }
 }
-*/
 
 // Cycle crossover
 void cycle_crossover(int *padre1, int *padre2, int *hijo, int longitud_genotipo) {
@@ -390,7 +374,7 @@ void cycle_crossover(int *padre1, int *padre2, int *hijo, int longitud_genotipo)
         int actual = inicio;
 
         // Seguir el ciclo hasta que se cierre
-        while (true) {
+        while (1) {
             // Marcar como visitado
             visitado[actual] = 1;
             posiciones_restantes--;
@@ -438,13 +422,15 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
             exit(1);
         }
     }
+    
     int tamano_poblacion = Poblacion->tamano;
     int tamano_padres = padres->tamano;
     int *indices_torneo = malloc(num_competidores * sizeof(int));
-    
+
     // Asegurarse de que la población de padres tiene espacio suficiente
     if (tamano_padres != tamano_poblacion) {
         fprintf(stderr, "Error: La población de padres debe tener el mismo tamaño que la población inicial.\n");
+        free(indices_torneo);
         return;
     }
 
@@ -460,7 +446,6 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
         }
 
         // Encontrar el ganador del torneo (menor fitness)
-
         int indice_ganador = indices_torneo[0];
         double mejor_fitness = Poblacion->individuos[indices_torneo[0]].fitness;
 
@@ -474,13 +459,19 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
             }
         }
 
-        // Copiar al individuo ganador a la población de padres
-        padres->individuos[i] = Poblacion->individuos[indice_ganador];
+        // Copiar el individuo ganador a la población de padres
+        // Crear una nueva copia del genotipo
+        for (int j = 0; j < longitud_genotipo; j++) {
+            padres->individuos[i].genotipo[j] = Poblacion->individuos[indice_ganador].genotipo[j];
+        }
 
+        // Copiar el fitness del ganador
+        padres->individuos[i].fitness = Poblacion->individuos[indice_ganador].fitness;
     }
 
     // Liberar memoria usada para los índices
-        free(indices_torneo);
+    free(indices_torneo);
+
     // Verificar población de padres
     for (int i = 0; i < tamano_poblacion; i++) {
         if (!verificar_si_es_permutacion(padres->individuos[i].genotipo, longitud_genotipo)) {
@@ -490,6 +481,7 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
         }
     }
 }
+
 
 // Función para verificar si un arreglo es una permutación válida
 int verificar_si_es_permutacion(int *arreglo, int longitud) {
@@ -668,7 +660,7 @@ void introsort_util(individuo *arr, int *profundidad_max, int inicio, int fin) {
     introsort_util(arr, profundidad_max, pivote + 1, fin);
 }
 
-// Función principal de ordenamiento para reemplazar ordenar_poblacion existente
+// Función principal de ordenamiento para la población
 void ordenar_poblacion(poblacion *poblacion) {
     int n = poblacion->tamano;
     if (n <= 1) return;

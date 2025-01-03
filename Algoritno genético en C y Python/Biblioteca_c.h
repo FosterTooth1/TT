@@ -1,9 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include<math.h>
 #include<string.h>
 #include<time.h>
-#include<stdbool.h>
 
 typedef struct{
     int *genotipo;
@@ -15,13 +13,20 @@ typedef struct{
     int tamano;
 }poblacion;
 
+// Estructura auxiliar para ordenar distancias
+typedef struct {
+    double distancia;
+    int indice;
+} DistanciaOrdenada;
+
+
 poblacion *crear_poblacion(int tamano, int longitud_genotipo);
 void crear_permutaciones(poblacion *poblacion, int longitud_genotipo); 
 void liberar_poblacion(poblacion *poblacion);
-void liberar_individuo(individuo *individuo);
+void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_genotipo);
 void imprimir_poblacion(poblacion *poblacion, int longitud_genotipo);
 void evaluar_poblacion(poblacion *poblacion, double **distancias, int longitud_genotipo);
-void evaluar_individuo(individuo *individuo, double **distancias, int longitud_genotipo);
+double evaluar_individuo(int *individuo, double **distancias, int longitud_genotipo);
 void mutar_individuo(individuo *individuo, double **distancias, double probabilidad_mutacion, int longitud_genotipo);
 void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int longitud_genotipo, int m, double **distancias, double probabilidad_cruce);
 void copiar_arreglo(int *destino, int *origen, int longitud);
@@ -39,3 +44,8 @@ int mediana_de_tres(individuo *arr, int a, int b, int c);
 int particion(individuo *arr, int bajo, int alto);
 int log2_suelo(int n);
 void introsort_util(individuo *arr, int *profundidad_max, int inicio, int fin);
+//
+double calcular_costo_ruta(int* ruta, double** distancias, int longitud);
+int comparar_distancias(const void* a, const void* b);
+void insertar_en_posicion(int* array, int longitud, int elemento, int posicion);
+void eliminar_de_posicion(int* array, int longitud, int posicion);
