@@ -5,9 +5,9 @@ int main(int argc, char** argv){
     time_t inicio = time(NULL);
 
     srand(time(NULL));
-    int tamano_poblacion = 500;
+    int tamano_poblacion = 50;
     int longitud_genotipo = 32;
-    int num_generaciones = 11;
+    int num_generaciones = 1000;
     int num_competidores = 2;
     int m = 3;
     double probabilidad_mutacion = 0.15;
@@ -85,10 +85,9 @@ int main(int argc, char** argv){
         for (int i = 0; i < tamano_poblacion; i++) {
             mutar_individuo(&hijos->individuos[i], distancias, probabilidad_mutacion, longitud_genotipo);
         }
-        puts("Hijos mutados");
+
         //Reemplazar la población
         actualizar_poblacion(&Poblacion, hijos, longitud_genotipo);
-        puts("Población actualizada");
 
         // Evaluar hijos
         evaluar_poblacion(Poblacion, distancias, longitud_genotipo);
@@ -113,30 +112,23 @@ int main(int argc, char** argv){
     time_t fin = time(NULL);
     double tiempo_ejecucion = difftime(fin, inicio);
     printf("Tiempo de ejecución: %.2f segundos\n", tiempo_ejecucion);
-    fflush(stdout);
-    puts("Fin del programa");
 
     // Liberar memoria
     if (Poblacion != NULL) {
         liberar_poblacion(Poblacion);
-        puts("Población liberadaaaaaaaaaaaaaaaaa");
     }
     if (padres != NULL) {
         liberar_poblacion(padres);
-        puts("Padres liberadooooooooooooooooos");
     }
     if (hijos != NULL) {
         liberar_poblacion(hijos);
-        puts("Hijos liberadoooooooooooooooos");
     }
     for (int i = 0; i < longitud_genotipo; i++) {
         free(distancias[i]);
     }
     free(distancias);
-    puts("Distancias liberadas");
     free(Mejor_Individuo->genotipo);
     Mejor_Individuo->genotipo = NULL;
     free(Mejor_Individuo);
-    puts("Mejor Individuo liberado");
     return 0;
 }
