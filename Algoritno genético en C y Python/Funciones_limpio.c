@@ -1,48 +1,42 @@
 #include "Biblioteca_c_limpio.h"
 
+//Asigna memoria para una población
+//Recibe el tamaño de la población y la longitud del genotipo
+//Devuelve un puntero a la población creada
 poblacion *crear_poblacion(int tamano, int longitud_genotipo) {
+    // Asigna memoria para la estructura de la población
     poblacion *Poblacion = malloc(sizeof(poblacion));
-    if (Poblacion == NULL) return NULL;
-    
+
+    // Asigna memoria para los individuos
     Poblacion->tamano = tamano;
     Poblacion->individuos = malloc(tamano * sizeof(individuo));
-    if (Poblacion->individuos == NULL) {
-        free(Poblacion);
-        return NULL;
-    }
-    
+
+    // Asigna memoria para los genotipos de cada individuo
     for(int i = 0; i < tamano; i++) {
         Poblacion->individuos[i].genotipo = malloc(longitud_genotipo * sizeof(int));
-        if (Poblacion->individuos[i].genotipo == NULL) {
-            // Liberar toda la memoria asignada hasta ahora
-            for(int j = 0; j < i; j++) {
-                free(Poblacion->individuos[j].genotipo);
-            }
-            free(Poblacion->individuos);
-            free(Poblacion);
-            return NULL;
-        }
+
+        // Inicializa el fitness en 0
         Poblacion->individuos[i].fitness = 0;
     }
     return Poblacion;
 }
 
+// Actualiza la población destino copiando los datos de la población origen
+// Recibe un puntero a la población destino, un puntero a la población origen y la longitud del genotipo
+// No devuelve nada (todo se hace por referencia)
 void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_genotipo) {
-    if (destino == NULL || origen == NULL) return;
-    
-    // Crear una población temporal nueva
+    // Crea una población temporal nueva
     poblacion *nueva = crear_poblacion(origen->tamano, longitud_genotipo);
-    if (nueva == NULL) return;
-    
-    // Copiar los datos
+
+    // Copia los datos
     for (int i = 0; i < origen->tamano; i++) {
         for (int j = 0; j < longitud_genotipo; j++) {
             nueva->individuos[i].genotipo[j] = origen->individuos[i].genotipo[j];
         }
         nueva->individuos[i].fitness = origen->individuos[i].fitness;
     }
-    
-    // Liberar la población antigua si existe
+
+    // Libera la población antigua si existe
     if (*destino != NULL) {
         for (int i = 0; i < (*destino)->tamano; i++) {
             if ((*destino)->individuos[i].genotipo != NULL) {
@@ -54,14 +48,19 @@ void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_g
         }
         free(*destino);
     }
-    
-    // Asignar la nueva población
+
+    // Asigna la nueva población
     *destino = nueva;
 }
 
+// Libera la memoria usada por una población
+// Recibe un puntero a la población
+// No devuelve nada (todo se hace por referencia)
 void liberar_poblacion(poblacion *pob) {
+    // Verifica si la población es nula
     if (pob == NULL) return;
-    
+
+    // Libera la memoria de los genotipos de cada individuo
     if (pob->individuos != NULL) {
         for (int i = 0; i < pob->tamano; i++) {
             if (pob->individuos[i].genotipo != NULL) {
@@ -72,17 +71,23 @@ void liberar_poblacion(poblacion *pob) {
         free(pob->individuos);
         pob->individuos = NULL;
     }
+
+    // Libera la memoria de la población
     free(pob);
 }
 
+// Crea permutaciones aleatorias para cada individuo de la población
+// Recibe un puntero a la población y la longitud del genotipo
+// No devuelve nada (todo se hace por referencia)
 void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
     for (int i = 0; i < poblacion->tamano; i++) {
-        // Crear permutación aleatoria para el genotipo
+        
+        // Inicializa el genotipo con valores ordenados
         for (int j = 0; j < longitud_genotipo; j++) {
             poblacion->individuos[i].genotipo[j] = j;
         }
-
-        // Mezclar el genotipo utilizando el algoritmo de Fisher-Yates
+        
+        // Mezcla el genotipo utilizando el algoritmo de Fisher-Yates
         for (int j = longitud_genotipo - 1; j > 0; j--) {
             int k = rand() % (j + 1);
             int temp = poblacion->individuos[i].genotipo[j];
@@ -92,7 +97,9 @@ void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
     }
 }
 
-// Función para evaluar un individuo
+// Función para calcular la distancia total recorrida por el individuo (fitness)
+// Recibe un genotipo, una matriz de distancias y la longitud del genotipo
+// Devuelve el fitness del individuo
 double evaluar_individuo(int *genotipo, double **distancias, int longitud_genotipo) {
     double total_cost = 0.0;
     for (int i = 0; i < longitud_genotipo - 1; i++) {
@@ -102,63 +109,75 @@ double evaluar_individuo(int *genotipo, double **distancias, int longitud_genoti
     return total_cost;
 }
 
-// Función para evaluar una población
+// Evalua la población basándose en las distancias entre las ciudades (fitness)
+// Recibe un puntero a la población, una matriz de distancias y la longitud del genotipo
+// No devuelve nada (todo se hace por referencia)
 void evaluar_poblacion(poblacion *poblacion, double **distancias, int longitud_genotipo) {
-    // Evaluar cada individuo de la población
+    // Evalua cada individuo de la población
     for (int i = 0; i < poblacion->tamano; i++) {
         poblacion->individuos[i].fitness = evaluar_individuo(
             poblacion->individuos[i].genotipo, distancias, longitud_genotipo);
     }
 }
 
+// Muta a un individuo basado en una probabilidad de mutación
+// Recibe un puntero al individuo, una matriz de distancias, la probabilidad de mutación y la longitud del genotipo
+// No devuelve nada (todo se hace por referencia)
 void mutar_individuo(individuo *individuo, double **distancias, double probabilidad_mutacion, int longitud_genotipo) {
-    // Generar un número aleatorio y determinar si se realiza la mutación
+    // Genera un número aleatorio y determina si se realiza la mutación
     if ((double)rand() / RAND_MAX < probabilidad_mutacion) {
-        // Generar dos índices aleatorios distintos
+
+        // Genera dos índices aleatorios distintos
         int idx1 = rand() % longitud_genotipo;
         int idx2 = rand() % longitud_genotipo;
         while (idx1 == idx2) {
             idx2 = rand() % longitud_genotipo;
         }
 
-        // Intercambiar los genes en las posiciones idx1 e idx2
+        // Intercambia los genes en las posiciones idx1 e idx2
         int temp = individuo->genotipo[idx1];
         individuo->genotipo[idx1] = individuo->genotipo[idx2];
         individuo->genotipo[idx2] = temp;
 
-        // Recalcular el fitness del individuo usando la nueva evaluar_individuo
+        // Recalcula el fitness del individuo usando la nueva evaluar_individuo
         individuo->fitness = evaluar_individuo(individuo->genotipo, distancias, longitud_genotipo);
     }
 }
 
+// Cruza a los padres para generar a los hijos dependiendo de una probabilidad de cruce
+// Recibe un puntero a la población destino, un puntero a la población origen y la longitud del genotipo
+// No devuelve nada (todo se hace por referencia)
 void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int longitud_genotipo, int m, double **distancias, double probabilidad_cruce) {
     for (int i = 0; i < num_pob; i += 2) {
-        // Decidir si se realiza el cruce basado en la probabilidad
+        // Genera un número aleatorio y determina si se realiza la cruza
         if ((double)rand() / RAND_MAX < probabilidad_cruce) {
-            // Aplicar cycle crossover y heurística de mejora
+
+            // Se asigna memoria para los hijos
             int *hijo1 = malloc(longitud_genotipo * sizeof(int));
             int *hijo2 = malloc(longitud_genotipo * sizeof(int));
 
+            // Cruza los padres para generar a dos hijos
             cycle_crossover(padres->individuos[i].genotipo, padres->individuos[i + 1].genotipo, hijo1, longitud_genotipo);
             cycle_crossover(padres->individuos[i + 1].genotipo, padres->individuos[i].genotipo, hijo2, longitud_genotipo);
 
             heuristica_abruptos(hijo1, longitud_genotipo, m, distancias);
             heuristica_abruptos(hijo2, longitud_genotipo, m, distancias);
 
-            // Crear array temporal para almacenar los individuos
+            // Crea un array temporal para almacenar los individuos
             int **individuos = malloc(4 * sizeof(int *));
             individuos[0] = padres->individuos[i].genotipo;
             individuos[1] = padres->individuos[i + 1].genotipo;
             individuos[2] = hijo1;
             individuos[3] = hijo2;
 
+            // Evalua a los individuos
             individuo temp_hijos[4];
             for (int j = 0; j < 4; j++) {
                 temp_hijos[j].genotipo = individuos[j];
                 temp_hijos[j].fitness = evaluar_individuo(individuos[j], distancias, longitud_genotipo);
             }
 
-            // Seleccionar los mejores dos individuos
+            // Selecciona los mejores dos individuos
             int mejores_indices[2] = {0, 1};
             for (int j = 2; j < 4; j++) {
                 if (temp_hijos[j].fitness < temp_hijos[mejores_indices[0]].fitness) {
@@ -169,7 +188,7 @@ void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int lon
                 }
             }
 
-            // Asignar los mejores individuos a los hijos
+            // Asigna los mejores individuos a los hijos
             for (int j = 0; j < longitud_genotipo; j++) {
                 hijos->individuos[i].genotipo[j] = individuos[mejores_indices[0]][j];
                 hijos->individuos[i + 1].genotipo[j] = individuos[mejores_indices[1]][j];
@@ -177,13 +196,13 @@ void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int lon
             hijos->individuos[i].fitness = temp_hijos[mejores_indices[0]].fitness;
             hijos->individuos[i + 1].fitness = temp_hijos[mejores_indices[1]].fitness;
 
-            // Liberar memoria de los hijos temporales
+            // Libera memoria de los hijos temporales
             free(hijo1);
             free(hijo2);
             free(individuos);
             
         } else {
-            // Si no hay cruce, copiar los padres directamente a los hijos
+            // Si no hay cruce, copia los padres directamente a los hijos
             for (int j = 0; j < longitud_genotipo; j++) {
                 hijos->individuos[i].genotipo[j] = padres->individuos[i].genotipo[j];
                 hijos->individuos[i + 1].genotipo[j] = padres->individuos[i + 1].genotipo[j];
@@ -195,6 +214,8 @@ void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int lon
 }
 
 // Función de comparación para qsort
+// Recibe dos punteros a distancia ordenada
+// Devuelve un entero que indica la relación entre las distancias
 int comparar_distancias(const void* a, const void* b) {
     DistanciaOrdenada* da = (DistanciaOrdenada*)a;
     DistanciaOrdenada* db = (DistanciaOrdenada*)b;
@@ -204,6 +225,8 @@ int comparar_distancias(const void* a, const void* b) {
 }
 
 // Función para insertar un elemento en una posición específica del array
+// Recibe un puntero al array, la longitud del array, el elemento a insertar y la posición
+// No devuelve nada (todo se hace por referencia)
 void insertar_en_posicion(int* array, int longitud, int elemento, int posicion) {
     for (int i = longitud - 1; i > posicion; i--) {
         array[i] = array[i - 1];
@@ -212,51 +235,56 @@ void insertar_en_posicion(int* array, int longitud, int elemento, int posicion) 
 }
 
 // Función para eliminar un elemento de una posición específica
+// Recibe un puntero al array, la longitud del array y la posición
+// No devuelve nada (todo se hace por referencia)
 void eliminar_de_posicion(int* array, int longitud, int posicion) {
     for (int i = posicion; i < longitud - 1; i++) {
         array[i] = array[i + 1];
     }
 }
 
-// Heurística optimizada de remoción de abruptos
-void heuristica_abruptos(int* ruta, int longitud_genotipo, int m, double** distancias) {
-    // Arreglo temporal para manipulación de rutas
-    int* ruta_temp = malloc(longitud_genotipo * sizeof(int));
+// Heurística para remover abruptos en la ruta intercambiando ciudades mal posicionadas
+// Recibe un puntero a la ruta, el número de ciudades total (longitud del genotipo), el número de ciudades más cercanas a considerar y la matriz de distancias
+// No devuelve nada (todo se hace por referencia)
+void heuristica_abruptos(int* ruta, int num_ciudades, int m, double** distancias) {
+    // Inicializamos memoria para un arreglo temporal para la manipulación de rutas
+    int* ruta_temp = malloc(num_ciudades * sizeof(int));
 
-    // Estructura para ordenar distancias
-    DistanciaOrdenada* dist_ordenadas = malloc(longitud_genotipo * sizeof(DistanciaOrdenada));
+    // Inicializamos meemoria para la estructura que sirve para ordenar distancias
+    DistanciaOrdenada* dist_ordenadas = malloc(num_ciudades * sizeof(DistanciaOrdenada));
 
     // Para cada ciudad en la ruta
-    for (int i = 0; i < longitud_genotipo; i++) {
+    for (int i = 0; i < num_ciudades; i++) {
         int ciudad_actual = ruta[i];
         
-        // Obtener y ordenar las m ciudades más cercanas
-        for (int j = 0; j < longitud_genotipo; j++) {
+        // Se obtiene y ordenan las m ciudades más cercanas
+        for (int j = 0; j < num_ciudades; j++) {
             dist_ordenadas[j].distancia = distancias[ciudad_actual][j];
             dist_ordenadas[j].indice = j;
         }
-        qsort(dist_ordenadas, longitud_genotipo, sizeof(DistanciaOrdenada), comparar_distancias);
+        qsort(dist_ordenadas, num_ciudades, sizeof(DistanciaOrdenada), comparar_distancias);
 
-        // Encontrar posición actual
+        // Encontramos la posición actual de la ciudad en la ruta
         int pos_actual = -1;
-        for (int j = 0; j < longitud_genotipo; j++) {
+        for (int j = 0; j < num_ciudades; j++) {
             if (ruta[j] == ciudad_actual) {
                 pos_actual = j;
                 break;
             }
         }
 
-        double mejor_costo = evaluar_individuo(ruta, distancias, longitud_genotipo);
+        // Inicializamos el mejor costo con el costo actual
+        double mejor_costo = evaluar_individuo(ruta, distancias, num_ciudades);
         int mejor_posicion = pos_actual;
         int mejor_vecino = -1;
 
-        // Probar inserción con las m ciudades más cercanas
-        for (int j = 1; j <= m && j < longitud_genotipo; j++) {
+        // Probamos la inserción con las m ciudades más cercanas
+        for (int j = 1; j <= m && j < num_ciudades; j++) {
             int ciudad_cercana = dist_ordenadas[j].indice;
             
-            // Encontrar posición de la ciudad cercana
+            // Encontramos la posición de la ciudad cercana
             int pos_cercana = -1;
-            for (int k = 0; k < longitud_genotipo; k++) {
+            for (int k = 0; k < num_ciudades; k++) {
                 if (ruta[k] == ciudad_cercana) {
                     pos_cercana = k;
                     break;
@@ -265,21 +293,22 @@ void heuristica_abruptos(int* ruta, int longitud_genotipo, int m, double** dista
 
             if (pos_cercana != -1) {
                 // Probar inserción antes y después de la ciudad cercana
-                for (int offset = 0; offset <= 1; offset++) {
-                    memcpy(ruta_temp, ruta, longitud_genotipo * sizeof(int));
+                for (int posicion_antes_o_despues = 0; posicion_antes_o_despues <= 1; posicion_antes_o_despues++) {
+                    memcpy(ruta_temp, ruta, num_ciudades * sizeof(int));
                     
                     // Eliminar de posición actual
-                    eliminar_de_posicion(ruta_temp, longitud_genotipo, pos_actual);
+                    eliminar_de_posicion(ruta_temp, num_ciudades, pos_actual);
                     
-                    // Insertar en nueva posición
-                    int nueva_pos = pos_cercana + offset;
+                    // Insertar en nueva posición (antes o después de la ciudad cercana)
+                    int nueva_pos = pos_cercana + posicion_antes_o_despues;
                     if (nueva_pos > pos_actual) nueva_pos--;
-                    if (nueva_pos >= longitud_genotipo) nueva_pos = longitud_genotipo - 1;
+                    if (nueva_pos >= num_ciudades) nueva_pos = num_ciudades - 1;
+                    insertar_en_posicion(ruta_temp, num_ciudades, ciudad_actual, nueva_pos);
+
+                    // Evaluar el nuevo costo
+                    double nuevo_costo = evaluar_individuo(ruta_temp, distancias, num_ciudades);
                     
-                    insertar_en_posicion(ruta_temp, longitud_genotipo, ciudad_actual, nueva_pos);
-                    
-                    double nuevo_costo = evaluar_individuo(ruta_temp, distancias, longitud_genotipo);
-                    
+                    // Actualizar el mejor costo y posición de la ciudad actual si es necesario
                     if (nuevo_costo < mejor_costo) {
                         mejor_costo = nuevo_costo;
                         mejor_posicion = nueva_pos;
@@ -289,38 +318,41 @@ void heuristica_abruptos(int* ruta, int longitud_genotipo, int m, double** dista
             }
         }
 
-        // Aplicar el mejor movimiento encontrado
+        // Si se encontró un mejor vecino, actualizar la ruta
         if (mejor_vecino != -1 && mejor_posicion != pos_actual) {
-            memcpy(ruta_temp, ruta, longitud_genotipo * sizeof(int));
-            eliminar_de_posicion(ruta_temp, longitud_genotipo, pos_actual);
-            insertar_en_posicion(ruta_temp, longitud_genotipo, ciudad_actual, mejor_posicion);
-            memcpy(ruta, ruta_temp, longitud_genotipo * sizeof(int));
+            memcpy(ruta_temp, ruta, num_ciudades * sizeof(int));
+            eliminar_de_posicion(ruta_temp, num_ciudades, pos_actual);
+            insertar_en_posicion(ruta_temp, num_ciudades, ciudad_actual, mejor_posicion);
+            memcpy(ruta, ruta_temp, num_ciudades * sizeof(int));
         }
     }
 
-    // Liberar memoria
+    // Liberamos memoria
     free(ruta_temp);
     free(dist_ordenadas);
 }
 
-// Cycle crossover
-void cycle_crossover(int *padre1, int *padre2, int *hijo, int longitud_genotipo) {
-    // Inicializar el hijo con -1 (marca de no visitado)
-    for (int i = 0; i < longitud_genotipo; i++) {
+// Cruza a dos padres para generar a dos hijos mediante el operador de ciclo
+// Recibe los genotipos de los padres, el genotipo del hijo y el numero de ciudades total (longitud del genotipo)
+// No devuelve nada (todo se hace por referencia)
+void cycle_crossover(int *padre1, int *padre2, int *hijo, int num_ciudades) {
+    // Inicializamos el hijo con -1 en todo su genotipo (marca de no visitado)
+    for (int i = 0; i < num_ciudades; i++) {
         hijo[i] = -1;
     }
 
-    // Array para marcar posiciones visitadas
-    int *visitado = calloc(longitud_genotipo, sizeof(int));
+    // Inicializamos un array para marcar las posiciones ya visitadas
+    int *visitado = calloc(num_ciudades, sizeof(int));
 
+    // Inicializamos un ciclo para seguir el ciclo de los padres
     int ciclo = 0;
-    int posiciones_restantes = longitud_genotipo;
+    int posiciones_restantes = num_ciudades;
 
-    // Mientras queden posiciones por visitar
+    // Realizamos el cambio de ciclo mientras queden posiciones por visitar 
     while (posiciones_restantes > 0) {
-        // Encontrar la primera posición no visitada
+        // Encontramos la primera posición no visitada
         int inicio = -1;
-        for (int i = 0; i < longitud_genotipo; i++) {
+        for (int i = 0; i < num_ciudades; i++) {
             if (!visitado[i]) {
                 inicio = i;
                 break;
@@ -330,41 +362,49 @@ void cycle_crossover(int *padre1, int *padre2, int *hijo, int longitud_genotipo)
         ciclo++;
         int actual = inicio;
 
-        // Seguir el ciclo hasta que se cierre
+        // Seguimos un ciclo hasta que se cierre
         while (1) {
-            // Marcar como visitado
+            // Marcamos la posición actual como visitada
             visitado[actual] = 1;
             posiciones_restantes--;
 
-            // Asignar valor según el número de ciclo
+            // Asignamos el valor del padre correspondiente al hijo (dependiendo del ciclo)
             hijo[actual] = (ciclo % 2 == 1) ? padre1[actual] : padre2[actual];
 
-            // Encontrar la siguiente posición
+            // Encontramos la siguiente posición en el ciclo
             int valor_buscar = padre2[actual];
             int siguiente = -1;
-            for (int i = 0; i < longitud_genotipo; i++) {
+            for (int i = 0; i < num_ciudades; i++) {
                 if (padre1[i] == valor_buscar) {
                     siguiente = i;
                     break;
                 }
             }
 
-            // Si la siguiente posición ya fue visitada, terminar este ciclo
+            // Si la siguiente posición ya fue visitada, terminamos este ciclo
             if (visitado[siguiente]) {
                 break;
             }
+
+            // Actualizamos la posición actual
             actual = siguiente;
         }
     }
+
+    // Liberamos la memoria usada para el array de visitados
     free(visitado);
 }
 
-
+// Selección de padres mediante un torneo de fitness
+// Recibe un puntero a la población, un puntero a la población de padres, el número de competidores y la longitud del genotipo
+// No devuelve nada (todo se hace por referencia)
 void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_competidores, int longitud_genotipo) {
+    // Inicializamos un array para los índices de los competidores
     int tamano_poblacion = Poblacion->tamano;
     int tamano_padres = padres->tamano;
     int *indices_torneo = malloc(num_competidores * sizeof(int));
 
+    
     for (int i = 0; i < tamano_poblacion; i++) {
         // Seleccionar al azar los competidores del torneo
         for (int j = 0; j < num_competidores; j++) {
