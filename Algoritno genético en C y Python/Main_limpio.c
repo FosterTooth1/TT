@@ -46,6 +46,17 @@ int main(int argc, char** argv){
     }
     fclose(archivo);
 
+    // Creamos un arreglo con los nombres de las ciudades
+    char nombres_ciudades[32][19] = {
+        "Aguascalientes", "Baja California", "Baja California Sur",
+        "Campeche", "Chiapas", "Chihuahua", "Coahuila", "Colima", "Durango",
+        "Guanajuato", "Guerrero", "Hidalgo", "Jalisco", "Estado de México",
+        "Michoacán", "Morelos", "Nayarit", "Nuevo León", "Oaxaca", "Puebla",
+        "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora",
+        "Tabasco", "Tamaulipas", "Tlaxcala", "Veracruz", "Yucatán",
+        "Zacatecas", "CDMX"
+    };
+
     // Inicializamos la población
     poblacion *Poblacion = crear_poblacion(tamano_poblacion, longitud_genotipo);
     poblacion *padres = crear_poblacion(tamano_poblacion, longitud_genotipo);    
@@ -106,6 +117,12 @@ int main(int argc, char** argv){
         printf("%d  ", Mejor_Individuo->genotipo[i]);
     }
     printf(" Fitness: %f\n", Mejor_Individuo->fitness);
+
+    // Imprimimos el recorrido
+    printf("Recorrido: ");
+    for (int i = 0; i < longitud_genotipo; i++) {
+        printf("%s -> ", nombres_ciudades[Mejor_Individuo->genotipo[i]]);
+    }
 
     // Liberamos la memoria de todos los elementos
     liberar_poblacion(Poblacion);
