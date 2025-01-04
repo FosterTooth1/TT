@@ -1,0 +1,78 @@
+#ifndef BIBLIOTECA_CUDA_H
+#define BIBLIOTECA_CUDA_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+#include <curand_kernel.h>
+
+// Estructuras
+typedef struct {
+    int *genotipo;
+    double fitness;
+} individuo;
+
+typedef struct {
+    individuo *individuos;
+    int tamano;
+} poblacion;
+
+typedef struct {
+    double distancia;
+    int indice;
+} DistanciaOrdenada;
+
+// Estructuras para GPU
+typedef struct {
+    int *genotipo;
+    double fitness;
+} individuo_gpu;
+
+typedef struct {
+    individuo_gpu *individuos;
+    int tamano;
+} poblacion_gpu;
+
+// Estructura auxiliar para ordenar distancias en GPU
+struct DistanciaOrdenadaGPU {
+    double distancia;
+    int indice;
+};
+
+// Funciones principales
+poblacion *crear_poblacion(int tamano, int longitud_genotipo);
+void crear_permutaciones(poblacion *poblacion, int longitud_genotipo);
+__global__ void evaluar_poblacion_kernel(individuo_gpu *poblacion, double *distancias, int tamano_poblacion, int longitud_genotipo);
+__device__ double evaluar_individuo_gpu(int *ruta, double *distancias, int num_ciudades);
+void ordenar_poblacion(poblacion *poblacion);
+__global__ void seleccionar_padres_kernel(individuo_gpu *poblacion, individuo_gpu *padres, int *indices_torneo, int num_competidores, int tamano_poblacion, int longitud_genotipo, curandState *states);
+__global__ void cruzar_individuos_kernel(individuo_gpu *padres, individuo_gpu *hijos, double *distancias, double prob_cruce, int tamano_poblacion, int longitud_genotipo, int m, curandState *states);
+__global__ void mutar_individuos_kernel(individuo_gpu *individuos, double *distancias, double prob_mutacion, int tamano_poblacion, int longitud_genotipo, curandState *states);
+void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_genotipo);
+void liberar_poblacion(poblacion *poblacion);
+
+// Funciones CUDA
+__global__ void setup_curand_kernel(curandState *states, unsigned long seed);
+void obtenerConfiguracionCUDA(int *blockSize, int *minGridSize, int *gridSize, int N);
+
+
+// Funciones auxiliares
+__device__ void heuristica_abruptos_gpu(int *ruta, int num_ciudades, int m, double *distancias)
+__device__ int comparar_distancias_gpu(DistanciaOrdenada a, DistanciaOrdenada b);
+__device__ void insertar_en_posicion_gpu(int* array, int longitud, int elemento, int posicion);
+__device__ void eliminar_de_posicion_gpu(int* array, int longitud, int posicion);
+
+// Funciones de ordenamiento
+void introsort_util(individuo *arr, int *profundidad_max, int inicio, int fin);
+int log2_suelo(int n);
+int particion(individuo *arr, int bajo, int alto);
+int mediana_de_tres(individuo *arr, int a, int b, int c);
+void intercambiar_individuos(individuo *a, individuo *b);
+void insertion_sort(individuo *arr, int izquierda, int derecha);
+void heapsort(individuo *arr, int n);
+void heapify(individuo *arr, int n, int i);
+
+#endif
