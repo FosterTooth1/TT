@@ -82,18 +82,21 @@ void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
 // Recibe un puntero a la población, una matriz de distancias y la longitud del genotipo
 // No devuelve nada (todo se hace por referencia)
 // Kernel para evaluar toda la población
-__global__ void evaluar_poblacion_kernel(individuo_gpu *poblacion, double *distancias, int tamano_poblacion, int longitud_genotipo) {
+__global__ void evaluar_poblacion_kernel(individuo_gpu *poblacion, double *distancias,
+                                         int tamano_poblacion, int longitud_genotipo) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= tamano_poblacion) return;
 
     double total_cost = 0.0;
     int *genotipo = poblacion[idx].genotipo;
 
+    // Calcular costo total de la ruta (fitness)
     for (int i = 0; i < longitud_genotipo - 1; i++) {
         total_cost += distancias[genotipo[i] * longitud_genotipo + genotipo[i + 1]];
     }
     total_cost += distancias[genotipo[longitud_genotipo - 1] * longitud_genotipo + genotipo[0]];
     
+    // Asignar fitness al individuo
     poblacion[idx].fitness = total_cost;
 }
 
@@ -129,29 +132,28 @@ void ordenar_poblacion(poblacion *poblacion) {
 // Kernel para selección de padres por torneo
 // Recibe un puntero a la población, un puntero a la población de padres, el número de competidores y la longitud del genotipo
 // No devuelve nada (todo se hace por referencia)
-__global__ void seleccionar_padres_kernel(individuo_gpu *poblacion, individuo_gpu *padres, int *indices_torneo, 
-                                        int num_competidores, int tamano_poblacion, int longitud_genotipo, 
-                                        curandState *states) {
+__global__ void seleccionar_padres_kernel(individuo_gpu *poblacion, individuo_gpu *padres,
+                                           int num_competidores, int tamano_poblacion,
+                                           int longitud_genotipo, curandState *states) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= tamano_poblacion) return;
 
-    // Generamos índices aleatorios para el torneo
-    int indice_ganador = 0;
+    int mejor_idx = -1;
     double mejor_fitness = 1e9;
 
     for (int i = 0; i < num_competidores; i++) {
-        int indice_actual = (int)(curand_uniform(&states[idx]) * tamano_poblacion);
-        if (poblacion[indice_actual].fitness < mejor_fitness) {
-            mejor_fitness = poblacion[indice_actual].fitness;
-            indice_ganador = indice_actual;
+        int rand_idx = curand(&states[idx]) % tamano_poblacion;
+        if (poblacion[rand_idx].fitness < mejor_fitness) {
+            mejor_fitness = poblacion[rand_idx].fitness;
+            mejor_idx = rand_idx;
         }
     }
 
-    // Copiamos el ganador a la población de padres
-    for (int i = 0; i < longitud_genotipo; i++) {
-        padres[idx].genotipo[i] = poblacion[indice_ganador].genotipo[i];
+    // Copiar el mejor individuo al arreglo de padres
+    for (int j = 0; j < longitud_genotipo; j++) {
+        padres[idx].genotipo[j] = poblacion[mejor_idx].genotipo[j];
     }
-    padres[idx].fitness = poblacion[indice_ganador].fitness;
+    padres[idx].fitness = poblacion[mejor_idx].fitness;
 }
 
 // Cruza a los padres para generar a los hijos dependiendo de una probabilidad de cruce

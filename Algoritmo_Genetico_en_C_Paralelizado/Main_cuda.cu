@@ -134,9 +134,13 @@ int main(int argc, char** argv) {
               tamano_poblacion * sizeof(individuo_gpu), cudaMemcpyHostToDevice));
 
     // Evaluar población inicial
-    evaluar_poblacion_kernel<<<gridSize, blockSize>>>(d_poblacion, d_genotipos, 
-                                                     d_distancias, tamano_poblacion, 
-                                                     longitud_genotipo);
+    // En lugar de 5 argumentos, solo 4 (coincidiendo con el kernel).
+    evaluar_poblacion_kernel<<<gridSize, blockSize>>>(
+        d_poblacion,
+        d_distancias,
+        tamano_poblacion,
+        longitud_genotipo
+    );
     
     // Copiar resultados de vuelta a CPU
     gpuErrchk(cudaMemcpy(Poblacion->individuos, d_poblacion,
@@ -155,10 +159,15 @@ int main(int argc, char** argv) {
     // Bucle principal del algoritmo genético
     for(int generacion = 0; generacion < num_generaciones; generacion++) {
         // Selección de padres
-        seleccionar_padres_kernel<<<gridSize, blockSize>>>(d_poblacion, d_padres, 
-                                                          d_genotipos, num_competidores, 
-                                                          tamano_poblacion, longitud_genotipo, 
-                                                          d_states);
+        // En lugar de 7 argumentos, solo 6.
+        seleccionar_padres_kernel<<<gridSize, blockSize>>>(
+            d_poblacion,
+            d_padres,
+            num_competidores,
+            tamano_poblacion,
+            longitud_genotipo,
+            d_states
+        );
         cudaDeviceSynchronize();
         gpuErrchk(cudaGetLastError());
 
@@ -186,12 +195,14 @@ int main(int argc, char** argv) {
                   tamano_poblacion * sizeof(individuo), cudaMemcpyHostToDevice));
 
         // Evaluar nueva población
-        evaluar_poblacion_kernel<<<gridSize, blockSize>>>(d_poblacion, d_genotipos,
-                                                         d_distancias, tamano_poblacion, 
-                                                         longitud_genotipo);
-        gpuErrchk(cudaMemcpy(Poblacion->individuos, d_poblacion,
-                  tamano_poblacion * sizeof(individuo), cudaMemcpyDeviceToHost));
-
+        evaluar_poblacion_kernel<<<gridSize, blockSize>>>(
+            d_poblacion,
+            d_distancias,
+            tamano_poblacion,
+            longitud_genotipo
+        );
+        cudaDeviceSynchronize();
+        gpuErrchk(cudaGetLastError());
         ordenar_poblacion(Poblacion);
 
         // Actualizar mejor individuo si se encuentra uno mejor
