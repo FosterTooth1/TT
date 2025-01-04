@@ -1,5 +1,14 @@
 #include "Biblioteca_cuda.h"
 
+// Macro para manejo de errores CUDA
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true) {
+    if (code != cudaSuccess) {
+        fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+        if (abort) exit(code);
+    }
+}
+
 int main(int argc, char** argv) {
     // Iniciamos la medición del tiempo
     time_t inicio = time(NULL);
@@ -15,12 +24,12 @@ int main(int argc, char** argv) {
     double probabilidad_cruce = 0.99;
 
     // Nombre del archivo con las distancias
-    char *nombre_archivo = "Distancias_no_head.csv";
+    const char *nombre_archivo = "Distancias_no_head.csv";  // Cambiado a const char*
 
     // Reservamos memoria para la matriz que almacena las distancias
-    double **distancias = malloc(longitud_genotipo * sizeof(double *));
+    double **distancias = (double **)malloc(longitud_genotipo * sizeof(double *));  // Cast explícito añadido
     for (int i = 0; i < longitud_genotipo; i++) {
-        distancias[i] = malloc(longitud_genotipo * sizeof(double));
+        distancias[i] = (double *)malloc(longitud_genotipo * sizeof(double));  // Cast explícito añadido
     }
 
     // Abrimos el archivo
@@ -46,7 +55,7 @@ int main(int argc, char** argv) {
     fclose(archivo);
 
     // Creamos un arreglo con los nombres de las ciudades
-    char nombres_ciudades[32][19] = {
+    const char nombres_ciudades[32][20] = {  // Aumentado tamaño a 20 y cambiado a const
         "Aguascalientes", "Baja California", "Baja California Sur",
         "Campeche", "Chiapas", "Chihuahua", "Coahuila", "Colima", "Durango",
         "Guanajuato", "Guerrero", "Hidalgo", "Jalisco", "Estado de México",
@@ -76,7 +85,7 @@ int main(int argc, char** argv) {
               longitud_genotipo * longitud_genotipo * sizeof(double), 
               cudaMemcpyHostToDevice));
 
-    // Configuración de bloques y grids
+     // Configuración de bloques
     int blockSize;
     int minGridSize;
     int gridSize;
@@ -92,6 +101,19 @@ int main(int argc, char** argv) {
     poblacion *padres = crear_poblacion(tamano_poblacion, longitud_genotipo);    
     poblacion *hijos = crear_poblacion(tamano_poblacion, longitud_genotipo);
 
+    // Verify population initialization
+    if (Poblacion == NULL || Poblacion->individuos == NULL) {
+        fprintf(stderr, "Error: Population not properly initialized\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < tamano_poblacion; i++) {
+        if (Poblacion->individuos[i].genotipo == NULL) {
+            fprintf(stderr, "Error: Genotype %d not properly initialized\n", i);
+            exit(EXIT_FAILURE);
+        }
+    }
+
     // Crear estructuras equivalentes en GPU
     individuo_gpu *d_poblacion, *d_padres, *d_hijos;
     gpuErrchk(cudaMalloc(&d_poblacion, tamano_poblacion * sizeof(individuo_gpu)));
@@ -100,27 +122,56 @@ int main(int argc, char** argv) {
 
     // Alocar memoria para los genotipos en GPU
     int **d_genotipos_poblacion, **d_genotipos_padres, **d_genotipos_hijos;
-    gpuErrchk(cudaMalloc(&d_genotipos_poblacion, tamano_poblacion * sizeof(int*)));
-    gpuErrchk(cudaMalloc(&d_genotipos_padres, tamano_poblacion * sizeof(int*)));
-    gpuErrchk(cudaMalloc(&d_genotipos_hijos, tamano_poblacion * sizeof(int*)));
+    if (cudaMalloc(&d_genotipos_poblacion, tamano_poblacion * sizeof(int*)) != cudaSuccess) {
+    fprintf(stderr, "Failed to allocate device memory for genotype pointers\n");
+    exit(EXIT_FAILURE);
+    }
 
     // Alocar memoria para cada genotipo individual
     for(int i = 0; i < tamano_poblacion; i++) {
-        int *d_genotipo;
-        gpuErrchk(cudaMalloc(&d_genotipo, longitud_genotipo * sizeof(int)));
-        gpuErrchk(cudaMemcpy(&d_genotipos_poblacion[i], &d_genotipo, sizeof(int*), cudaMemcpyHostToDevice));
+        // Para población
+        int *d_genotipo_poblacion;
+        gpuErrchk(cudaMalloc(&d_genotipo_poblacion, longitud_genotipo * sizeof(int)));
+        gpuErrchk(cudaMemcpy(d_genotipo_poblacion, Poblacion->individuos[i].genotipo, 
+                            longitud_genotipo * sizeof(int), 
+                            cudaMemcpyHostToDevice));
         
-        gpuErrchk(cudaMalloc(&d_genotipo, longitud_genotipo * sizeof(int)));
-        gpuErrchk(cudaMemcpy(&d_genotipos_padres[i], &d_genotipo, sizeof(int*), cudaMemcpyHostToDevice));
+        int *temp_ptr_poblacion = d_genotipo_poblacion;
+        gpuErrchk(cudaMemcpy(d_genotipos_poblacion + i, &temp_ptr_poblacion, 
+                            sizeof(int*), 
+                            cudaMemcpyHostToDevice));
+
+        // Para padres
+        int *d_genotipo_padres;
+        gpuErrchk(cudaMalloc(&d_genotipo_padres, longitud_genotipo * sizeof(int)));
+        gpuErrchk(cudaMemcpy(d_genotipo_padres, padres->individuos[i].genotipo, 
+                            longitud_genotipo * sizeof(int), 
+                            cudaMemcpyHostToDevice));
         
-        gpuErrchk(cudaMalloc(&d_genotipo, longitud_genotipo * sizeof(int)));
-        gpuErrchk(cudaMemcpy(&d_genotipos_hijos[i], &d_genotipo, sizeof(int*), cudaMemcpyHostToDevice));
+        int *temp_ptr_padres = d_genotipo_padres;
+        gpuErrchk(cudaMemcpy(d_genotipos_padres + i, &temp_ptr_padres, 
+                            sizeof(int*), 
+                            cudaMemcpyHostToDevice));
+
+        // Para hijos
+        int *d_genotipo_hijos;
+        gpuErrchk(cudaMalloc(&d_genotipo_hijos, longitud_genotipo * sizeof(int)));
+        gpuErrchk(cudaMemcpy(d_genotipo_hijos, hijos->individuos[i].genotipo, 
+                            longitud_genotipo * sizeof(int), 
+                            cudaMemcpyHostToDevice));
+        
+        int *temp_ptr_hijos = d_genotipo_hijos;
+        gpuErrchk(cudaMemcpy(d_genotipos_hijos + i, &temp_ptr_hijos, 
+                            sizeof(int*), 
+                            cudaMemcpyHostToDevice));
     }
 
-    // Modificar la copia de la población inicial a GPU
-    for(int i = 0; i < tamano_poblacion; i++) {
-        gpuErrchk(cudaMemcpy(d_genotipos_poblacion[i], Poblacion->individuos[i].genotipo, 
-                longitud_genotipo * sizeof(int), cudaMemcpyHostToDevice));
+    // Verificar asignación de memoria
+    for (int i = 0; i < tamano_poblacion; i++) {
+        if (Poblacion->individuos[i].genotipo == NULL) {
+            fprintf(stderr, "Error: genotipo del individuo %d no está asignado\n", i);
+            exit(EXIT_FAILURE);
+        }
     }
 
     // Creamos permutaciones aleatorias iniciales
@@ -131,7 +182,7 @@ int main(int argc, char** argv) {
               tamano_poblacion * sizeof(individuo_gpu), cudaMemcpyHostToDevice));
 
     // Evaluamos la población inicial
-    evaluar_poblacion_kernel<<<numBlocks, blockSize>>>(d_poblacion, d_distancias, 
+    evaluar_poblacion_kernel<<<gridSize, blockSize>>>(d_poblacion, d_distancias, 
                                                       tamano_poblacion, longitud_genotipo);
     
     // Copiamos resultados de vuelta a CPU para ordenamiento

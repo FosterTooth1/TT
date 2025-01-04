@@ -27,20 +27,33 @@ void obtenerConfiguracionCUDA(int *blockSize, int *minGridSize, int *gridSize, i
 //Recibe el tamaño de la población y la longitud del genotipo
 //Devuelve un puntero a la población creada
 poblacion *crear_poblacion(int tamano, int longitud_genotipo) {
-    // Asigna memoria para la estructura de la población
-    poblacion *Poblacion = malloc(sizeof(poblacion));
-
-    // Asigna memoria para los individuos
-    Poblacion->tamano = tamano;
-    Poblacion->individuos = malloc(tamano * sizeof(individuo));
-
-    // Asigna memoria para los genotipos de cada individuo
-    for(int i = 0; i < tamano; i++) {
-        Poblacion->individuos[i].genotipo = malloc(longitud_genotipo * sizeof(int));
-
-        // Inicializa el fitness en 0
-        Poblacion->individuos[i].fitness = 0;
+    poblacion *Poblacion = (poblacion *)malloc(sizeof(poblacion));
+    if (Poblacion == NULL) {
+        fprintf(stderr, "Error al asignar memoria para Poblacion\n");
+        exit(EXIT_FAILURE);
     }
+
+    Poblacion->tamano = tamano;
+    Poblacion->individuos = (individuo *)malloc(tamano * sizeof(individuo));
+    if (Poblacion->individuos == NULL) {
+        fprintf(stderr, "Error al asignar memoria para individuos\n");
+        free(Poblacion);
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < tamano; i++) {
+        Poblacion->individuos[i].genotipo = (int *)malloc(longitud_genotipo * sizeof(int));
+        if (Poblacion->individuos[i].genotipo == NULL) {
+            fprintf(stderr, "Error al asignar memoria para genotipo del individuo %d\n", i);
+            for (int j = 0; j < i; j++) {
+                free(Poblacion->individuos[j].genotipo);
+            }
+            free(Poblacion->individuos);
+            free(Poblacion);
+            exit(EXIT_FAILURE);
+        }
+    }
+
     return Poblacion;
 }
 
@@ -618,7 +631,6 @@ __device__ int comparar_distancias_gpu(DistanciaOrdenadaGPU a, DistanciaOrdenada
 // Recibe un puntero al array, la longitud del array, el elemento a insertar y la posición
 // No devuelve nada (todo se hace por referencia)
 __device__ void insertar_en_posicion_gpu(int *ruta, int num_ciudades, int ciudad, int pos) {
-    int ultimo = ruta[num_ciudades - 1];
     for (int i = num_ciudades - 1; i > pos; i--) {
         ruta[i] = ruta[i - 1];
     }
