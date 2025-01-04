@@ -1,5 +1,7 @@
 #include "Biblioteca_c_limpio.h"
 
+//Funciones principales del algoritmo genético
+
 //Asigna memoria para una población
 //Recibe el tamaño de la población y la longitud del genotipo
 //Devuelve un puntero a la población creada
@@ -19,61 +21,6 @@ poblacion *crear_poblacion(int tamano, int longitud_genotipo) {
         Poblacion->individuos[i].fitness = 0;
     }
     return Poblacion;
-}
-
-// Actualiza la población destino copiando los datos de la población origen
-// Recibe un puntero a la población destino, un puntero a la población origen y la longitud del genotipo
-// No devuelve nada (todo se hace por referencia)
-void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_genotipo) {
-    // Crea una población temporal nueva
-    poblacion *nueva = crear_poblacion(origen->tamano, longitud_genotipo);
-
-    // Copia los datos
-    for (int i = 0; i < origen->tamano; i++) {
-        for (int j = 0; j < longitud_genotipo; j++) {
-            nueva->individuos[i].genotipo[j] = origen->individuos[i].genotipo[j];
-        }
-        nueva->individuos[i].fitness = origen->individuos[i].fitness;
-    }
-
-    // Libera la población antigua si existe
-    if (*destino != NULL) {
-        for (int i = 0; i < (*destino)->tamano; i++) {
-            if ((*destino)->individuos[i].genotipo != NULL) {
-                free((*destino)->individuos[i].genotipo);
-            }
-        }
-        if ((*destino)->individuos != NULL) {
-            free((*destino)->individuos);
-        }
-        free(*destino);
-    }
-
-    // Asigna la nueva población
-    *destino = nueva;
-}
-
-// Libera la memoria usada por una población
-// Recibe un puntero a la población
-// No devuelve nada (todo se hace por referencia)
-void liberar_poblacion(poblacion *pob) {
-    // Verifica si la población es nula
-    if (pob == NULL) return;
-
-    // Libera la memoria de los genotipos de cada individuo
-    if (pob->individuos != NULL) {
-        for (int i = 0; i < pob->tamano; i++) {
-            if (pob->individuos[i].genotipo != NULL) {
-                free(pob->individuos[i].genotipo);
-                pob->individuos[i].genotipo = NULL;
-            }
-        }
-        free(pob->individuos);
-        pob->individuos = NULL;
-    }
-
-    // Libera la memoria de la población
-    free(pob);
 }
 
 // Crea permutaciones aleatorias para cada individuo de la población
@@ -97,6 +44,17 @@ void crear_permutaciones(poblacion *poblacion, int longitud_genotipo) {
     }
 }
 
+// Evalua la población basándose en las distancias entre las ciudades (fitness)
+// Recibe un puntero a la población, una matriz de distancias y la longitud del genotipo
+// No devuelve nada (todo se hace por referencia)
+void evaluar_poblacion(poblacion *poblacion, double **distancias, int longitud_genotipo) {
+    // Evalua cada individuo de la población
+    for (int i = 0; i < poblacion->tamano; i++) {
+        poblacion->individuos[i].fitness = evaluar_individuo(
+            poblacion->individuos[i].genotipo, distancias, longitud_genotipo);
+    }
+}
+
 // Función para calcular la distancia total recorrida por el individuo (fitness)
 // Recibe un genotipo, una matriz de distancias y la longitud del genotipo
 // Devuelve el fitness del individuo
@@ -109,39 +67,63 @@ double evaluar_individuo(int *genotipo, double **distancias, int longitud_genoti
     return total_cost;
 }
 
-// Evalua la población basándose en las distancias entre las ciudades (fitness)
-// Recibe un puntero a la población, una matriz de distancias y la longitud del genotipo
+// Función principal de ordenamiento para la población
+// Recibe un puntero a la población
 // No devuelve nada (todo se hace por referencia)
-void evaluar_poblacion(poblacion *poblacion, double **distancias, int longitud_genotipo) {
-    // Evalua cada individuo de la población
-    for (int i = 0; i < poblacion->tamano; i++) {
-        poblacion->individuos[i].fitness = evaluar_individuo(
-            poblacion->individuos[i].genotipo, distancias, longitud_genotipo);
-    }
+void ordenar_poblacion(poblacion *poblacion) {
+    // Obtenemos el tamaño de la población
+    int n = poblacion->tamano;
+    
+    // Si la población igual o menor a 1, no se hace nada
+    if (n <= 1) return;
+    
+    // Calculamos la profundidad máxima de recursión
+    int profundidad_max = 2 * log2_suelo(n);
+    
+    // Llamamos a la función auxiliar de ordenamiento introspectivo
+    introsort_util(poblacion->individuos, &profundidad_max, 0, n);
 }
 
-// Muta a un individuo basado en una probabilidad de mutación
-// Recibe un puntero al individuo, una matriz de distancias, la probabilidad de mutación y la longitud del genotipo
+// Selección de padres mediante un torneo de fitness
+// Recibe un puntero a la población, un puntero a la población de padres, el número de competidores y la longitud del genotipo
 // No devuelve nada (todo se hace por referencia)
-void mutar_individuo(individuo *individuo, double **distancias, double probabilidad_mutacion, int longitud_genotipo) {
-    // Genera un número aleatorio y determina si se realiza la mutación
-    if ((double)rand() / RAND_MAX < probabilidad_mutacion) {
+void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_competidores, int longitud_genotipo) {
+    // Inicializamos un array para los índices de los competidores
+    int tamano_poblacion = Poblacion->tamano;
+    int *indices_torneo = malloc(num_competidores * sizeof(int));
 
-        // Genera dos índices aleatorios distintos
-        int idx1 = rand() % longitud_genotipo;
-        int idx2 = rand() % longitud_genotipo;
-        while (idx1 == idx2) {
-            idx2 = rand() % longitud_genotipo;
+    // Realizamos un torneo para seleccionar a un padre
+    for (int i = 0; i < tamano_poblacion; i++) {
+
+        // Seleccionamos al azar los competidores del torneo
+        for (int j = 0; j < num_competidores; j++) {
+            indices_torneo[j] = rand() % tamano_poblacion;
         }
 
-        // Intercambia los genes en las posiciones idx1 e idx2
-        int temp = individuo->genotipo[idx1];
-        individuo->genotipo[idx1] = individuo->genotipo[idx2];
-        individuo->genotipo[idx2] = temp;
+        // Encontramos el ganador del torneo evaluando su fitness
+        int indice_ganador = indices_torneo[0];
+        double mejor_fitness = Poblacion->individuos[indices_torneo[0]].fitness;
+        for (int j = 1; j < num_competidores; j++) {
+            int indice_actual = indices_torneo[j];
+            double fitness_actual = Poblacion->individuos[indice_actual].fitness;
 
-        // Recalcula el fitness del individuo usando la nueva evaluar_individuo
-        individuo->fitness = evaluar_individuo(individuo->genotipo, distancias, longitud_genotipo);
+            if (fitness_actual < mejor_fitness) {
+                mejor_fitness = fitness_actual;
+                indice_ganador = indice_actual;
+            }
+        }
+
+        // Copiamos el individuo ganador a la población de padres
+        for (int j = 0; j < longitud_genotipo; j++) {
+            padres->individuos[i].genotipo[j] = Poblacion->individuos[indice_ganador].genotipo[j];
+        }
+
+        // Copiamos el fitness del ganador
+        padres->individuos[i].fitness = Poblacion->individuos[indice_ganador].fitness;
     }
+
+    // Liberamos la memoria usada para los índices
+    free(indices_torneo);
 }
 
 // Cruza a los padres para generar a los hijos dependiendo de una probabilidad de cruce
@@ -213,35 +195,86 @@ void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int lon
     }
 }
 
-// Función de comparación para qsort
-// Recibe dos punteros a distancia ordenada
-// Devuelve un entero que indica la relación entre las distancias
-int comparar_distancias(const void* a, const void* b) {
-    DistanciaOrdenada* da = (DistanciaOrdenada*)a;
-    DistanciaOrdenada* db = (DistanciaOrdenada*)b;
-    if (da->distancia < db->distancia) return -1;
-    if (da->distancia > db->distancia) return 1;
-    return 0;
-}
-
-// Función para insertar un elemento en una posición específica del array
-// Recibe un puntero al array, la longitud del array, el elemento a insertar y la posición
+// Muta a un individuo basado en una probabilidad de mutación
+// Recibe un puntero al individuo, una matriz de distancias, la probabilidad de mutación y la longitud del genotipo
 // No devuelve nada (todo se hace por referencia)
-void insertar_en_posicion(int* array, int longitud, int elemento, int posicion) {
-    for (int i = longitud - 1; i > posicion; i--) {
-        array[i] = array[i - 1];
-    }
-    array[posicion] = elemento;
-}
+void mutar_individuo(individuo *individuo, double **distancias, double probabilidad_mutacion, int longitud_genotipo) {
+    // Genera un número aleatorio y determina si se realiza la mutación
+    if ((double)rand() / RAND_MAX < probabilidad_mutacion) {
 
-// Función para eliminar un elemento de una posición específica
-// Recibe un puntero al array, la longitud del array y la posición
-// No devuelve nada (todo se hace por referencia)
-void eliminar_de_posicion(int* array, int longitud, int posicion) {
-    for (int i = posicion; i < longitud - 1; i++) {
-        array[i] = array[i + 1];
+        // Genera dos índices aleatorios distintos
+        int idx1 = rand() % longitud_genotipo;
+        int idx2 = rand() % longitud_genotipo;
+        while (idx1 == idx2) {
+            idx2 = rand() % longitud_genotipo;
+        }
+
+        // Intercambia los genes en las posiciones idx1 e idx2
+        int temp = individuo->genotipo[idx1];
+        individuo->genotipo[idx1] = individuo->genotipo[idx2];
+        individuo->genotipo[idx2] = temp;
+
+        // Recalcula el fitness del individuo usando la nueva evaluar_individuo
+        individuo->fitness = evaluar_individuo(individuo->genotipo, distancias, longitud_genotipo);
     }
 }
+
+// Actualiza la población destino copiando los datos de la población origen
+// Recibe un puntero a la población destino, un puntero a la población origen y la longitud del genotipo
+// No devuelve nada (todo se hace por referencia)
+void actualizar_poblacion(poblacion **destino, poblacion *origen, int longitud_genotipo) {
+    // Crea una población temporal nueva
+    poblacion *nueva = crear_poblacion(origen->tamano, longitud_genotipo);
+
+    // Copia los datos
+    for (int i = 0; i < origen->tamano; i++) {
+        for (int j = 0; j < longitud_genotipo; j++) {
+            nueva->individuos[i].genotipo[j] = origen->individuos[i].genotipo[j];
+        }
+        nueva->individuos[i].fitness = origen->individuos[i].fitness;
+    }
+
+    // Libera la población antigua si existe
+    if (*destino != NULL) {
+        for (int i = 0; i < (*destino)->tamano; i++) {
+            if ((*destino)->individuos[i].genotipo != NULL) {
+                free((*destino)->individuos[i].genotipo);
+            }
+        }
+        if ((*destino)->individuos != NULL) {
+            free((*destino)->individuos);
+        }
+        free(*destino);
+    }
+
+    // Asigna la nueva población
+    *destino = nueva;
+}
+
+// Libera la memoria usada por una población
+// Recibe un puntero a la población
+// No devuelve nada (todo se hace por referencia)
+void liberar_poblacion(poblacion *pob) {
+    // Verifica si la población es nula
+    if (pob == NULL) return;
+
+    // Libera la memoria de los genotipos de cada individuo
+    if (pob->individuos != NULL) {
+        for (int i = 0; i < pob->tamano; i++) {
+            if (pob->individuos[i].genotipo != NULL) {
+                free(pob->individuos[i].genotipo);
+                pob->individuos[i].genotipo = NULL;
+            }
+        }
+        free(pob->individuos);
+        pob->individuos = NULL;
+    }
+
+    // Libera la memoria de la población
+    free(pob);
+}
+
+// Funciones auxiliares del cruzamiento
 
 // Heurística para remover abruptos en la ruta intercambiando ciudades mal posicionadas
 // Recibe un puntero a la ruta, el número de ciudades total (longitud del genotipo), el número de ciudades más cercanas a considerar y la matriz de distancias
@@ -395,143 +428,44 @@ void cycle_crossover(int *padre1, int *padre2, int *hijo, int num_ciudades) {
     free(visitado);
 }
 
-// Selección de padres mediante un torneo de fitness
-// Recibe un puntero a la población, un puntero a la población de padres, el número de competidores y la longitud del genotipo
+// Funciones auxiliares de ordenamiento
+
+// Implementación de ordenamiento introspectivo
+// Recibe un array de individuos, la profundidad máxima de recursión, el índice de inicio y fin
 // No devuelve nada (todo se hace por referencia)
-void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_competidores, int longitud_genotipo) {
-    // Inicializamos un array para los índices de los competidores
-    int tamano_poblacion = Poblacion->tamano;
-    int *indices_torneo = malloc(num_competidores * sizeof(int));
-
-    // Realizamos un torneo para seleccionar a un padre
-    for (int i = 0; i < tamano_poblacion; i++) {
-
-        // Seleccionamos al azar los competidores del torneo
-        for (int j = 0; j < num_competidores; j++) {
-            indices_torneo[j] = rand() % tamano_poblacion;
-        }
-
-        // Encontramos el ganador del torneo evaluando su fitness
-        int indice_ganador = indices_torneo[0];
-        double mejor_fitness = Poblacion->individuos[indices_torneo[0]].fitness;
-        for (int j = 1; j < num_competidores; j++) {
-            int indice_actual = indices_torneo[j];
-            double fitness_actual = Poblacion->individuos[indice_actual].fitness;
-
-            if (fitness_actual < mejor_fitness) {
-                mejor_fitness = fitness_actual;
-                indice_ganador = indice_actual;
-            }
-        }
-
-        // Copiamos el individuo ganador a la población de padres
-        for (int j = 0; j < longitud_genotipo; j++) {
-            padres->individuos[i].genotipo[j] = Poblacion->individuos[indice_ganador].genotipo[j];
-        }
-
-        // Copiamos el fitness del ganador
-        padres->individuos[i].fitness = Poblacion->individuos[indice_ganador].fitness;
+void introsort_util(individuo *arr, int *profundidad_max, int inicio, int fin) {
+    // Calculamos el tamaño de la partición
+    int tamano = fin - inicio;
+    
+    // Si el tamaño de la partición es pequeño, usamos el ordenamiento por inserción
+    if (tamano < 16) {
+        insertion_sort(arr, inicio, fin - 1);
+        return;
     }
-
-    // Liberamos la memoria usada para los índices
-    free(indices_torneo);
+    
+    // Si la profundidad máxima es cero, cambiamos a heapsort (para evitar peor caso de quicksort)
+    if (*profundidad_max == 0) {
+        heapsort(arr + inicio, tamano);
+        return;
+    }
+    
+    // En caso contrario, usamos quicksort
+    (*profundidad_max)--;
+    int pivote = particion(arr, inicio, fin - 1);
+    introsort_util(arr, profundidad_max, inicio, pivote);
+    introsort_util(arr, profundidad_max, pivote + 1, fin);
 }
 
-// Función auxiliar para heapsort
-// Recibe un array de individuos, el tamaño del array y un índice
-// No devuelve nada (todo se hace por referencia)
-void heapify(individuo *arr, int n, int i) {
-    // Inicializamos el mayor como el indice actual
-    int mayor = i;
-
-    // Calculamos los indices de los hijos izquierdo y derecho
-    int izquierda = 2 * i + 1;
-    int derecha = 2 * i + 2;
-
-    // Si el hijo izquierdo es mayor que el padre actualizamos el mayor
-    if (izquierda < n && arr[izquierda].fitness > arr[mayor].fitness)
-        mayor = izquierda;
-
-    // Si el hijo derecho es mayor que el padre actualizamos el mayor
-    if (derecha < n && arr[derecha].fitness > arr[mayor].fitness)
-        mayor = derecha;
-
-    // Si el mayor no es el padre, intercambiamos y aplicamos heapify al subárbol
-    if (mayor != i) {
-        individuo temp = arr[i];
-        arr[i] = arr[mayor];
-        arr[mayor] = temp;
-        heapify(arr, n, mayor);
+// Función para calcular el logaritmo en base 2 de un número entero (parte entera)
+// Recibe un número entero
+// Devuelve el logaritmo en base 2 (parte entera)
+int log2_suelo(int n) {
+    int log = 0;
+    while (n > 1) {
+        n >>= 1;
+        log++;
     }
-}
-
-// Heapsort para ordenar a los individuos por fitness
-// Recibe un array de individuos y el tamaño del array
-// No devuelve nada (todo se hace por referencia)
-void heapsort(individuo *arr, int n) {
-    // Construimos el montón (heapify)
-    for (int i = n / 2 - 1; i >= 0; i--)
-        heapify(arr, n, i);
-
-    // Extraemos los elementos del montón uno por uno
-    for (int i = n - 1; i > 0; i--) {
-        individuo temp = arr[0];
-        arr[0] = arr[i];
-        arr[i] = temp;
-        heapify(arr, i, 0);
-    }
-}
-
-// Ordenamiento por inserción para arreglos pequeños
-// Recibe un array de individuos, el índice izquierdo y derecho
-// No devuelve nada (todo se hace por referencia)
-void insertion_sort(individuo *arr, int izquierda, int derecha) {
-    // Recorremos el array de izquierda a derecha
-    for (int i = izquierda + 1; i <= derecha; i++) {
-        // Insertamos el elemento actual en la posición correcta
-        individuo clave = arr[i];
-        int j = i - 1;
-        
-        // Movemos los elementos mayores que la clave a una posición adelante
-        while (j >= izquierda && arr[j].fitness > clave.fitness) {
-            arr[j + 1] = arr[j];
-            j--;
-        }
-
-        // Insertamos la clave en la posición correcta
-        arr[j + 1] = clave;
-    }
-}
-
-// Función para intercambiar dos elementos
-// Recibe dos punteros a individuos
-// No devuelve nada (todo se hace por referencia)
-void intercambiar_individuos(individuo *a, individuo *b) {
-    individuo temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
-// Función para encontrar la mediana de tres elementos (usado en quicksort para mejorar el balanceo)
-// Recibe un array de individuos y tres índices
-// Devuelve el índice de la mediana
-int mediana_de_tres(individuo *arr, int a, int b, int c) {
-    // Se realizan comparaciones lógicas para encontrar la mediana
-    if (arr[a].fitness <= arr[b].fitness) {
-        if (arr[b].fitness <= arr[c].fitness)
-            return b;
-        else if (arr[a].fitness <= arr[c].fitness)
-            return c;
-        else
-            return a;
-    } else {
-        if (arr[a].fitness <= arr[c].fitness)
-            return a;
-        else if (arr[b].fitness <= arr[c].fitness)
-            return c;
-        else
-            return b;
-    }
+    return log;
 }
 
 // Partición de quicksort usando la mediana de tres como pivote
@@ -567,57 +501,131 @@ int particion(individuo *arr, int bajo, int alto) {
     return i + 1;
 }
 
-// Función para calcular el logaritmo en base 2 de un número entero (parte entera)
-// Recibe un número entero
-// Devuelve el logaritmo en base 2 (parte entera)
-int log2_suelo(int n) {
-    int log = 0;
-    while (n > 1) {
-        n >>= 1;
-        log++;
+// Función para encontrar la mediana de tres elementos (usado en quicksort para mejorar el balanceo)
+// Recibe un array de individuos y tres índices
+// Devuelve el índice de la mediana
+int mediana_de_tres(individuo *arr, int a, int b, int c) {
+    // Se realizan comparaciones lógicas para encontrar la mediana
+    if (arr[a].fitness <= arr[b].fitness) {
+        if (arr[b].fitness <= arr[c].fitness)
+            return b;
+        else if (arr[a].fitness <= arr[c].fitness)
+            return c;
+        else
+            return a;
+    } else {
+        if (arr[a].fitness <= arr[c].fitness)
+            return a;
+        else if (arr[b].fitness <= arr[c].fitness)
+            return c;
+        else
+            return b;
     }
-    return log;
 }
 
-// Implementación de ordenamiento introspectivo
-// Recibe un array de individuos, la profundidad máxima de recursión, el índice de inicio y fin
+// Función para intercambiar dos elementos
+// Recibe dos punteros a individuos
 // No devuelve nada (todo se hace por referencia)
-void introsort_util(individuo *arr, int *profundidad_max, int inicio, int fin) {
-    // Calculamos el tamaño de la partición
-    int tamano = fin - inicio;
-    
-    // Si el tamaño de la partición es pequeño, usamos el ordenamiento por inserción
-    if (tamano < 16) {
-        insertion_sort(arr, inicio, fin - 1);
-        return;
-    }
-    
-    // Si la profundidad máxima es cero, cambiamos a heapsort (para evitar peor caso de quicksort)
-    if (*profundidad_max == 0) {
-        heapsort(arr + inicio, tamano);
-        return;
-    }
-    
-    // En caso contrario, usamos quicksort
-    (*profundidad_max)--;
-    int pivote = particion(arr, inicio, fin - 1);
-    introsort_util(arr, profundidad_max, inicio, pivote);
-    introsort_util(arr, profundidad_max, pivote + 1, fin);
+void intercambiar_individuos(individuo *a, individuo *b) {
+    individuo temp = *a;
+    *a = *b;
+    *b = temp;
 }
 
-// Función principal de ordenamiento para la población
-// Recibe un puntero a la población
+// Ordenamiento por inserción para arreglos pequeños
+// Recibe un array de individuos, el índice izquierdo y derecho
 // No devuelve nada (todo se hace por referencia)
-void ordenar_poblacion(poblacion *poblacion) {
-    // Obtenemos el tamaño de la población
-    int n = poblacion->tamano;
-    
-    // Si la población igual o menor a 1, no se hace nada
-    if (n <= 1) return;
-    
-    // Calculamos la profundidad máxima de recursión
-    int profundidad_max = 2 * log2_suelo(n);
-    
-    // Llamamos a la función auxiliar de ordenamiento introspectivo
-    introsort_util(poblacion->individuos, &profundidad_max, 0, n);
+void insertion_sort(individuo *arr, int izquierda, int derecha) {
+    // Recorremos el array de izquierda a derecha
+    for (int i = izquierda + 1; i <= derecha; i++) {
+        // Insertamos el elemento actual en la posición correcta
+        individuo clave = arr[i];
+        int j = i - 1;
+        
+        // Movemos los elementos mayores que la clave a una posición adelante
+        while (j >= izquierda && arr[j].fitness > clave.fitness) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+
+        // Insertamos la clave en la posición correcta
+        arr[j + 1] = clave;
+    }
+}
+
+// Heapsort para ordenar a los individuos por fitness
+// Recibe un array de individuos y el tamaño del array
+// No devuelve nada (todo se hace por referencia)
+void heapsort(individuo *arr, int n) {
+    // Construimos el montón (heapify)
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapify(arr, n, i);
+
+    // Extraemos los elementos del montón uno por uno
+    for (int i = n - 1; i > 0; i--) {
+        individuo temp = arr[0];
+        arr[0] = arr[i];
+        arr[i] = temp;
+        heapify(arr, i, 0);
+    }
+}
+
+// Función auxiliar para heapsort
+// Recibe un array de individuos, el tamaño del array y un índice
+// No devuelve nada (todo se hace por referencia)
+void heapify(individuo *arr, int n, int i) {
+    // Inicializamos el mayor como el indice actual
+    int mayor = i;
+
+    // Calculamos los indices de los hijos izquierdo y derecho
+    int izquierda = 2 * i + 1;
+    int derecha = 2 * i + 2;
+
+    // Si el hijo izquierdo es mayor que el padre actualizamos el mayor
+    if (izquierda < n && arr[izquierda].fitness > arr[mayor].fitness)
+        mayor = izquierda;
+
+    // Si el hijo derecho es mayor que el padre actualizamos el mayor
+    if (derecha < n && arr[derecha].fitness > arr[mayor].fitness)
+        mayor = derecha;
+
+    // Si el mayor no es el padre, intercambiamos y aplicamos heapify al subárbol
+    if (mayor != i) {
+        individuo temp = arr[i];
+        arr[i] = arr[mayor];
+        arr[mayor] = temp;
+        heapify(arr, n, mayor);
+    }
+}
+
+//Funciones auxiliares de manipulación de arreglos (Usadas en la heurística de remoción de abruptos)
+
+// Función de comparación para qsort
+// Recibe dos punteros a distancia ordenada
+// Devuelve un entero que indica la relación entre las distancias
+int comparar_distancias(const void* a, const void* b) {
+    DistanciaOrdenada* da = (DistanciaOrdenada*)a;
+    DistanciaOrdenada* db = (DistanciaOrdenada*)b;
+    if (da->distancia < db->distancia) return -1;
+    if (da->distancia > db->distancia) return 1;
+    return 0;
+}
+
+// Función para insertar un elemento en una posición específica del array
+// Recibe un puntero al array, la longitud del array, el elemento a insertar y la posición
+// No devuelve nada (todo se hace por referencia)
+void insertar_en_posicion(int* array, int longitud, int elemento, int posicion) {
+    for (int i = longitud - 1; i > posicion; i--) {
+        array[i] = array[i - 1];
+    }
+    array[posicion] = elemento;
+}
+
+// Función para eliminar un elemento de una posición específica
+// Recibe un puntero al array, la longitud del array y la posición
+// No devuelve nada (todo se hace por referencia)
+void eliminar_de_posicion(int* array, int longitud, int posicion) {
+    for (int i = posicion; i < longitud - 1; i++) {
+        array[i] = array[i + 1];
+    }
 }

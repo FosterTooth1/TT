@@ -52,22 +52,22 @@ void heuristica_abruptos(int *ruta, int num_ciudades, int m, double **distancias
 void cycle_crossover(int *padre1, int *padre2, int *hijo, int num_ciudades);
 
 //Funciones auxiliares de ordenamiento
-//Heapify es una función auxiliar para heapsort
-void heapify(individuo *arr, int n, int i);
-//Heapsort es un algoritmo de ordenamiento basado en árboles binarios
-void heapsort(individuo *arr, int n);
-//Insertion sort es un algoritmo de ordenamiento simple y eficiente para arreglos pequeños
-void insertion_sort(individuo *arr, int izquierda, int derecha);
-//Intercambia dos individuos (Funcion auxiliar de Introsort en especifico para el QuickSort)
-void intercambiar_individuos(individuo *a, individuo *b);
-//Calcula la mediana de tres elementos (Funcion auxiliar de Introsort en especifico para el QuickSort)
-int mediana_de_tres(individuo *arr, int a, int b, int c);
-//Particiona el arreglo para el QuickSort (Funcion auxiliar de Introsort en especifico para el QuickSort)
-int particion(individuo *arr, int bajo, int alto);
-//Calcula el logaritmo base 2 de un número para medir la profundidad de recursividad que puede alzanzar QuickSort
-int log2_suelo(int n);
 // Introsort es un algoritmo de ordenamiento híbrido que combina QuickSort, HeapSort e InsertionSort
 void introsort_util(individuo *arr, int *profundidad_max, int inicio, int fin);
+//Calcula el logaritmo base 2 de un número para medir la profundidad de recursividad que puede alcanzar QuickSort
+int log2_suelo(int n);
+//Particiona el arreglo para el QuickSort (Funcion auxiliar de Introsort en especifico para el QuickSort)
+int particion(individuo *arr, int bajo, int alto);
+//Calcula la mediana de tres elementos (Funcion auxiliar de Introsort en especifico para el QuickSort)
+int mediana_de_tres(individuo *arr, int a, int b, int c);
+//Intercambia dos individuos (Funcion auxiliar de Introsort en especifico para el QuickSort)
+void intercambiar_individuos(individuo *a, individuo *b);
+//Insertion sort es un algoritmo de ordenamiento simple y eficiente para arreglos pequeños
+void insertion_sort(individuo *arr, int izquierda, int derecha);
+//Heapsort es un algoritmo de ordenamiento basado en árboles binarios
+void heapsort(individuo *arr, int n);
+//Heapify es una función auxiliar para heapsort
+void heapify(individuo *arr, int n, int i);
 
 //Funciones auxiliares de manipulación de arreglos (Usadas en la heurística de remoción de abruptos)
 //Compara dos distancias para ordenarlas
