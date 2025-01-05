@@ -138,8 +138,6 @@ EXPORT ResultadoGenetico* ejecutar_algoritmo_genetico_ventanas_tiempo(
 
     // Finalizamos la medición del tiempo
     time_t fin = time(NULL);
-
-    // Imprimimos el tiempo de ejecución
     double tiempo_ejecucion = difftime(fin, inicio);
 
     // Preparamos el resultado para devolverlo a Python
