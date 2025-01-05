@@ -18,11 +18,11 @@ class AlgoritmoGenetico:
         # Cargamos la biblioteca compartida desde la ruta proporcionada
         self.biblioteca = ctypes.CDLL(ruta_biblioteca)
         
-        # Configuramos el tipo de retorno de la función `ejecutar_algoritmo_genetico`
-        self.biblioteca.ejecutar_algoritmo_genetico.restype = POINTER(ResultadoGenetico)
+        # Configuramos el tipo de retorno de la función `ejecutar_algoritmo_genetico_ventanas_tiempo`
+        self.biblioteca.ejecutar_algoritmo_genetico_ventanas_tiempo.restype = POINTER(ResultadoGenetico)
         
-        # Especificamos los tipos de argumentos que espera `ejecutar_algoritmo_genetico`
-        self.biblioteca.ejecutar_algoritmo_genetico.argtypes = [
+        # Especificamos los tipos de argumentos que espera `ejecutar_algoritmo_genetico_ventanas_tiempo`
+        self.biblioteca.ejecutar_algoritmo_genetico_ventanas_tiempo.argtypes = [
             c_int,      # tamano_poblacion
             c_int,      # longitud_genotipo
             c_int,      # num_generaciones
@@ -30,21 +30,22 @@ class AlgoritmoGenetico:
             c_int,      # m parametro de heurística
             c_double,   # probabilidad_mutacion
             c_double,   # probabilidad_cruce
-            c_char_p    # nombre_archivo (ruta al archivo con matriz de distancias)
+            c_char_p,    # nombre_archivo (ruta al archivo con matriz de distancias)
+            c_int       # km_hr
         ]
         
         # Configuramos los argumentos de la función para liberar resultados
         self.biblioteca.liberar_resultado.argtypes = [POINTER(ResultadoGenetico)]
 
-    def ejecutar(self, tamano_poblacion=50, longitud_genotipo=32, num_generaciones=100,
-                 num_competidores=2, m=3, probabilidad_mutacion=0.15, 
-                 probabilidad_cruce=0.99, nombre_archivo="Distancias_no_head.csv"):
+    def ejecutar(self, tamano_poblacion, longitud_genotipo, num_generaciones,
+                 num_competidores, m, probabilidad_mutacion, 
+                 probabilidad_cruce, nombre_archivo, km_hr):
         try:
             # Convertimos el nombre del archivo a una cadena de bytes
             nombre_archivo_bytes = nombre_archivo.encode('utf-8')
             
-            # Llamamos a la función `ejecutar_algoritmo_genetico` de la biblioteca C
-            resultado = self.biblioteca.ejecutar_algoritmo_genetico(
+            # Llamamos a la función `ejecutar_algoritmo_genetico_ventanas_tiempo` de la biblioteca C
+            resultado = self.biblioteca.ejecutar_algoritmo_genetico_ventanas_tiempo(
                 tamano_poblacion,
                 longitud_genotipo,
                 num_generaciones,
@@ -52,7 +53,8 @@ class AlgoritmoGenetico:
                 m,
                 probabilidad_mutacion,
                 probabilidad_cruce,
-                nombre_archivo_bytes
+                nombre_archivo_bytes,
+                km_hr
             )
             
             # Verificamos si la función devolvió un resultado válido
@@ -91,7 +93,7 @@ def main():
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
     
     # Definimos el nombre del archivo de la biblioteca compartida según el sistema operativo
-    nombre_biblioteca = "genetic_algo.dll" if os.name == 'nt' else "libgenetic_algo.so"
+    nombre_biblioteca = "genetic_algo_vent.dll" if os.name == 'nt' else "libgenetic_algo_vent.so"
     ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
     
     # Verificamos que el archivo de la biblioteca existe en la ruta especificada
@@ -102,14 +104,15 @@ def main():
     ag = AlgoritmoGenetico(ruta_biblioteca)
     
     # Definir los parámetros para el algoritmo genético
-    tamano_poblacion = 50
+    tamano_poblacion = 1000
     longitud_genotipo = 32
     num_generaciones = 100
     num_competidores = 2
     m = 3
-    probabilidad_mutacion = 0.15
-    probabilidad_cruce = 0.99
+    probabilidad_mutacion = 0.3
+    probabilidad_cruce = 0.9
     nombre_archivo = "Distancias_no_head.csv"
+    km_hr = 80
     
     # Ejecutar el algoritmo genético con estos parámetros
     resultado = ag.ejecutar(
@@ -120,7 +123,8 @@ def main():
         m=m,
         probabilidad_mutacion=probabilidad_mutacion,
         probabilidad_cruce=probabilidad_cruce,
-        nombre_archivo=nombre_archivo
+        nombre_archivo=nombre_archivo,
+        km_hr=km_hr
     )
     
     # Mostrar los resultados
