@@ -6,10 +6,10 @@ int main(int argc, char** argv){
 
     // Parámetros del algoritmo genético
     srand(time(NULL));
-    int tamano_poblacion = 50;
+    int tamano_poblacion = 100000;
     int longitud_genotipo = 32;
-    int num_generaciones = 100;
-    int num_competidores = 2;
+    int num_generaciones  = 100;
+    int num_competidores  = 2;
     int m = 3;
     double probabilidad_mutacion = 0.15;
     double probabilidad_cruce = 0.99;
