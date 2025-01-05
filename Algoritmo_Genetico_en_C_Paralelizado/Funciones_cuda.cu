@@ -74,23 +74,46 @@ __global__ void cruzar_individuos_kernel(individuo_gpu *padres, individuo_gpu *h
 {
     // 1) Cada bloque tiene "blockDim.x" hilos. 
     //    Usamos "extern __shared__ int sMem[]" para la memoria compartida dinámica.
-    extern __shared__ int sMem[];  // Se define en la llamada del kernel (ver más abajo).
+    extern __shared__ unsigned char sMem[]; 
+
 
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= tamano_poblacion / 2) return;
 
-    // 2) Para cada thread, apartamos 3*longitud_genotipo int:
-    //    - hijo1[longitud_genotipo]
-    //    - hijo2[longitud_genotipo]
-    //    - visitado[longitud_genotipo]
-    // El offset para "este" hilo es:
-    int perThreadSize = 3 * longitud_genotipo;
-    int offset = threadIdx.x * perThreadSize;
+    // blockSize = blockDim.x
+    // Cada hilo "i" dentro del bloque usará un trozo de sMem
 
-    // Apuntadores en shared memory:
-    int *hijo1    = &sMem[offset];
-    int *hijo2    = &sMem[offset + longitud_genotipo];
-    int *visitado = &sMem[offset + 2 * longitud_genotipo];
+    size_t espacioCrossover = 3UL * longitud_genotipo * sizeof(int);  // hijo1,hijo2,visitado
+    size_t espacioHeurRuta  = (size_t)longitud_genotipo * sizeof(int);
+    size_t espacioHeurDist  = (size_t)longitud_genotipo * sizeof(DistanciaOrdenadaGPU);
+
+    size_t totalPorHilo = espacioCrossover + espacioHeurRuta + espacioHeurDist;
+
+    // offset para ESTE hilo (threadIdx.x)
+    size_t offset = (size_t)threadIdx.x * totalPorHilo; 
+    unsigned char* ptrBase = &sMem[offset];
+
+    // 1) Crossover
+    // a) hijo1: int[longitud_genotipo]
+    int* hijo1 = reinterpret_cast<int*>(ptrBase);
+    ptrBase += longitud_genotipo * sizeof(int);
+
+    // b) hijo2: int[longitud_genotipo]
+    int* hijo2 = reinterpret_cast<int*>(ptrBase);
+    ptrBase += longitud_genotipo * sizeof(int);
+
+    // c) visitado: int[longitud_genotipo]
+    int* visitado = reinterpret_cast<int*>(ptrBase);
+    ptrBase += longitud_genotipo * sizeof(int);
+
+    // 2) Heurística
+    // a) ruta_temp: int[longitud_genotipo]
+    int* ruta_temp = reinterpret_cast<int*>(ptrBase);
+    ptrBase += longitud_genotipo * sizeof(int);
+
+    // b) dist_ordenadas: DistanciaOrdenadaGPU[longitud_genotipo]
+    DistanciaOrdenadaGPU* dist_ordenadas = reinterpret_cast<DistanciaOrdenadaGPU*>(ptrBase);
+    ptrBase += longitud_genotipo * sizeof(DistanciaOrdenadaGPU);
 
     // idx2 indica qué par (padre1, padre2) estamos trabajando
     int idx2 = idx * 2;
@@ -123,8 +146,9 @@ __global__ void cruzar_individuos_kernel(individuo_gpu *padres, individuo_gpu *h
         );
 
         // (Opcional) Llamar heurística:
-        heuristica_abruptos_gpu(hijo1, longitud_genotipo, m, distancias);
-        heuristica_abruptos_gpu(hijo2, longitud_genotipo, m, distancias);
+        heuristica_abruptos_gpu(hijo1, longitud_genotipo, m, distancias,ruta_temp, dist_ordenadas);
+
+        heuristica_abruptos_gpu(hijo2, longitud_genotipo, m, distancias,ruta_temp, dist_ordenadas);
 
         // 3) Evaluar padres e hijos
         double fit_p1 = evaluar_individuo_gpu(padres[idx2].genotipo, distancias, longitud_genotipo);
@@ -278,10 +302,12 @@ __device__ double evaluar_individuo_gpu(int *ruta, double *distancias, int num_c
     return fitness;
 }
 
-__device__ void heuristica_abruptos_gpu(int *ruta, int num_ciudades, int m, double *distancias) {
-    // Memoria temporal para manipulación de rutas
-    int *ruta_temp = new int[num_ciudades];
-    DistanciaOrdenadaGPU *dist_ordenadas = new DistanciaOrdenadaGPU[num_ciudades];
+__device__ void heuristica_abruptos_gpu(int *ruta,
+                                        int num_ciudades,
+                                        int m,
+                                        double *distancias,
+                                        int *ruta_temp,
+                                        DistanciaOrdenadaGPU *dist_ordenadas) {
 
     for (int i = 0; i < num_ciudades; i++) {
         int ciudad_actual = ruta[i];
@@ -364,8 +390,6 @@ __device__ void heuristica_abruptos_gpu(int *ruta, int num_ciudades, int m, doub
         }
     }
 
-    delete[] ruta_temp;
-    delete[] dist_ordenadas;
 }
 
 __device__ int comparar_distancias_gpu(DistanciaOrdenadaGPU a, DistanciaOrdenadaGPU b) {

@@ -9,11 +9,11 @@ int main(int argc, char** argv) {
     srand(time(NULL));
     int tamano_poblacion = 100000;
     int longitud_genotipo = 32;
-    int num_generaciones  = 100;
+    int num_generaciones  = 200;
     int num_competidores  = 2;
-    int m = 3;
+    int m = 6;
     double prob_mutacion = 0.15;
-    double prob_cruce    = 0.99;
+    double prob_cruce    = 0.9;
 
     // Cargar archivo de distancias
     const char *nombre_archivo = "Distancias_no_head.csv";
@@ -129,6 +129,18 @@ int main(int argc, char** argv) {
                              cudaMemcpyHostToDevice));
         free(tempHijos);
     }
+    
+    // Ejemplo de blockSize=128, o el que hayas elegido
+    int blockSize_1 = 32;
+    int gridSize_1  = ( (tamano_poblacion/2) + blockSize_1 - 1 ) / blockSize_1;
+
+    // Cálculo de shared memory:
+    size_t espacioCrossover = 3UL * longitud_genotipo * sizeof(int);
+    size_t espacioHeurRuta  = (size_t)longitud_genotipo * sizeof(int);
+    size_t espacioHeurDist  = (size_t)longitud_genotipo * sizeof(DistanciaOrdenadaGPU);
+
+    size_t totalPorHilo = espacioCrossover + espacioHeurRuta + espacioHeurDist;
+    size_t sharedMemSize_1 = blockSize_1 * totalPorHilo;
 
     // ---------------------------------------------------------
     // Copiar la población inicial (CPU->GPU) para d_poblacion
@@ -170,15 +182,11 @@ int main(int argc, char** argv) {
         cudaDeviceSynchronize();
         gpuErrchk(cudaGetLastError());
 
-
         // Cruzamiento
-        blockSize = 128; // o 128
-        gridSize = ( (tamano_poblacion/2) + blockSize - 1 ) / blockSize;
-        size_t sharedMemSize = (size_t)blockSize * 3 * longitud_genotipo * sizeof(int);
-
-        cruzar_individuos_kernel<<<gridSize, blockSize, sharedMemSize>>>(
-            d_padres, d_hijos, d_distancias, 
-            prob_cruce, tamano_poblacion, longitud_genotipo,
+        cruzar_individuos_kernel<<<gridSize_1, blockSize_1, sharedMemSize_1>>>(
+            d_padres, d_hijos,
+            d_distancias, prob_cruce,
+            tamano_poblacion, longitud_genotipo,
             m, d_states
         );
         cudaDeviceSynchronize();
