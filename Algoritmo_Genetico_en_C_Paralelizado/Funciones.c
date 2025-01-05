@@ -70,102 +70,98 @@ __global__ void seleccionar_padres_kernel(individuo_gpu *poblacion, individuo_gp
 __global__ void cruzar_individuos_kernel(individuo_gpu *padres, individuo_gpu *hijos,
                                          double *distancias, double prob_cruce,
                                          int tamano_poblacion, int longitud_genotipo,
-                                         int m, curandState *states) {
+                                         int m, curandState *states)
+{
+    // 1) Cada bloque tiene "blockDim.x" hilos. 
+    //    Usamos "extern __shared__ int sMem[]" para la memoria compartida dinámica.
+    extern __shared__ int sMem[];  // Se define en la llamada del kernel (ver más abajo).
+
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= tamano_poblacion / 2) return;
 
+    // 2) Para cada thread, apartamos 3*longitud_genotipo int:
+    //    - hijo1[longitud_genotipo]
+    //    - hijo2[longitud_genotipo]
+    //    - visitado[longitud_genotipo]
+    // El offset para "este" hilo es:
+    int perThreadSize = 3 * longitud_genotipo;
+    int offset = threadIdx.x * perThreadSize;
+
+    // Apuntadores en shared memory:
+    int *hijo1    = &sMem[offset];
+    int *hijo2    = &sMem[offset + longitud_genotipo];
+    int *visitado = &sMem[offset + 2 * longitud_genotipo];
+
+    // idx2 indica qué par (padre1, padre2) estamos trabajando
     int idx2 = idx * 2;
-    if (curand_uniform(&states[idx]) < prob_cruce) {
-        // Crear espacio temporal en device (manejo con new o malloc en device no es usual, 
-        // pero para ejemplo se puede; 
-        // si tuviéramos “malloc en device” deberíamos usar un buffer. 
-        // Aquí simplificaré asumiendo "new" en device no es usual, 
-        // pero lo mantengo como en tu ejemplo original. Ojo en la práctica.)
 
-        int *hijo1 = new int[longitud_genotipo];
-        int *hijo2 = new int[longitud_genotipo];
+    // Decidimos si hacemos cruce
+    if (curand_uniform(&states[idx]) < prob_cruce)
+    {
+        // 1) Generar hijo1 con cycle_crossover_device(padre1, padre2)
+        cycle_crossover_device(
+            padres[idx2].genotipo,
+            padres[idx2 + 1].genotipo,
+            hijo1,         // => en shared memory
+            visitado,      // => en shared memory
+            longitud_genotipo
+        );
 
-        int *visitado = new int[longitud_genotipo];
-        for(int i=0; i<longitud_genotipo; i++) visitado[i] = 0;
-
-        // Realizar cycle crossover
-        int ciclo = 0;
-        int posiciones_restantes = longitud_genotipo;
+        // 2) Generar hijo2 con cycle_crossover_device(padre2, padre1)
+        //    *Pero* hay que "reiniciar" "visitado" antes de reusar. Lo más fácil:
+        //    reusar la misma "visitado[]" si deseas, o usar un trozo distinto.
+        //    Aquí, por simplicidad, volvemos a poner en 0:
         for (int i = 0; i < longitud_genotipo; i++) {
-            hijo1[i] = -1;
-            hijo2[i] = -1;
+            visitado[i] = 0;
         }
+        cycle_crossover_device(
+            padres[idx2 + 1].genotipo,
+            padres[idx2].genotipo,
+            hijo2,
+            visitado,
+            longitud_genotipo
+        );
 
-        while (posiciones_restantes > 0) {
-            int inicio = -1;
-            for (int i = 0; i < longitud_genotipo; i++) {
-                if (!visitado[i]) {
-                    inicio = i;
-                    break;
-                }
-            }
-            ciclo++;
-            int actual = inicio;
-            while(true) {
-                visitado[actual] = 1;
-                posiciones_restantes--;
-
-                hijo1[actual] = (ciclo % 2 == 1) ? padres[idx2].genotipo[actual] : padres[idx2+1].genotipo[actual];
-                hijo2[actual] = (ciclo % 2 == 1) ? padres[idx2+1].genotipo[actual] : padres[idx2].genotipo[actual];
-
-                int valor_buscar = (ciclo % 2 == 1) ? padres[idx2+1].genotipo[actual] : padres[idx2].genotipo[actual];
-                int siguiente = -1;
-                for (int i = 0; i < longitud_genotipo; i++) {
-                    if (padres[idx2].genotipo[i] == valor_buscar) {
-                        siguiente = i;
-                        break;
-                    }
-                }
-                if (siguiente == -1 || visitado[siguiente]) break;
-                actual = siguiente;
-            }
-        }
-
-        // heurística
+        // (Opcional) Llamar heurística:
         heuristica_abruptos_gpu(hijo1, longitud_genotipo, m, distancias);
         heuristica_abruptos_gpu(hijo2, longitud_genotipo, m, distancias);
 
-        // Evaluar padres e hijos
-        double fitness_padre1 = evaluar_individuo_gpu(padres[idx2].genotipo, distancias, longitud_genotipo);
-        double fitness_padre2 = evaluar_individuo_gpu(padres[idx2+1].genotipo, distancias, longitud_genotipo);
-        double fitness_hijo1  = evaluar_individuo_gpu(hijo1, distancias, longitud_genotipo);
-        double fitness_hijo2  = evaluar_individuo_gpu(hijo2, distancias, longitud_genotipo);
+        // 3) Evaluar padres e hijos
+        double fit_p1 = evaluar_individuo_gpu(padres[idx2].genotipo, distancias, longitud_genotipo);
+        double fit_p2 = evaluar_individuo_gpu(padres[idx2+1].genotipo, distancias, longitud_genotipo);
+        double fit_h1 = evaluar_individuo_gpu(hijo1, distancias, longitud_genotipo);
+        double fit_h2 = evaluar_individuo_gpu(hijo2, distancias, longitud_genotipo);
 
-        // Seleccionar mejores dos
-        double fitness_array[4] = { fitness_padre1, fitness_padre2, fitness_hijo1, fitness_hijo2 };
-        int *genotipos[4]       = { padres[idx2].genotipo, padres[idx2+1].genotipo, hijo1, hijo2 };
+        // Seleccionamos 2 mejores
+        double fitness_array[4] = { fit_p1, fit_p2, fit_h1, fit_h2 };
+        int *genotipos[4]       = { padres[idx2].genotipo,
+                                    padres[idx2+1].genotipo,
+                                    hijo1,
+                                    hijo2 };
 
-        int mejores[2] = {0,1};
-        for (int j=2; j<4; j++) {
-            if(fitness_array[j] < fitness_array[mejores[0]]) {
+        int mejores[2] = {0, 1};
+        for (int j = 2; j < 4; j++) {
+            if (fitness_array[j] < fitness_array[mejores[0]]) {
                 mejores[1] = mejores[0];
                 mejores[0] = j;
             }
-            else if(fitness_array[j] < fitness_array[mejores[1]]) {
+            else if (fitness_array[j] < fitness_array[mejores[1]]) {
                 mejores[1] = j;
             }
         }
 
-        // Asignar a hijos
-        for(int j=0; j<longitud_genotipo; j++) {
+        // Copiar a hijos finales
+        for(int j = 0; j < longitud_genotipo; j++) {
             hijos[idx2].genotipo[j]   = genotipos[mejores[0]][j];
             hijos[idx2+1].genotipo[j] = genotipos[mejores[1]][j];
         }
         hijos[idx2].fitness   = fitness_array[mejores[0]];
         hijos[idx2+1].fitness = fitness_array[mejores[1]];
-
-        delete[] hijo1;
-        delete[] hijo2;
-        delete[] visitado;
-
-    } else {
-        // Sin cruce, copiamos tal cual
-        for (int i=0; i<longitud_genotipo; i++) {
+    }
+    else
+    {
+        // Sin cruce, copiamos padres
+        for (int i = 0; i < longitud_genotipo; i++) {
             hijos[idx2].genotipo[i]   = padres[idx2].genotipo[i];
             hijos[idx2+1].genotipo[i] = padres[idx2+1].genotipo[i];
         }
@@ -205,6 +201,74 @@ __global__ void mutar_individuos_kernel(individuo_gpu *individuos, double *dista
 // ----------------------------------------------------
 // Funciones device auxiliares
 // ----------------------------------------------------
+
+/// --------------------------------------------------------------------------
+/// cycle_crossover_device:
+///   Versión "device" de tu ciclo de cruce en CPU.
+///   Genera 1 hijo en el array "child" (size = num_ciudades)
+///   usando padre1 "p1" y padre2 "p2" (también arrays de size=num_ciudades).
+/// --------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------
+// cycle_crossover_device: Sin "new[]".
+// Usa "child[]" y "visitado[]" que fueron asignados en shared memory.
+// ---------------------------------------------------------------------
+__device__ void cycle_crossover_device(const int *p1, const int *p2,
+                                       int *child, int *visitado,
+                                       int num_ciudades)
+{
+    // 1) Inicializa child con -1, visitado = 0
+    for (int i = 0; i < num_ciudades; i++) {
+        child[i]   = -1;
+        visitado[i] = 0;  // 0 => no visitado
+    }
+
+    int ciclo = 0;
+    int restantes = num_ciudades;
+
+    // 2) Mientras queden posiciones sin visitar
+    while (restantes > 0) {
+        // encontrar primera posición no visitada
+        int inicio = -1;
+        for (int i = 0; i < num_ciudades; i++) {
+            if (visitado[i] == 0) {
+                inicio = i;
+                break;
+            }
+        }
+
+        ciclo++;
+        int actual = inicio;
+
+        // 3) Recorremos el ciclo
+        while (true) {
+            visitado[actual] = 1;
+            restantes--;
+
+            // En ciclos impares copiamos de p1, en pares de p2
+            if (ciclo % 2 == 1) {
+                child[actual] = p1[actual];
+            } else {
+                child[actual] = p2[actual];
+            }
+
+            // "valor_buscar" = p2[actual], lo buscamos en p1
+            int valor_buscar = p2[actual];
+            int siguiente = -1;
+            for (int j = 0; j < num_ciudades; j++) {
+                if (p1[j] == valor_buscar) {
+                    siguiente = j;
+                    break;
+                }
+            }
+            if (siguiente == -1 || visitado[siguiente] == 1) {
+                break;
+            }
+            actual = siguiente;
+        }
+    }
+}
+
 __device__ double evaluar_individuo_gpu(int *ruta, double *distancias, int num_ciudades) {
     double fitness = 0.0;
     for (int i = 0; i < num_ciudades - 1; i++) {

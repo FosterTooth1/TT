@@ -7,25 +7,13 @@ int main(int argc, char** argv) {
 
     // Parámetros del algoritmo genético
     srand(time(NULL));
-    int tamano_poblacion = 50;
+    int tamano_poblacion = 100000;
     int longitud_genotipo = 32;
     int num_generaciones  = 100;
     int num_competidores  = 2;
     int m = 3;
     double prob_mutacion = 0.15;
     double prob_cruce    = 0.99;
-
-    // Verificar memoria GPU
-    size_t memoria_libre, memoria_total;
-    cudaMemGetInfo(&memoria_libre, &memoria_total);
-    printf("Memoria GPU disponible: %zu bytes\n", memoria_libre);
-
-    // Cálculo de memoria requerida (aprox. para genotipos)
-    size_t memoria_requerida = tamano_poblacion * longitud_genotipo * sizeof(int);
-    if(memoria_requerida > memoria_libre) {
-        fprintf(stderr, "Error: No hay suficiente memoria GPU\n");
-        exit(1);
-    }
 
     // Cargar archivo de distancias
     const char *nombre_archivo = "Distancias_no_head.csv";
@@ -82,6 +70,8 @@ int main(int argc, char** argv) {
     // Configuración de CUDA
     int blockSize, minGridSize, gridSize;
     obtenerConfiguracionCUDA(&blockSize, &minGridSize, &gridSize, tamano_poblacion);
+    //int blockSize = 64; // o 128
+    //int gridSize = ( (tamano_poblacion/2) + blockSize - 1 ) / blockSize;
 
     setup_curand_kernel<<<gridSize, blockSize>>>(d_states, time(NULL));
     cudaDeviceSynchronize();
@@ -180,13 +170,21 @@ int main(int argc, char** argv) {
         cudaDeviceSynchronize();
         gpuErrchk(cudaGetLastError());
 
+
         // Cruzamiento
-        cruzar_individuos_kernel<<<gridSize, blockSize>>>(d_padres, d_hijos,
-                                                          d_distancias, prob_cruce,
-                                                          tamano_poblacion, longitud_genotipo,
-                                                          m, d_states);
+        blockSize = 128; // o 128
+        gridSize = ( (tamano_poblacion/2) + blockSize - 1 ) / blockSize;
+        size_t sharedMemSize = (size_t)blockSize * 3 * longitud_genotipo * sizeof(int);
+
+        cruzar_individuos_kernel<<<gridSize, blockSize, sharedMemSize>>>(
+            d_padres, d_hijos, d_distancias, 
+            prob_cruce, tamano_poblacion, longitud_genotipo,
+            m, d_states
+        );
         cudaDeviceSynchronize();
         gpuErrchk(cudaGetLastError());
+
+        obtenerConfiguracionCUDA(&blockSize, &minGridSize, &gridSize, tamano_poblacion);
 
         // Mutación
         mutar_individuos_kernel<<<gridSize, blockSize>>>(d_hijos, d_distancias,

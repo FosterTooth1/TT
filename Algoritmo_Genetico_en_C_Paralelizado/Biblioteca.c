@@ -78,7 +78,7 @@ __global__ void mutar_individuos_kernel(individuo_gpu *individuos, double *dista
 // Funciones device/host auxiliares
 // ----------------------------------------------------
 __device__ double evaluar_individuo_gpu(int *ruta, double *distancias, int num_ciudades);
-
+__device__ void cycle_crossover_device(const int *p1, const int *p2, int *child, int *visitado, int num_ciudades);
 __device__ void heuristica_abruptos_gpu(int *ruta, int num_ciudades, int m, double *distancias);
 __device__ int  comparar_distancias_gpu(DistanciaOrdenadaGPU a, DistanciaOrdenadaGPU b);
 __device__ void insertar_en_posicion_gpu(int* array, int longitud, int elemento, int posicion);
