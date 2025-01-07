@@ -10,74 +10,78 @@
 #include <curand_kernel.h>
 #include <curand.h>
 
-// ----------------------------------------------------
-// Estructuras para CPU
-// ----------------------------------------------------
+// Estructuras CPU
+// Esructura para representar un individuo de la población (Almacena genotipo y fitness)
 typedef struct {
     int *genotipo;
     double fitness;
 } individuo;
 
+// Estructura para representar una población (Almacena un arreglo de individuos y su tamaño)
 typedef struct {
     individuo *individuos;
     int tamano;
 } poblacion;
 
-// ----------------------------------------------------
-// Estructuras para GPU
-// ----------------------------------------------------
+// Estructuras CPU
+// Esructura para representar un individuo de la población (Almacena genotipo y fitness)
 typedef struct {
-    int *genotipo;   // Puntero a genotipo en la GPU
+    int *genotipo;
     double fitness;  
 } individuo_gpu;
 
+// Estructura para representar una población (Almacena un arreglo de individuos y su tamaño)
 typedef struct {
     individuo_gpu *individuos; 
     int tamano;               
 } poblacion_gpu;
 
-// ----------------------------------------------------
 // Estructura auxiliar para ordenar distancias en GPU
-// ----------------------------------------------------
 typedef struct {
     double distancia;
     int indice;
 } DistanciaOrdenadaGPU;
 
-// ----------------------------------------------------
 // Macros / funciones inline para manejo de errores CUDA
-// ----------------------------------------------------
 void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true);
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 
-// ----------------------------------------------------
 // Prototipos de kernels y funciones CUDA
-// ----------------------------------------------------
+
+// Kernel para inicializar el estado de los generadores de números aleatorios
 __global__ void setup_curand_kernel(curandState *states, unsigned long seed);
 
+// Funcion para obtener la configuracion de CUDA (bloque, grid, etc) basado en el tamaño de la poblacion
 void obtenerConfiguracionCUDA(int *blockSize, int *minGridSize, int *gridSize, int N);
 
+// Kernel para evaluar la poblacion
 __global__ void evaluar_poblacion_kernel(individuo_gpu *poblacion, double *distancias,
                                          int tamano_poblacion, int longitud_genotipo);
 
+// Kernel para seleccionar padres
 __global__ void seleccionar_padres_kernel(individuo_gpu *poblacion, individuo_gpu *padres,
                                            int num_competidores, int tamano_poblacion,
                                            int longitud_genotipo, curandState *states);
 
+// Kernel para cruzar individuos
 __global__ void cruzar_individuos_kernel(individuo_gpu *padres, individuo_gpu *hijos,
                                          double *distancias, double prob_cruce,
                                          int tamano_poblacion, int longitud_genotipo,
                                          int m, curandState *states);
 
+// Kernel para mutar individuos
 __global__ void mutar_individuos_kernel(individuo_gpu *individuos, double *distancias,
                                         double prob_mutacion, int tamano_poblacion,
                                         int longitud_genotipo, curandState *states);
 
-// ----------------------------------------------------
-// Funciones device/host auxiliares
-// ----------------------------------------------------
+
+// Funciones device auxiliares de los kernels
+
+// Funcion device para evaluar un individuo
 __device__ double evaluar_individuo_gpu(int *ruta, double *distancias, int num_ciudades);
+
+// Funcion device 
 __device__ void cycle_crossover_device(const int *p1, const int *p2, int *child, int *visitado, int num_ciudades);
 __device__ void heuristica_abruptos_gpu(int *ruta, int num_ciudades, int m, double *distancias, int *ruta_temp, DistanciaOrdenadaGPU *dist_ordenadas);
 __device__ int  comparar_distancias_gpu(DistanciaOrdenadaGPU a, DistanciaOrdenadaGPU b);
