@@ -42,7 +42,6 @@ int main(int argc, char** argv){
             columna++;
         }
         fila++;
-        free(token);
     }
     fclose(archivo);
 
@@ -58,38 +57,38 @@ int main(int argc, char** argv){
     };
 
     //Inicializamos el cumulo
-    cumulo *Cumulo = crear_cumulo(tamano_poblacion, longitud_ruta);
+    Cumulo *cumulo = crear_cumulo(tamano_poblacion, longitud_ruta);
 
     //Creamos permutaciones aleatorias para cada particula de el cumulo
-    crear_permutaciones(Cumulo, longitud_ruta);
+    crear_permutaciones(cumulo, longitud_ruta);
 
     //Calculamos el fitness de cada particula y su mejor ruta encontrada hasta el momento (pbest)
     for (int i = 0; i < tamano_poblacion; i++) {
-        Cumulo->particulas[i].fitness_actual = calcular_fitness(Cumulo->particulas[i].ruta_actual, distancias, longitud_ruta);
-        memcpy(Cumulo->particulas[i].mejor_ruta, Cumulo->particulas[i].ruta_actual, longitud_ruta * sizeof(int));
-        Cumulo->particulas[i].fitness_mejor = Cumulo->particulas[i].fitness_actual;
+        cumulo->particulas[i].fitness_actual = calcular_fitness(cumulo->particulas[i].ruta_actual, distancias, longitud_ruta);
+        memcpy(cumulo->particulas[i].mejor_ruta, cumulo->particulas[i].ruta_actual, longitud_ruta * sizeof(int));
+        cumulo->particulas[i].fitness_mejor = cumulo->particulas[i].fitness_actual;
     }
 
     // Ordenamos el cumulo de acuerdo a su fitness
-    ordenar_cumulo(Cumulo);
+    ordenar_cumulo(cumulo);
 
     // Inicializamos la mejor ruta global (gbest) con la mejor ruta de la primera particula
     int *gbest = malloc(longitud_ruta * sizeof(int));
-    memcpy(gbest, Cumulo->particulas[0].mejor_ruta, longitud_ruta * sizeof(int));
-    double fitness_gbest = Cumulo->particulas[0].fitness_mejor;
+    memcpy(gbest, cumulo->particulas[0].mejor_ruta, longitud_ruta * sizeof(int));
+    double fitness_gbest = cumulo->particulas[0].fitness_mejor;
     
     //Ejecutamos el PSO
     for (int generacion = 0; generacion < num_generaciones; generacion++) {
         // Actualizamos el cumulo
-        actualizar_cumulo(Cumulo, gbest, distancias, longitud_ruta, prob_pbest, prob_gbest, prob_inercia);
+        actualizar_cumulo(cumulo, gbest, distancias, longitud_ruta, prob_pbest, prob_gbest, prob_inercia);
 
         // Ordenamos el cumulo de acuerdo a su fitness
-        ordenar_cumulo(Cumulo);
+        ordenar_cumulo(cumulo);
 
         // Actualizamos la mejor ruta global (gbest) si es necesario
-        if (Cumulo->particulas[0].fitness_mejor < fitness_gbest) {
-            fitness_gbest = Cumulo->particulas[0].fitness_mejor;
-            memcpy(gbest, Cumulo->particulas[0].mejor_ruta, longitud_ruta * sizeof(int));
+        if (cumulo->particulas[0].fitness_mejor < fitness_gbest) {
+            fitness_gbest = cumulo->particulas[0].fitness_mejor;
+            memcpy(gbest, cumulo->particulas[0].mejor_ruta, longitud_ruta * sizeof(int));
         }
     }
 
@@ -108,7 +107,7 @@ int main(int argc, char** argv){
     printf("\n");
 
     // Liberamos la memomoria de todos los elementos
-    liberar_cumulo(Cumulo);
+    liberar_cumulo(cumulo);
     free(gbest);
     gbest = NULL;
     for (int i = 0; i < longitud_ruta; i++) {
