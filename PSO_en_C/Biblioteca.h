@@ -6,26 +6,6 @@
 
 
 // Estructuras
-// Estructura para una particula (Almacena la ruta actual y la mejor ruta encontrada hasta el momento)
-typedef struct{
-    int *ruta_actual;
-    int *mejor_ruta;
-    double fitness_actual;
-    double fitness_mejor;
-}particula;
-
-// Estructura para un cumulo (Almacena un arreglo de particulas y su tamaño)
-typedef struct{
-    particula *particulas;
-    int tamano;
-}cumulo;
-
-
-// Estructura para ordenar distancias (Almacena la distancia y el índice)(Usado en la heurística de remoción de abruptos)
-typedef struct {
-    double distancia;
-    int indice;
-} DistanciaOrdenada;
 
 // Estructura para almacenar swaps candidatos
 typedef struct {
@@ -34,15 +14,37 @@ typedef struct {
     float prob;     // Probabilidad asociada
 } Swap;
 
+// Estructura para una particula (Almacena la ruta actual y la mejor ruta encontrada hasta el momento)
+typedef struct{
+    int *ruta_actual;
+    int *mejor_ruta;
+    double fitness_actual;
+    double fitness_mejor;
+    Swap *swaps_anteriores;
+    int num_swaps_anteriores;
+}particula;
+
+// Estructura para un cumulo (Almacena un arreglo de particulas y su tamaño)
+typedef struct{
+    particula *particulas;
+    int tamano;
+}cumulo;
+
+// Estructura para ordenar distancias (Almacena la distancia y el índice)(Usado en la heurística de remoción de abruptos)
+typedef struct {
+    double distancia;
+    int indice;
+} DistanciaOrdenada;
+
 //Funciones principales del PSO
 //Asigna memoria para un cumulo
 cumulo *crear_cumulo(int tamano, int longitud_permutacion);
 //Crea permutaciones aleatorias para cada particula de el cumulo
 void crear_permutaciones(cumulo *cumulo, int longitud_permutacion);
 //Actualizar la ruta y el fitness del cumulo tomando en cuenta la mejor ruta global y la mejor ruta personal de cada particula
-void actualizar_cumulo(cumulo *cumulo, int* gbest, double **distancias, int longitud_permutacion, float prob_pbest, float prob_gbest);
+void actualizar_cumulo(cumulo *cumulo, int* gbest, double **distancias, int longitud_permutacion, float prob_pbest, float prob_gbest, float prob_inercia);
 //Actualizar la ruta y el fitness de una particula tomando en cuenta la mejor ruta global y la mejor ruta personal
-void actualizar_particula(particula *particula, int* gbest, double **distancias, int longitud_permutacion, float prob_pbest, float prob_gbest);
+void actualizar_particula(particula *particula, int* gbest, double **distancias, int longitud_permutacion, float prob_pbest, float prob_gbest, float prob_inercia);
 //Ordena a la población de acuerdo a su fitness mediante el algoritmo de introsort
 void ordenar_cumulo(cumulo *cumulo);
 //Libera la memoria usada para el cumulo

@@ -11,7 +11,6 @@ cumulo *crear_cumulo(int tamano, int longitud_ruta_actual)
     // Asigna memoria para las particulas
     cumulo->tamano = tamano;
     cumulo->particulas = malloc(tamano * sizeof(particula));
-    cumulo->lbest_idx = malloc(tamano * sizeof(int));
 
     // Asigna memoria para la ruta actual y la mejor ruta de cada particula
     for (int i = 0; i < tamano; i++)
@@ -22,9 +21,13 @@ cumulo *crear_cumulo(int tamano, int longitud_ruta_actual)
         cumulo->particulas[i].fitness_actual = 0;
         cumulo->particulas[i].fitness_mejor = 0;
     }
-    // Inicialmente, cada lbest es ella misma
+
+    // Asigna memoria para los swaps anteriores de cada particula
     for (int i = 0; i < tamano; i++)
-        cumulo->lbest_idx[i] = i;
+    {
+        cumulo->particulas[i].swaps_anteriores = malloc(longitud_ruta_actual * sizeof(Swap));
+        cumulo->particulas[i].num_swaps_anteriores = 0;
+    }
 
     return cumulo;
 }
@@ -58,58 +61,44 @@ void crear_permutaciones(cumulo *cumulo, int longitud_ruta_actual)
 // Recibe un puntero a el cumulo, un puntero a la mejor particula (gbest), una matriz de distancias, la longitud de la ruta actual
 // la probabilidad de pbest y la probabilidad de gbest
 // No devuelve nada (todo se hace por referencia)
-// topology: vecinos inmediatos en anillo
-void actualizar_cumulo(cumulo *c, double **distancias, int longitud_ruta, float prob_pbest, float prob_gbest, float prob_heuristica, float prob_aleatorio)
+void actualizar_cumulo(cumulo *cumulo, int *gbest, double **distancias, int longitud_ruta_actual, float prob_pbest, float prob_gbest, float prob_inercia)
 {
-    int N = c->tamano;
 
-    // 1) Para cada partícula i, busca el mejor fitness_mejor entre {i-1, i, i+1}
-    for (int i = 0; i < N; i++)
+    // Recorre cada particula en el cumulo
+    for (int i = 0; i < cumulo->tamano; i++)
     {
-        int left = (i - 1 + N) % N;
-        int right = (i + 1) % N;
-        int best = i;
-        double f_best = c->particulas[i].fitness_mejor;
-        if (c->particulas[left].fitness_mejor < f_best)
-        {
-            best = left;
-            f_best = c->particulas[left].fitness_mejor;
-        }
-        if (c->particulas[right].fitness_mejor < f_best)
-        {
-            best = right;
-            f_best = c->particulas[right].fitness_mejor;
-        }
-        c->lbest_idx[i] = best;
-    }
-
-    // 2) Para cada partícula, pásarle su lbest en lugar de gbest
-    for (int i = 0; i < N; i++)
-    {
-        // puntero a la mejor ruta local
-        int *lbest_ruta = c->particulas[c->lbest_idx[i]].mejor_ruta;
-        actualizar_particula(&c->particulas[i],
-                             lbest_ruta,
-                             distancias,
-                             longitud_ruta,
-                             prob_pbest, prob_gbest,
-                             prob_heuristica, prob_aleatorio);
+        // Actualiza la ruta y el fitness de la particula
+        actualizar_particula(&cumulo->particulas[i], gbest, distancias, longitud_ruta_actual, prob_pbest, prob_gbest, prob_inercia);
     }
 }
 
 // Actualiza la ruta y el fitness de una particula tomando en cuenta la mejor ruta global y la mejor ruta personal
 // Recibe un puntero a la particula, un puntero a la mejor particula (gbest), una matriz de distancias, la longitud de la ruta actual
-// la probabilidad de pbest y la probabilidad de gbest
+// la probabilidad de pbest, la probabilidad de gbest y la probabilidad de inercia
 // No devuelve nada (todo se hace por referencia)
-void actualizar_particula(particula *particula, int *gbest, double **distancias, int longitud_ruta_actual, float prob_pbest, float prob_gbest, float prob_heuristica, float prob_aleatorio)
+void actualizar_particula(particula *particula, int *gbest, double **distancias,
+                          int longitud_ruta_actual, float prob_pbest, float prob_gbest, float prob_inercia)
 {
     // Paso 1: Clonar rutas originales
     int *ruta_original = clonar_ruta(particula->ruta_actual, longitud_ruta_actual);
     int *temp_pbest = clonar_ruta(particula->mejor_ruta, longitud_ruta_actual);
     int *temp_gbest = clonar_ruta(gbest, longitud_ruta_actual);
 
-    // Paso 2: Generar todos los swaps candidatos (pbest y gbest)
-    Swap *swaps = malloc(3 * longitud_ruta_actual * sizeof(Swap)); // Máximo 3 swaps por posición
+    // Paso 2: Aplicar inercia y rastrear swaps aplicados
+    Swap *applied_inercia = malloc(particula->num_swaps_anteriores * sizeof(Swap));
+    int applied_inercia_count = 0;
+    for (int s = 0; s < particula->num_swaps_anteriores; s++)
+    {
+        if ((float)rand() / RAND_MAX <= prob_inercia)
+        { // Conservar swap con probabilidad ω
+            aplicar_swap(ruta_original, particula->swaps_anteriores[s].i,
+                         particula->swaps_anteriores[s].j);
+            applied_inercia[applied_inercia_count++] = particula->swaps_anteriores[s];
+        }
+    }
+
+    // Paso 3: Generar todos los swaps candidatos (pbest y gbest)
+    Swap *swaps = malloc(2 * longitud_ruta_actual * sizeof(Swap)); // Máximo 2 swaps por posición
     int swap_count = 0;
 
     // Recopilar swaps basados en diferencias con pbest y gbest
@@ -142,32 +131,34 @@ void actualizar_particula(particula *particula, int *gbest, double **distancias,
         }
     }
 
-    // Paso 3: Seleccionar el swap por posición (manejo de empates)
+    // Paso 4: Seleccionar el mejor swap por posición (mayor probabilidad)
     Swap *swaps_seleccionados = malloc(longitud_ruta_actual * sizeof(Swap));
     bool *posicion_procesada = malloc(longitud_ruta_actual * sizeof(bool));
-    memset(posicion_procesada, 0, longitud_ruta_actual * sizeof(bool));
+    memset(posicion_procesada, 0, longitud_ruta_actual * sizeof(bool)); // Inicializar a false
 
-    for (int s = 0; s < swap_count; s++) {
+    for (int s = 0; s < swap_count; s++)
+    {
         int pos = swaps[s].i;
-        if (!posicion_procesada[pos]) {
+        if (!posicion_procesada[pos])
+        {
             swaps_seleccionados[pos] = swaps[s];
             posicion_procesada[pos] = true;
-        } else {
-            // Si la probabilidad es mayor, reemplazar
-            if (swaps[s].prob > swaps_seleccionados[pos].prob) {
+        }
+        else
+        {
+            // Comparar probabilidades y quedarse con la mayor
+            if (swaps[s].prob > swaps_seleccionados[pos].prob)
+            {
                 swaps_seleccionados[pos] = swaps[s];
-            }
-            // Si la probabilidad es igual, decidir aleatoriamente
-            else if (swaps[s].prob == swaps_seleccionados[pos].prob) {
-                if (rand() % 2 == 0) { // 50% de chance de reemplazar
-                    swaps_seleccionados[pos] = swaps[s];
-                }
             }
         }
     }
 
-    // Paso 4: Aplicar swaps seleccionados con su probabilidad
+    // Paso 5: Aplicar swaps seleccionados y rastrear los aplicados
     int *nueva_ruta = clonar_ruta(ruta_original, longitud_ruta_actual);
+    Swap *applied_new = malloc(longitud_ruta_actual * sizeof(Swap));
+    int applied_new_count = 0;
+
     for (int i = 0; i < longitud_ruta_actual; i++)
     {
         if (posicion_procesada[i])
@@ -176,16 +167,32 @@ void actualizar_particula(particula *particula, int *gbest, double **distancias,
             if ((float)rand() / RAND_MAX <= swap.prob)
             {
                 aplicar_swap(nueva_ruta, swap.i, swap.j);
+                applied_new[applied_new_count++] = swap;
             }
         }
     }
 
-    // Paso 5: Aplicar heurística de remoción de abruptos
-    // Si la probabilidad de heurística es mayor a un número aleatorio, aplicar la heurística
-    if ((float)rand() / RAND_MAX <= prob_heuristica)
-        heuristica_abruptos(nueva_ruta, longitud_ruta_actual, 3, distancias);
+    // Paso 6: Actualizar swaps_anteriores con los swaps aplicados en esta iteración
+    int total_swaps = applied_inercia_count + applied_new_count;
+    Swap *new_swaps_anteriores = malloc(total_swaps * sizeof(Swap));
+    if (total_swaps > 0)
+    {
+        memcpy(new_swaps_anteriores, applied_inercia, applied_inercia_count * sizeof(Swap));
+        memcpy(new_swaps_anteriores + applied_inercia_count, applied_new, applied_new_count * sizeof(Swap));
+    }
 
-    // Paso 6: Actualizar fitness y rutas
+    // Liberar los swaps anteriores de la partícula si existen
+    if (particula->swaps_anteriores != NULL)
+    {
+        free(particula->swaps_anteriores);
+    }
+    particula->swaps_anteriores = new_swaps_anteriores;
+    particula->num_swaps_anteriores = total_swaps;
+
+    // Paso 7: Aplicar heurística de remoción de abruptos (opcional)
+    heuristica_abruptos(nueva_ruta, longitud_ruta_actual, 3, distancias);
+
+    // Paso 8: Actualizar fitness y rutas
     double nuevo_fitness = calcular_fitness(nueva_ruta, distancias, longitud_ruta_actual);
     if (nuevo_fitness < particula->fitness_mejor)
     {
@@ -203,6 +210,8 @@ void actualizar_particula(particula *particula, int *gbest, double **distancias,
     free(swaps_seleccionados);
     free(posicion_procesada);
     free(nueva_ruta);
+    free(applied_inercia);
+    free(applied_new);
 }
 
 // Función auxiliar para clonar una ruta

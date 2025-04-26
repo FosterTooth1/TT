@@ -20,7 +20,7 @@ typedef struct {
 EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_ruta, 
                                            int num_generaciones, float prob_pbest, 
                                            float prob_gbest, char* nombre_archivo,
-                                           float prob_heuristica, float prob_aleatorio) {
+                                           float prob_inercia) {
 
     // Iniciamos la medición del tiempo
     time_t inicio = time(NULL);
@@ -50,7 +50,7 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
             columna++;
         }
         fila++;
-        free(token);
+        //free(token);
     }
     fclose(archivo);
 
@@ -92,22 +92,10 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
     //Ejecutamos el PSO
     for (int generacion = 0; generacion < num_generaciones; generacion++) {
         // Actualizamos el cumulo
-        actualizar_cumulo(Cumulo, distancias, longitud_ruta, prob_pbest, prob_gbest, prob_heuristica, prob_aleatorio);
+        actualizar_cumulo(Cumulo, gbest, distancias, longitud_ruta, prob_pbest, prob_gbest, prob_inercia);
 
-        // Creamos una copia de el cumulo para ordenarlo
-        cumulo *cumulo_copia = crear_cumulo(tamano_poblacion, longitud_ruta);
-        for (int i = 0; i < tamano_poblacion; i++) {
-            memcpy(cumulo_copia->particulas[i].ruta_actual, Cumulo->particulas[i].ruta_actual, longitud_ruta * sizeof(int));
-            memcpy(cumulo_copia->particulas[i].mejor_ruta, Cumulo->particulas[i].mejor_ruta, longitud_ruta * sizeof(int));
-            cumulo_copia->particulas[i].fitness_actual = Cumulo->particulas[i].fitness_actual;
-            cumulo_copia->particulas[i].fitness_mejor = Cumulo->particulas[i].fitness_mejor;
-        }
-        // Ordenamos el cumulo copia de acuerdo a su fitness
-        ordenar_cumulo(cumulo_copia);
-        // Actualizamos el mejor fitness de la generación actual
-        double fitness_generacion = cumulo_copia->particulas[0].fitness_mejor;
-        // Liberamos la memoria de la copia del cumulo
-        liberar_cumulo(cumulo_copia);
+        // Ordenamos el cumulo de acuerdo a su fitness
+        ordenar_cumulo(Cumulo);
 
         // Guardamos el fitness de la generación actual
         fitness_generaciones[generacion] = fitness_gbest; // Guardamos el fitness de la generación actual
@@ -144,7 +132,6 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
         resultado->fitness_generaciones[i] = fitness_generaciones[i];
     }
     
-    // Liberamos la memoria usada
     liberar_cumulo(Cumulo);
     for (int i = 0; i < longitud_ruta; i++) {
         free(distancias[i]);

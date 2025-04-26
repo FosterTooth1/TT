@@ -10,8 +10,9 @@ int main(int argc, char** argv){
     int longitud_ruta = 32;
     int num_generaciones  = 500;
     int m = 3;
-    float prob_gbest = 0.8;
-    float prob_pbest = 0.75;
+    float prob_gbest = 0.7;
+    float prob_pbest = 0.35;
+    float prob_inercia = 0.3;
     
     // Nombre del archivo con las distancias
     char *nombre_archivo = "Distancias_no_head.csv";
@@ -80,7 +81,7 @@ int main(int argc, char** argv){
     //Ejecutamos el PSO
     for (int generacion = 0; generacion < num_generaciones; generacion++) {
         // Actualizamos el cumulo
-        actualizar_cumulo(Cumulo, gbest, distancias, longitud_ruta, prob_pbest, prob_gbest);
+        actualizar_cumulo(Cumulo, gbest, distancias, longitud_ruta, prob_pbest, prob_gbest, prob_inercia);
 
         // Ordenamos el cumulo de acuerdo a su fitness
         ordenar_cumulo(Cumulo);

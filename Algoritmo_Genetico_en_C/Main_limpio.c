@@ -6,13 +6,13 @@ int main(int argc, char** argv){
 
     // Parámetros del algoritmo genético
     srand(time(NULL));
-    int tamano_poblacion = 100000;
+    int tamano_poblacion = 150;
     int longitud_genotipo = 32;
-    int num_generaciones  = 100;
+    int num_generaciones  = 500;
     int num_competidores  = 2;
     int m = 3;
     double probabilidad_mutacion = 0.15;
-    double probabilidad_cruce = 0.99;
+    double probabilidad_cruce = 0.85;
 
     // Nombre del archivo con las distancias
     char *nombre_archivo = "Distancias_no_head.csv";

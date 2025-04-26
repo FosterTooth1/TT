@@ -21,6 +21,14 @@ cumulo *crear_cumulo(int tamano, int longitud_ruta_actual)
         cumulo->particulas[i].fitness_actual = 0;
         cumulo->particulas[i].fitness_mejor = 0;
     }
+
+    // Asigna memoria para los swaps anteriores de cada particula
+    for (int i = 0; i < tamano; i++)
+    {
+        cumulo->particulas[i].swaps_anteriores = malloc(longitud_ruta_actual * sizeof(Swap));
+        cumulo->particulas[i].num_swaps_anteriores = 0;
+    }
+
     return cumulo;
 }
 
@@ -53,30 +61,43 @@ void crear_permutaciones(cumulo *cumulo, int longitud_ruta_actual)
 // Recibe un puntero a el cumulo, un puntero a la mejor particula (gbest), una matriz de distancias, la longitud de la ruta actual
 // la probabilidad de pbest y la probabilidad de gbest
 // No devuelve nada (todo se hace por referencia)
-void actualizar_cumulo(cumulo *cumulo, int *gbest, double **distancias, int longitud_ruta_actual, float prob_pbest, float prob_gbest)
+void actualizar_cumulo(cumulo *cumulo, int *gbest, double **distancias, int longitud_ruta_actual, float prob_pbest, float prob_gbest, float prob_inercia)
 {
 
     // Recorre cada particula en el cumulo
     for (int i = 0; i < cumulo->tamano; i++)
     {
         // Actualiza la ruta y el fitness de la particula
-        actualizar_particula(&cumulo->particulas[i], gbest, distancias, longitud_ruta_actual, prob_pbest, prob_gbest);
+        actualizar_particula(&cumulo->particulas[i], gbest, distancias, longitud_ruta_actual, prob_pbest, prob_gbest, prob_inercia);
     }
 }
 
 // Actualiza la ruta y el fitness de una particula tomando en cuenta la mejor ruta global y la mejor ruta personal
 // Recibe un puntero a la particula, un puntero a la mejor particula (gbest), una matriz de distancias, la longitud de la ruta actual
-// la probabilidad de pbest y la probabilidad de gbest
+// la probabilidad de pbest, la probabilidad de gbest y la probabilidad de inercia
 // No devuelve nada (todo se hace por referencia)
 void actualizar_particula(particula *particula, int *gbest, double **distancias,
-                          int longitud_ruta_actual, float prob_pbest, float prob_gbest)
+                          int longitud_ruta_actual, float prob_pbest, float prob_gbest, float prob_inercia)
 {
     // Paso 1: Clonar rutas originales
     int *ruta_original = clonar_ruta(particula->ruta_actual, longitud_ruta_actual);
     int *temp_pbest = clonar_ruta(particula->mejor_ruta, longitud_ruta_actual);
     int *temp_gbest = clonar_ruta(gbest, longitud_ruta_actual);
 
-    // Paso 2: Generar todos los swaps candidatos (pbest y gbest)
+    // Paso 2: Aplicar inercia y rastrear swaps aplicados
+    Swap *applied_inercia = malloc(particula->num_swaps_anteriores * sizeof(Swap));
+    int applied_inercia_count = 0;
+    for (int s = 0; s < particula->num_swaps_anteriores; s++)
+    {
+        if ((float)rand() / RAND_MAX <= prob_inercia)
+        { // Conservar swap con probabilidad ω
+            aplicar_swap(ruta_original, particula->swaps_anteriores[s].i,
+                         particula->swaps_anteriores[s].j);
+            applied_inercia[applied_inercia_count++] = particula->swaps_anteriores[s];
+        }
+    }
+
+    // Paso 3: Generar todos los swaps candidatos (pbest y gbest)
     Swap *swaps = malloc(2 * longitud_ruta_actual * sizeof(Swap)); // Máximo 2 swaps por posición
     int swap_count = 0;
 
@@ -110,7 +131,7 @@ void actualizar_particula(particula *particula, int *gbest, double **distancias,
         }
     }
 
-    // Paso 3: Seleccionar el mejor swap por posición (mayor probabilidad)
+    // Paso 4: Seleccionar el mejor swap por posición (mayor probabilidad)
     Swap *swaps_seleccionados = malloc(longitud_ruta_actual * sizeof(Swap));
     bool *posicion_procesada = malloc(longitud_ruta_actual * sizeof(bool));
     memset(posicion_procesada, 0, longitud_ruta_actual * sizeof(bool)); // Inicializar a false
@@ -133,8 +154,11 @@ void actualizar_particula(particula *particula, int *gbest, double **distancias,
         }
     }
 
-    // Paso 4: Aplicar swaps seleccionados con su probabilidad
+    // Paso 5: Aplicar swaps seleccionados y rastrear los aplicados
     int *nueva_ruta = clonar_ruta(ruta_original, longitud_ruta_actual);
+    Swap *applied_new = malloc(longitud_ruta_actual * sizeof(Swap));
+    int applied_new_count = 0;
+
     for (int i = 0; i < longitud_ruta_actual; i++)
     {
         if (posicion_procesada[i])
@@ -143,14 +167,32 @@ void actualizar_particula(particula *particula, int *gbest, double **distancias,
             if ((float)rand() / RAND_MAX <= swap.prob)
             {
                 aplicar_swap(nueva_ruta, swap.i, swap.j);
+                applied_new[applied_new_count++] = swap;
             }
         }
     }
 
-    // Paso 5: Aplicar heurística de remoción de abruptos
+    // Paso 6: Actualizar swaps_anteriores con los swaps aplicados en esta iteración
+    int total_swaps = applied_inercia_count + applied_new_count;
+    Swap *new_swaps_anteriores = malloc(total_swaps * sizeof(Swap));
+    if (total_swaps > 0)
+    {
+        memcpy(new_swaps_anteriores, applied_inercia, applied_inercia_count * sizeof(Swap));
+        memcpy(new_swaps_anteriores + applied_inercia_count, applied_new, applied_new_count * sizeof(Swap));
+    }
+
+    // Liberar los swaps anteriores de la partícula si existen
+    if (particula->swaps_anteriores != NULL)
+    {
+        free(particula->swaps_anteriores);
+    }
+    particula->swaps_anteriores = new_swaps_anteriores;
+    particula->num_swaps_anteriores = total_swaps;
+
+    // Paso 7: Aplicar heurística de remoción de abruptos (opcional)
     heuristica_abruptos(nueva_ruta, longitud_ruta_actual, 3, distancias);
 
-    // Paso 6: Actualizar fitness y rutas
+    // Paso 8: Actualizar fitness y rutas
     double nuevo_fitness = calcular_fitness(nueva_ruta, distancias, longitud_ruta_actual);
     if (nuevo_fitness < particula->fitness_mejor)
     {
@@ -168,6 +210,8 @@ void actualizar_particula(particula *particula, int *gbest, double **distancias,
     free(swaps_seleccionados);
     free(posicion_procesada);
     free(nueva_ruta);
+    free(applied_inercia);
+    free(applied_new);
 }
 
 // Función auxiliar para clonar una ruta
@@ -253,19 +297,22 @@ void liberar_cumulo(cumulo *cumulo)
 // Heurística para remover abruptos en la ruta intercambiando ciudades mal posicionadas
 // Recibe un puntero a la ruta, el número de ciudades total (longitud del genotipo), el número de ciudades más cercanas a considerar y la matriz de distancias
 // No devuelve nada (todo se hace por referencia)
-void heuristica_abruptos(int* ruta, int num_ciudades, int m, double** distancias) {
+void heuristica_abruptos(int *ruta, int num_ciudades, int m, double **distancias)
+{
     // Inicializamos memoria para un arreglo temporal para la manipulación de rutas
-    int* ruta_temp = malloc(num_ciudades * sizeof(int));
+    int *ruta_temp = malloc(num_ciudades * sizeof(int));
 
     // Inicializamos meemoria para la estructura que sirve para ordenar distancias
-    DistanciaOrdenada* dist_ordenadas = malloc(num_ciudades * sizeof(DistanciaOrdenada));
+    DistanciaOrdenada *dist_ordenadas = malloc(num_ciudades * sizeof(DistanciaOrdenada));
 
     // Para cada ciudad en la ruta
-    for (int i = 0; i < num_ciudades; i++) {
+    for (int i = 0; i < num_ciudades; i++)
+    {
         int ciudad_actual = ruta[i];
-        
+
         // Se obtiene y ordenan las m ciudades más cercanas
-        for (int j = 0; j < num_ciudades; j++) {
+        for (int j = 0; j < num_ciudades; j++)
+        {
             dist_ordenadas[j].distancia = distancias[ciudad_actual][j];
             dist_ordenadas[j].indice = j;
         }
@@ -273,8 +320,10 @@ void heuristica_abruptos(int* ruta, int num_ciudades, int m, double** distancias
 
         // Encontramos la posición actual de la ciudad en la ruta
         int pos_actual = -1;
-        for (int j = 0; j < num_ciudades; j++) {
-            if (ruta[j] == ciudad_actual) {
+        for (int j = 0; j < num_ciudades; j++)
+        {
+            if (ruta[j] == ciudad_actual)
+            {
                 pos_actual = j;
                 break;
             }
@@ -286,37 +335,45 @@ void heuristica_abruptos(int* ruta, int num_ciudades, int m, double** distancias
         int mejor_vecino = -1;
 
         // Probamos la inserción con las m ciudades más cercanas
-        for (int j = 1; j <= m && j < num_ciudades; j++) {
+        for (int j = 1; j <= m && j < num_ciudades; j++)
+        {
             int ciudad_cercana = dist_ordenadas[j].indice;
-            
+
             // Encontramos la posición de la ciudad cercana
             int pos_cercana = -1;
-            for (int k = 0; k < num_ciudades; k++) {
-                if (ruta[k] == ciudad_cercana) {
+            for (int k = 0; k < num_ciudades; k++)
+            {
+                if (ruta[k] == ciudad_cercana)
+                {
                     pos_cercana = k;
                     break;
                 }
             }
 
-            if (pos_cercana != -1) {
+            if (pos_cercana != -1)
+            {
                 // Probar inserción antes y después de la ciudad cercana
-                for (int posicion_antes_o_despues = 0; posicion_antes_o_despues <= 1; posicion_antes_o_despues++) {
+                for (int posicion_antes_o_despues = 0; posicion_antes_o_despues <= 1; posicion_antes_o_despues++)
+                {
                     memcpy(ruta_temp, ruta, num_ciudades * sizeof(int));
-                    
+
                     // Eliminar de posición actual
                     eliminar_de_posicion(ruta_temp, num_ciudades, pos_actual);
-                    
+
                     // Insertar en nueva posición (antes o después de la ciudad cercana)
                     int nueva_pos = pos_cercana + posicion_antes_o_despues;
-                    if (nueva_pos > pos_actual) nueva_pos--;
-                    if (nueva_pos >= num_ciudades) nueva_pos = num_ciudades - 1;
+                    if (nueva_pos > pos_actual)
+                        nueva_pos--;
+                    if (nueva_pos >= num_ciudades)
+                        nueva_pos = num_ciudades - 1;
                     insertar_en_posicion(ruta_temp, num_ciudades, ciudad_actual, nueva_pos);
 
                     // Evaluar el nuevo costo
                     double nuevo_costo = calcular_fitness(ruta_temp, distancias, num_ciudades);
-                    
+
                     // Actualizar el mejor costo y posición de la ciudad actual si es necesario
-                    if (nuevo_costo < mejor_costo) {
+                    if (nuevo_costo < mejor_costo)
+                    {
                         mejor_costo = nuevo_costo;
                         mejor_posicion = nueva_pos;
                         mejor_vecino = ciudad_cercana;
@@ -326,7 +383,8 @@ void heuristica_abruptos(int* ruta, int num_ciudades, int m, double** distancias
         }
 
         // Si se encontró un mejor vecino, actualizar la ruta
-        if (mejor_vecino != -1 && mejor_posicion != pos_actual) {
+        if (mejor_vecino != -1 && mejor_posicion != pos_actual)
+        {
             memcpy(ruta_temp, ruta, num_ciudades * sizeof(int));
             eliminar_de_posicion(ruta_temp, num_ciudades, pos_actual);
             insertar_en_posicion(ruta_temp, num_ciudades, ciudad_actual, mejor_posicion);
@@ -344,22 +402,25 @@ void heuristica_abruptos(int* ruta, int num_ciudades, int m, double** distancias
 // Implementación de ordenamiento introspectivo
 // Recibe un array de una particula, la profundidad máxima de recursión, el índice de inicio y fin
 // No devuelve nada (todo se hace por referencia)
-void introsort_util(particula *arr, int *profundidad_max, int inicio, int fin) {
+void introsort_util(particula *arr, int *profundidad_max, int inicio, int fin)
+{
     // Calculamos el tamaño de la partición
     int tamano = fin - inicio;
-    
+
     // Si el tamaño de la partición es pequeño, usamos el ordenamiento por inserción
-    if (tamano < 16) {
+    if (tamano < 16)
+    {
         insertion_sort(arr, inicio, fin - 1);
         return;
     }
-    
+
     // Si la profundidad máxima es cero, cambiamos a heapsort (para evitar peor caso de quicksort)
-    if (*profundidad_max == 0) {
+    if (*profundidad_max == 0)
+    {
         heapsort(arr + inicio, tamano);
         return;
     }
-    
+
     // En caso contrario, usamos quicksort
     (*profundidad_max)--;
     int pivote = particion(arr, inicio, fin - 1);
@@ -370,9 +431,11 @@ void introsort_util(particula *arr, int *profundidad_max, int inicio, int fin) {
 // Función para calcular el logaritmo en base 2 de un número entero (parte entera)
 // Recibe un número entero
 // Devuelve el logaritmo en base 2 (parte entera)
-int log2_suelo(int n) {
+int log2_suelo(int n)
+{
     int log = 0;
-    while (n > 1) {
+    while (n > 1)
+    {
         n >>= 1;
         log++;
     }
@@ -382,11 +445,12 @@ int log2_suelo(int n) {
 // Partición de quicksort usando la mediana de tres como pivote
 // Recibe un array de individuos, los índices bajo y alto
 // Devuelve el índice del pivote
-int particion(particula *arr, int bajo, int alto) {
+int particion(particula *arr, int bajo, int alto)
+{
     // Encontramos el índice del pivote usando la mediana de tres
     int medio = bajo + (alto - bajo) / 2;
     int indice_pivote = mediana_de_tres(arr, bajo, medio, alto);
-    
+
     // Movemos el pivote seleccionado al final del rango para facilitar partición
     intercambiar_particulas(&arr[indice_pivote], &arr[alto]);
 
@@ -397,10 +461,12 @@ int particion(particula *arr, int bajo, int alto) {
     int i = bajo - 1;
 
     // Recorremos el rango desde `bajo` hasta `alto - 1` (excluyendo el pivote)
-    for (int j = bajo; j < alto; j++) {
+    for (int j = bajo; j < alto; j++)
+    {
         // Si el elemento actual es menor o igual al pivote
-        if (arr[j].fitness_actual <= pivote.fitness_actual) {
-            i++; // Avanzamos `i` para marcar la posición de intercambio
+        if (arr[j].fitness_actual <= pivote.fitness_actual)
+        {
+            i++;                                       // Avanzamos `i` para marcar la posición de intercambio
             intercambiar_particulas(&arr[i], &arr[j]); // Intercambiamos el elemento menor al pivote
         }
     }
@@ -415,16 +481,20 @@ int particion(particula *arr, int bajo, int alto) {
 // Función para encontrar la mediana de tres elementos (usado en quicksort para mejorar el balanceo)
 // Recibe un array de particulas y tres índices
 // Devuelve el índice de la mediana
-int mediana_de_tres(particula *arr, int a, int b, int c) {
+int mediana_de_tres(particula *arr, int a, int b, int c)
+{
     // Se realizan comparaciones lógicas para encontrar la mediana
-    if (arr[a].fitness_actual <= arr[b].fitness_actual) {
+    if (arr[a].fitness_actual <= arr[b].fitness_actual)
+    {
         if (arr[b].fitness_actual <= arr[c].fitness_actual)
             return b;
         else if (arr[a].fitness_actual <= arr[c].fitness_actual)
             return c;
         else
             return a;
-    } else {
+    }
+    else
+    {
         if (arr[a].fitness_actual <= arr[c].fitness_actual)
             return a;
         else if (arr[b].fitness_actual <= arr[c].fitness_actual)
@@ -437,7 +507,8 @@ int mediana_de_tres(particula *arr, int a, int b, int c) {
 // Función para intercambiar dos elementos
 // Recibe dos punteros a particulas
 // No devuelve nada (todo se hace por referencia)
-void intercambiar_particulas(particula *a, particula *b) {
+void intercambiar_particulas(particula *a, particula *b)
+{
     particula temp = *a;
     *a = *b;
     *b = temp;
@@ -446,15 +517,18 @@ void intercambiar_particulas(particula *a, particula *b) {
 // Ordenamiento por inserción para arreglos pequeños
 // Recibe un array de particulas, el índice izquierdo y derecho
 // No devuelve nada (todo se hace por referencia)
-void insertion_sort(particula *arr, int izquierda, int derecha) {
+void insertion_sort(particula *arr, int izquierda, int derecha)
+{
     // Recorremos el array de izquierda a derecha
-    for (int i = izquierda + 1; i <= derecha; i++) {
+    for (int i = izquierda + 1; i <= derecha; i++)
+    {
         // Insertamos el elemento actual en la posición correcta
         particula clave = arr[i];
         int j = i - 1;
-        
+
         // Movemos los elementos mayores que la clave a una posición adelante
-        while (j >= izquierda && arr[j].fitness_actual > clave.fitness_actual) {
+        while (j >= izquierda && arr[j].fitness_actual > clave.fitness_actual)
+        {
             arr[j + 1] = arr[j];
             j--;
         }
@@ -467,13 +541,15 @@ void insertion_sort(particula *arr, int izquierda, int derecha) {
 // Heapsort para ordenar a las particulas por fitness
 // Recibe un array de particulas y el tamaño del array
 // No devuelve nada (todo se hace por referencia)
-void heapsort(particula *arr, int n) {
+void heapsort(particula *arr, int n)
+{
     // Construimos el montón (heapify)
     for (int i = n / 2 - 1; i >= 0; i--)
         heapify(arr, n, i);
 
     // Extraemos los elementos del montón uno por uno
-    for (int i = n - 1; i > 0; i--) {
+    for (int i = n - 1; i > 0; i--)
+    {
         particula temp = arr[0];
         arr[0] = arr[i];
         arr[i] = temp;
@@ -484,7 +560,8 @@ void heapsort(particula *arr, int n) {
 // Función auxiliar para heapsort
 // Recibe un array de particulas, el tamaño del array y un índice
 // No devuelve nada (todo se hace por referencia)
-void heapify(particula *arr, int n, int i) {
+void heapify(particula *arr, int n, int i)
+{
     // Inicializamos el mayor como el indice actual
     int mayor = i;
 
@@ -501,7 +578,8 @@ void heapify(particula *arr, int n, int i) {
         mayor = derecha;
 
     // Si el mayor no es el padre, intercambiamos y aplicamos heapify al subárbol
-    if (mayor != i) {
+    if (mayor != i)
+    {
         particula temp = arr[i];
         arr[i] = arr[mayor];
         arr[mayor] = temp;
@@ -509,24 +587,29 @@ void heapify(particula *arr, int n, int i) {
     }
 }
 
-//Funciones auxiliares de manipulación de arreglos (Usadas en la heurística de remoción de abruptos)
+// Funciones auxiliares de manipulación de arreglos (Usadas en la heurística de remoción de abruptos)
 
 // Función de comparación para qsort
 // Recibe dos punteros a distancia ordenada
 // Devuelve un entero que indica la relación entre las distancias
-int comparar_distancias(const void* a, const void* b) {
-    DistanciaOrdenada* da = (DistanciaOrdenada*)a;
-    DistanciaOrdenada* db = (DistanciaOrdenada*)b;
-    if (da->distancia < db->distancia) return -1;
-    if (da->distancia > db->distancia) return 1;
+int comparar_distancias(const void *a, const void *b)
+{
+    DistanciaOrdenada *da = (DistanciaOrdenada *)a;
+    DistanciaOrdenada *db = (DistanciaOrdenada *)b;
+    if (da->distancia < db->distancia)
+        return -1;
+    if (da->distancia > db->distancia)
+        return 1;
     return 0;
 }
 
 // Función para insertar un elemento en una posición específica del array
 // Recibe un puntero al array, la longitud del array, el elemento a insertar y la posición
 // No devuelve nada (todo se hace por referencia)
-void insertar_en_posicion(int* array, int longitud, int elemento, int posicion) {
-    for (int i = longitud - 1; i > posicion; i--) {
+void insertar_en_posicion(int *array, int longitud, int elemento, int posicion)
+{
+    for (int i = longitud - 1; i > posicion; i--)
+    {
         array[i] = array[i - 1];
     }
     array[posicion] = elemento;
@@ -535,8 +618,10 @@ void insertar_en_posicion(int* array, int longitud, int elemento, int posicion) 
 // Función para eliminar un elemento de una posición específica
 // Recibe un puntero al array, la longitud del array y la posición
 // No devuelve nada (todo se hace por referencia)
-void eliminar_de_posicion(int* array, int longitud, int posicion) {
-    for (int i = posicion; i < longitud - 1; i++) {
+void eliminar_de_posicion(int *array, int longitud, int posicion)
+{
+    for (int i = posicion; i < longitud - 1; i++)
+    {
         array[i] = array[i + 1];
     }
 }
