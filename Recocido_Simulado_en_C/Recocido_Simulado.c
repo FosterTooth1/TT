@@ -42,7 +42,6 @@ void generar_vecino(int *ruta_actual, int *ruta_vecino, int num_ciudades);
 // Calcula la probabilidad de aceptación de un nuevo vecino
 double probabilidad_aceptacion(double fitness_actual, double fitness_vecino, double temperatura);
 
-
 // Funciones auxiliares de manipulación de arreglos (Usadas en la heurística de remoción de abruptos)
 // Compara dos distancias para ordenarlas
 int comparar_distancias(const void *a, const void *b);
@@ -56,14 +55,17 @@ int main()
     // Iniciamos la medición del tiempo
     time_t inicio = time(NULL);
 
-    // Parámetros del PSO
     srand(time(NULL));
     int longitud_ruta = 32;
-    float temperatura_inicial = longitud_ruta * longitud_ruta;
-    float temperatura_final = 0.00000001;
-    float tasa_enfriamiento = 0.999;
-    
-    int num_generaciones = 30000;
+    double temperatura_inicial;
+    double temperatura_final = 0.001;
+    double tasa_enfriamiento = 0.92; // 0.87
+
+    // Parámetros adaptativos
+    const int max_neighbours = 1000; // L(T) = k·N, con k entre 10 y 100; N= 32
+    const int max_successes = (int)(0.5 * max_neighbours);
+
+    int num_generaciones = 75;
     int m = 3;
 
     // Nombre del archivo con las distancias
@@ -131,38 +133,77 @@ int main()
     memcpy(mejor->ruta, actual->ruta, longitud_ruta * sizeof(int));
     mejor->fitness = actual->fitness;
 
-    double temperatura = temperatura_inicial;
     int *vecino = malloc(longitud_ruta * sizeof(int));
+
+    double suma = 0, suma_cuadrados = 0;
+    for (int i = 0; i < 100; i++)
+    {
+        generar_vecino(actual->ruta, vecino, longitud_ruta);
+        // Aplicar la heurística de remoción de abruptos al vecino
+        heuristica_abruptos(vecino, longitud_ruta, m, distancias);
+        double fit = calcular_fitness(vecino, distancias, longitud_ruta);
+        suma += fit;
+        suma_cuadrados += fit * fit;
+    }
+    double desviacion = sqrt((suma_cuadrados - suma * suma / 100) / 99);
+    temperatura_inicial = desviacion; // Ajuste empírico
+
+    // Calculo de la temperatura inicial
+    // Usando un porcentaje de la mejor solución
+    // temperatura_inicial = mejor->fitness * 0.3;
+
+    double temperatura = temperatura_inicial;
 
     // Ciclo principal de recocido
     for (int iter = 0; iter < num_generaciones && temperatura > temperatura_final; iter++)
     {
-        generar_vecino(actual->ruta, vecino, longitud_ruta);
-        double fitness_vecino = calcular_fitness(vecino, distancias, longitud_ruta);
+        // Actualizar temperatura usando Cauchy: T_k = T0 / (1 + k)
+        temperatura = temperatura_inicial / (iter + 1); 
+        int neighbours = 0;
+        int successes = 0;
 
-        // Criterio de aceptación
-        if (probabilidad_aceptacion(actual->fitness, fitness_vecino, temperatura) > ((double)rand() / RAND_MAX))
+        // Fase de equilibrio: L(T) vecinos o hasta max_successes
+        while (neighbours < max_neighbours && successes < max_successes)
         {
-            memcpy(actual->ruta, vecino, longitud_ruta * sizeof(int));
-            actual->fitness = fitness_vecino;
+            generar_vecino(actual->ruta, vecino, longitud_ruta);
+            double fit_vecino = calcular_fitness(vecino, distancias, longitud_ruta);
 
-            // Actualizar mejor solución
-            if (actual->fitness < mejor->fitness)
+            if (probabilidad_aceptacion(actual->fitness, fit_vecino, temperatura) > ((double)rand() / RAND_MAX))
             {
-                memcpy(mejor->ruta, actual->ruta, longitud_ruta * sizeof(int));
-                mejor->fitness = actual->fitness;
+
+                // Aceptamos el vecino
+                memcpy(actual->ruta, vecino, longitud_ruta * sizeof(int));
+                actual->fitness = fit_vecino;
+                successes++;
+
+                // Actualizamos mejor si procede
+                if (actual->fitness < mejor->fitness)
+                {
+                    memcpy(mejor->ruta, actual->ruta, longitud_ruta * sizeof(int));
+                    mejor->fitness = actual->fitness;
+                }
             }
+
+            neighbours++;
         }
 
-        // Enfriamiento
-        temperatura *= tasa_enfriamiento;
+        // Una vez cumplido L(T) o el nº de éxitos, bajamos temperatura:
+        //temperatura *= tasa_enfriamiento;
 
-        // Opcional: Mostrar progreso cada 100 iteraciones
-        if (iter % 100 == 0)
-        {
-            printf("Iter: %d, Temp: %.2f, Mejor: %.2f, Actual: %.2f\n",
-                   iter, temperatura, mejor->fitness, actual->fitness);
-        }
+        // Aplicar heurística de remoción de abruptos tras cada enfriamiento
+        // (líneas comentadas para medir primero sin ella)
+
+        heuristica_abruptos(actual->ruta,
+                            longitud_ruta,
+                            m,
+                            distancias);
+        actual->fitness = calcular_fitness(actual->ruta,
+                                           distancias,
+                                           longitud_ruta);
+
+        // (Opcional) Mostrar info de cada paso de enfriamiento
+        printf("Temp:= %.6f | Neighbors: %4d | Successes: %3d | Mejor: %.2f\n",
+               temperatura, neighbours, successes, mejor->fitness);
     }
 
     // Mostrar tiempo de ejecución
@@ -397,7 +438,8 @@ double probabilidad_aceptacion(double fitness_actual, double fitness_vecino, dou
     return exp((fitness_actual - fitness_vecino) / temperatura);
 }
 
-void liberar_solucion(Solucion *solucion) {
+void liberar_solucion(Solucion *solucion)
+{
     free(solucion->ruta);
     free(solucion);
 }
