@@ -25,12 +25,13 @@ class AlgoritmoRecocido:
             c_int,    # max_neighbours
             c_int,    # m
             c_char_p, # nombre_archivo
+            c_int     # heuristica
         ]
         self.lib.liberar_resultado_recocido.argtypes = [POINTER(ResultadoRecocido)]
 
     def ejecutar(self, longitud_ruta, num_generaciones,
                  tasa_enfriamiento, temperatura_final,
-                 max_neighbours, m, nombre_archivo):
+                 max_neighbours, m, nombre_archivo, heuristica):
         ptr = self.lib.ejecutar_algoritmo_recocido(
             longitud_ruta,
             num_generaciones,
@@ -38,7 +39,8 @@ class AlgoritmoRecocido:
             temperatura_final,
             max_neighbours,
             m,
-            nombre_archivo.encode('utf-8')
+            nombre_archivo.encode('utf-8'),
+            heuristica
         )
         res = ptr.contents
 
@@ -69,7 +71,8 @@ def main():
         temperatura_final=0.001,
         max_neighbours=1000,
         m=3,
-        nombre_archivo="Distancias_no_head.csv"
+        nombre_archivo="Distancias_no_head.csv",
+        heuristica=0
     )
 
     plt.plot(out["fitness_generaciones"])

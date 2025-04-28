@@ -27,7 +27,8 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
                                                       double temperatura_final,
                                                       int max_neighbours,
                                                       int m,
-                                                      char *nombre_archivo)
+                                                      char *nombre_archivo,
+                                                      int heuristica)
 {
     time_t inicio = time(NULL);
     srand((unsigned)inicio);
@@ -69,8 +70,10 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     // 3) Preparar soluciones
     Solucion *sol = crear_solucion(longitud_ruta, longitud_ruta);
     crear_permutacion(sol, longitud_ruta);
-    heuristica_abruptos(sol->ruta, longitud_ruta, m, distancias);
-
+    if (heuristica == 1){
+        heuristica_abruptos(sol->ruta, longitud_ruta, m, distancias);
+    }
+    
     Solucion *actual = crear_solucion(longitud_ruta, longitud_ruta);
     Solucion *mejor = crear_solucion(longitud_ruta, longitud_ruta);
     memcpy(actual->ruta, sol->ruta, longitud_ruta * sizeof(int));
@@ -85,7 +88,9 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     for (int i = 0; i < 100; i++)
     {
         generar_vecino(actual->ruta, vecino, longitud_ruta);
-        heuristica_abruptos(vecino, longitud_ruta, m, distancias);
+        if (heuristica == 1){
+            heuristica_abruptos(vecino, longitud_ruta, m, distancias);     
+        }
         double f = calcular_fitness(vecino, distancias, longitud_ruta);
         suma += f;
         suma2 += f * f;
@@ -123,7 +128,11 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
             neigh++;
         }
         // heurística tras enfriar
-        heuristica_abruptos(actual->ruta, longitud_ruta, m, distancias);
+
+        if (heuristica == 1){
+            heuristica_abruptos(actual->ruta, longitud_ruta, m, distancias);
+        }
+        // Actualizar fitness
         actual->fitness = calcular_fitness(actual->ruta, distancias, longitud_ruta);
         hist[k] = mejor->fitness;
     }
