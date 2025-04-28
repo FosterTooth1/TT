@@ -61,14 +61,14 @@ void crear_permutaciones(Cumulo *cumulo, int longitud_ruta_actual)
 // Recibe un puntero a el cumulo, un puntero a la mejor particula (gbest), una matriz de distancias, la longitud de la ruta actual
 // la probabilidad de pbest y la probabilidad de gbest
 // No devuelve nada (todo se hace por referencia)
-void actualizar_cumulo(Cumulo *cumulo, int *gbest, double **distancias, int longitud_ruta_actual, float prob_pbest, float prob_gbest, float prob_inercia)
+void actualizar_cumulo(Cumulo *cumulo, int *gbest, double **distancias, int longitud_ruta_actual, float prob_pbest, float prob_gbest, float prob_inercia, int m, int heuristica)
 {
 
     // Recorre cada particula en el cumulo
     for (int i = 0; i < cumulo->tamano; i++)
     {
         // Actualiza la ruta y el fitness de la particula
-        actualizar_particula(&cumulo->particulas[i], gbest, distancias, longitud_ruta_actual, prob_pbest, prob_gbest, prob_inercia);
+        actualizar_particula(&cumulo->particulas[i], gbest, distancias, longitud_ruta_actual, prob_pbest, prob_gbest, prob_inercia, m, heuristica);
     }
 }
 
@@ -77,7 +77,7 @@ void actualizar_cumulo(Cumulo *cumulo, int *gbest, double **distancias, int long
 // la probabilidad de pbest, la probabilidad de gbest y la probabilidad de inercia
 // No devuelve nada (todo se hace por referencia)
 void actualizar_particula(Particula *particula, int *gbest, double **distancias,
-                          int longitud_ruta_actual, float prob_pbest, float prob_gbest, float prob_inercia)
+                          int longitud_ruta_actual, float prob_pbest, float prob_gbest, float prob_inercia, int m, int heuristica)
 {
     // Paso 1: Clonar rutas originales
     int *ruta_original = clonar_ruta(particula->ruta_actual, longitud_ruta_actual);
@@ -194,7 +194,9 @@ void actualizar_particula(Particula *particula, int *gbest, double **distancias,
     particula->num_swaps_anteriores = total_swaps;
 
     // Paso 7: Aplicar heurística de remoción de abruptos (opcional)
-    heuristica_abruptos(nueva_ruta, longitud_ruta_actual, 3, distancias);
+    if (heuristica == 1){
+    heuristica_abruptos(nueva_ruta, longitud_ruta_actual, m, distancias);
+    }
 
     // Paso 8: Actualizar fitness y rutas
     double nuevo_fitness = calcular_fitness(nueva_ruta, distancias, longitud_ruta_actual);

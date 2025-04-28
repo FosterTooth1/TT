@@ -1,63 +1,68 @@
-import ctypes
-from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char
 import os
 import matplotlib.pyplot as plt
+import ctypes
+from ctypes import (
+    CDLL, Structure, POINTER,
+    c_int, c_double, c_float,
+    c_char_p, c_char
+)
 
 class ResultadoPSO(Structure):
     _fields_ = [
-        ("recorrido", POINTER(c_int)),
-        ("fitness", c_double),
-        ("tiempo_ejecucion", c_double),
-        ("nombres_ciudades", POINTER(c_char * 50)),
+        ("recorrido",          POINTER(c_int)),
+        ("fitness",            c_double),
+        ("tiempo_ejecucion",   c_double),
+        ("nombres_ciudades",   POINTER(c_char * 50)),
         ("longitud_recorrido", c_int),
         ("fitness_generaciones", POINTER(c_double)),
     ]
 
-
 class AlgoritmoPSO:
     def __init__(self, ruta_biblioteca):
-        self.biblioteca = ctypes.CDLL(ruta_biblioteca)
-        self.biblioteca.ejecutar_algoritmo_pso.restype = POINTER(ResultadoPSO)
-        self.biblioteca.ejecutar_algoritmo_pso.argtypes = [
-            c_int, c_int, c_int, c_double, c_double, c_char_p, c_double
+        self.bibl = CDLL(ruta_biblioteca)
+        self.bibl.ejecutar_algoritmo_pso.restype = POINTER(ResultadoPSO)
+        self.bibl.ejecutar_algoritmo_pso.argtypes = [
+            c_int, c_int, c_int,
+            c_float, c_float,
+            c_char_p,
+            c_float,
+            c_int, c_int
         ]
-        self.biblioteca.liberar_resultado.argtypes = [POINTER(ResultadoPSO)]
-    
+        self.bibl.liberar_resultado.argtypes = [POINTER(ResultadoPSO)]
+
     def ejecutar(self, params):
-        resultado_ptr = self.biblioteca.ejecutar_algoritmo_pso(
+        ptr = self.bibl.ejecutar_algoritmo_pso(
             params['tamano_poblacion'],
             params['longitud_ruta'],
             params['num_generaciones'],
             params['prob_pbest'],
             params['prob_gbest'],
-            params['nombre_archivo'].encode('utf-8'),
+            params['nombre_archivo'].encode(),
             params['prob_inercia'],
+            params['m'],
+            params['heuristica'],
         )
-        
-        resultado = resultado_ptr.contents
-        num_gen = params['num_generaciones']
-        fitness_generaciones = [resultado.fitness_generaciones[i] for i in range(num_gen)]
+        res = ptr.contents
 
-        
-        nombres_ciudades = []
-        for i in range(resultado.longitud_recorrido):
-            raw = resultado.nombres_ciudades[i]   # esto es un (c_char * 50)
-            # .value te devuelve bytes hasta el primer '\0'
-            nombre = raw.value.decode('utf-8')     
-            nombres_ciudades.append(nombre)
+        # fitness_generaciones
+        fg = [res.fitness_generaciones[i] for i in range(params['num_generaciones'])]
 
+        # nombres_ciudades
+        nc = []
+        for i in range(res.longitud_recorrido):
+            raw = res.nombres_ciudades[i]
+            nombre = bytes(raw).split(b'\x00',1)[0].decode()
+            nc.append(nombre)
 
-        
-        recorrido = [resultado.recorrido[i] for i in range(resultado.longitud_recorrido)]
-        
-        self.biblioteca.liberar_resultado(resultado_ptr)
-        
+        recorrido = [res.recorrido[i] for i in range(res.longitud_recorrido)]
+        self.bibl.liberar_resultado(ptr)
+
         return {
             'recorrido': recorrido,
-            'nombres_ciudades': nombres_ciudades,
-            'fitness': resultado.fitness,
-            'tiempo_ejecucion': resultado.tiempo_ejecucion,
-            'fitness_generaciones': fitness_generaciones
+            'nombres_ciudades': nc,
+            'fitness': res.fitness,
+            'tiempo_ejecucion': res.tiempo_ejecucion,
+            'fitness_generaciones': fg
         }
 
 def main():
@@ -74,7 +79,9 @@ def main():
         'prob_pbest': 0.35,
         'prob_gbest': 0.7,
         'nombre_archivo': "Distancias_no_head.csv",
-        'prob_inercia': 0.3, 
+        'prob_inercia': 0.3,
+        'm': 3,
+        'heuristica': 1,
     }
     
     resultado = pso.ejecutar(params)

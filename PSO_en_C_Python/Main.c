@@ -18,9 +18,9 @@ typedef struct {
 #endif
 
 EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_ruta, 
-                                           int num_generaciones, float prob_pbest, 
-                                           float prob_gbest, char* nombre_archivo,
-                                           float prob_inercia) {
+                                           int num_generaciones, double prob_pbest, 
+                                           double prob_gbest, char* nombre_archivo,
+                                           double prob_inercia, int m, int heuristica) {
 
     // Iniciamos la medición del tiempo
     time_t inicio = time(NULL);
@@ -92,7 +92,7 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
     //Ejecutamos el PSO
     for (int generacion = 0; generacion < num_generaciones; generacion++) {
         // Actualizamos el cumulo
-        actualizar_cumulo(cumulo, gbest, distancias, longitud_ruta, prob_pbest, prob_gbest, prob_inercia);
+        actualizar_cumulo(cumulo, gbest, distancias, longitud_ruta, prob_pbest, prob_gbest, prob_inercia, m, heuristica);
 
         // Ordenamos el cumulo de acuerdo a su fitness
         ordenar_cumulo(cumulo);
@@ -143,12 +143,11 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
     return resultado;  // Devolvemos el resultado a Python
 }
 
-// Función para liberar la memoria del resultado en Python
 EXPORT void liberar_resultado(ResultadoPSO* resultado) {
     if (resultado) {
         free(resultado->recorrido);
         free(resultado->nombres_ciudades);
-        free(resultado->fitness_generaciones);
-        free(resultado);
+        free(resultado->fitness_generaciones); // Liberar primero
+        free(resultado); // Luego la estructura
     }
 }

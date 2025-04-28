@@ -42,9 +42,9 @@ Cumulo *crear_cumulo(int tamano, int longitud_permutacion);
 //Crea permutaciones aleatorias para cada particula de el cumulo
 void crear_permutaciones(Cumulo *cumulo, int longitud_permutacion);
 //Actualizar la ruta y el fitness del cumulo tomando en cuenta la mejor ruta global y la mejor ruta personal de cada particula
-void actualizar_cumulo(Cumulo *cumulo, int* gbest, double **distancias, int longitud_permutacion, float prob_pbest, float prob_gbest, float prob_inercia);
+void actualizar_cumulo(Cumulo *cumulo, int* gbest, double **distancias, int longitud_permutacion, float prob_pbest, float prob_gbest, float prob_inercia, int m, int heuristica);
 //Actualizar la ruta y el fitness de una particula tomando en cuenta la mejor ruta global y la mejor ruta personal
-void actualizar_particula(Particula *particula, int* gbest, double **distancias, int longitud_permutacion, float prob_pbest, float prob_gbest, float prob_inercia);
+void actualizar_particula(Particula *particula, int* gbest, double **distancias, int longitud_permutacion, float prob_pbest, float prob_gbest, float prob_inercia, int m, int heuristica);
 //Ordena a la población de acuerdo a su fitness mediante el algoritmo de introsort
 void ordenar_cumulo(Cumulo *cumulo);
 //Libera la memoria usada para el cumulo
