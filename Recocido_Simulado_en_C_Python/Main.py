@@ -1,4 +1,3 @@
-# recocido.py
 import ctypes
 from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char
 import os

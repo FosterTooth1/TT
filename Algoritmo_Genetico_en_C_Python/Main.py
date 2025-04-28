@@ -1,6 +1,7 @@
 import ctypes
 from ctypes import c_int, c_double, c_char_p, c_char, POINTER, Structure
 import os
+import matplotlib.pyplot as plt
 
 # Definimos una estructura que mapea la estructura `ResultadoGenetico` en C
 class ResultadoGenetico(Structure):
@@ -9,7 +10,8 @@ class ResultadoGenetico(Structure):
         ("fitness", c_double),                # Fitness del mejor individuo
         ("tiempo_ejecucion", c_double),       # Tiempo de ejecución del algoritmo
         ("nombres_ciudades", POINTER(c_char * 50 * 32)),  # Puntero a los nombres de las ciudades
-        ("longitud_recorrido", c_int)         # Longitud de la ruta
+        ("longitud_recorrido", c_int),         # Longitud de la ruta
+        ("fitness_generaciones", POINTER(c_double)),
     ]
 
 # Clase para la biblioteca compartida del algoritmo genético
@@ -69,13 +71,16 @@ class AlgoritmoGenetico:
                 nombre_ciudad = bytes(resultado.contents.nombres_ciudades.contents[i]).decode('utf-8')
                 nombre_ciudad = nombre_ciudad.split('\0')[0]  # Eliminamos los caracteres nulos
                 nombres_ciudades.append(nombre_ciudad)
+                
+            
             
             # Creamos un diccionario con los resultados
             salida = {
                 'recorrido': recorrido,                 # Ruta como lista de índices
                 'nombres_ciudades': nombres_ciudades,   # Lista de nombres de las ciudades
                 'fitness': resultado.contents.fitness,  # Fitness del mejor individuo
-                'tiempo_ejecucion': resultado.contents.tiempo_ejecucion  # Tiempo de ejecución
+                'tiempo_ejecucion': resultado.contents.tiempo_ejecucion,  # Tiempo de ejecución
+                "fitness_generaciones": [resultado.contents.fitness_generaciones[i] for i in range(num_generaciones)] # Evolución del fitness
             }
             
             # Liberamos la memoria reservada por la biblioteca C
@@ -102,9 +107,9 @@ def main():
     ag = AlgoritmoGenetico(ruta_biblioteca)
     
     # Definir los parámetros para el algoritmo genético
-    tamano_poblacion = 1000
+    tamano_poblacion = 150
     longitud_genotipo = 32
-    num_generaciones = 100
+    num_generaciones = 500
     num_competidores = 2
     m = 3
     probabilidad_mutacion = 0.3
@@ -129,6 +134,14 @@ def main():
         print(f"{i+1}. {nombre_ciudad} (índice: {indice_ciudad})")
     print(f"\nFitness: {resultado['fitness']}")
     print(f"Tiempo de ejecución: {resultado['tiempo_ejecucion']:.2f} segundos")
+    
+    # Graficar la evolución del fitness a lo largo de las generaciones
+    plt.plot(resultado['fitness_generaciones'])
+    plt.title("Evolución del Fitness en el Algoritmo Genético")
+    plt.xlabel("Generación")
+    plt.ylabel("Fitness")
+    plt.grid()
+    plt.show()
 
 # Punto de entrada principal del programa
 if __name__ == "__main__":

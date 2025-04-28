@@ -8,6 +8,7 @@ typedef struct {
     double tiempo_ejecucion;      // Tiempo de ejecución del algoritmo
     char (*nombres_ciudades)[50]; // Arreglo con los nombres de las ciudades correspondientes al mejor recorrido
     int longitud_recorrido;       // Longitud del recorrido
+    double *fitness_generaciones; // Array para histórico de fitness
 } ResultadoGenetico;
 
 // Definimos el atributo de exportación según el sistema operativo
@@ -93,6 +94,9 @@ EXPORT ResultadoGenetico* ejecutar_algoritmo_genetico(
     }
     MejorIndividuo->fitness = Poblacion->individuos[0].fitness;
 
+    // Creamos un array para almacenar el fitness de cada generación
+    double *fitness_generaciones = (double *)malloc(num_generaciones * sizeof(double));
+
     // Bucle principal del algoritmo genético
     for (int generacion = 0; generacion < num_generaciones; generacion++) {
         // Selección de padres mediante torneo
@@ -120,6 +124,9 @@ EXPORT ResultadoGenetico* ejecutar_algoritmo_genetico(
             }
             MejorIndividuo->fitness = Poblacion->individuos[0].fitness;
         }
+
+        // Guardamos el fitness de la mejor solución de esta generación
+        fitness_generaciones[generacion] = Poblacion->individuos[0].fitness;
     }
 
     // Calculamos el tiempo total de ejecución del algoritmo
@@ -131,6 +138,7 @@ EXPORT ResultadoGenetico* ejecutar_algoritmo_genetico(
     resultado->recorrido = (int*)malloc(longitud_genotipo * sizeof(int));
     resultado->nombres_ciudades = malloc(longitud_genotipo * sizeof(char[50]));
     resultado->longitud_recorrido = longitud_genotipo;
+    resultado->fitness_generaciones = fitness_generaciones; // Guardamos el histórico de fitness
 
     // Rellenamos la estructura con el mejor recorrido y su información
     for (int i = 0; i < longitud_genotipo; i++) {
@@ -160,6 +168,7 @@ EXPORT void liberar_resultado(ResultadoGenetico* resultado) {
     if (resultado) {
         free(resultado->recorrido);
         free(resultado->nombres_ciudades);
+        free(resultado->fitness_generaciones);
         free(resultado);
     }
 }
