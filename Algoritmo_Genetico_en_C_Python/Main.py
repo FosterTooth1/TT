@@ -32,7 +32,8 @@ class AlgoritmoGenetico:
             c_int,      # m parametro de heurística
             c_double,   # probabilidad_mutacion
             c_double,   # probabilidad_cruce
-            c_char_p    # nombre_archivo (ruta al archivo con matriz de distancias)
+            c_char_p,   # nombre_archivo (ruta al archivo con matriz de distancias)
+            c_int       # Heuristica (0 o 1) 
         ]
         
         # Configuramos los argumentos de la función para liberar resultados
@@ -40,7 +41,7 @@ class AlgoritmoGenetico:
 
     def ejecutar(self, tamano_poblacion, longitud_genotipo, num_generaciones,
                  num_competidores, m, probabilidad_mutacion, 
-                 probabilidad_cruce, nombre_archivo):
+                 probabilidad_cruce, nombre_archivo, heuristica):
         try:
             # Convertimos el nombre del archivo a una cadena de bytes
             nombre_archivo_bytes = nombre_archivo.encode('utf-8')
@@ -54,7 +55,8 @@ class AlgoritmoGenetico:
                 m,
                 probabilidad_mutacion,
                 probabilidad_cruce,
-                nombre_archivo_bytes
+                nombre_archivo_bytes,
+                heuristica
             )
             
             # Verificamos si la función devolvió un resultado válido
@@ -115,6 +117,7 @@ def main():
     probabilidad_mutacion = 0.3
     probabilidad_cruce = 0.9
     nombre_archivo = "Distancias_no_head.csv"
+    heuristica = 0 
     
     # Ejecutar el algoritmo genético con estos parámetros
     resultado = ag.ejecutar(
@@ -125,7 +128,8 @@ def main():
         m=m,
         probabilidad_mutacion=probabilidad_mutacion,
         probabilidad_cruce=probabilidad_cruce,
-        nombre_archivo=nombre_archivo
+        nombre_archivo=nombre_archivo,
+        heuristica=heuristica
     )
     
     # Mostrar los resultados

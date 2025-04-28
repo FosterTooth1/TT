@@ -36,7 +36,7 @@ void ordenar_poblacion(poblacion *poblacion);
 //Selecciona a los padres de la población mediante un torneo de fitness
 void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_competidores, int longitud_genotipo);
 //Cruza a los padres para generar a los hijos dependiendo de una probabilidad de cruce
-void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int longitud_genotipo, int m, double **distancias, double probabilidad_cruce);
+void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int longitud_genotipo, int m, double **distancias, double probabilidad_cruce, int heuristica);
 //Muta a un individuo dependiendo de una probabilidad de mutación
 void mutar_individuo(individuo *individuo, double **distancias, double probabilidad_mutacion, int longitud_genotipo);
 //Actualiza a la población con los nuevos individuos (hijos)

@@ -129,7 +129,7 @@ void seleccionar_padres_torneo(poblacion *Poblacion, poblacion *padres, int num_
 // Cruza a los padres para generar a los hijos dependiendo de una probabilidad de cruce
 // Recibe un puntero a la población destino, un puntero a la población origen y la longitud del genotipo
 // No devuelve nada (todo se hace por referencia)
-void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int longitud_genotipo, int m, double **distancias, double probabilidad_cruce) {
+void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int longitud_genotipo, int m, double **distancias, double probabilidad_cruce, int heuristica) {
     for (int i = 0; i < num_pob; i += 2) {
         // Genera un número aleatorio y determina si se realiza la cruza
         if ((double)rand() / RAND_MAX < probabilidad_cruce) {
@@ -142,8 +142,12 @@ void cruzar_individuos(poblacion *padres, poblacion *hijos, int num_pob, int lon
             cycle_crossover(padres->individuos[i].genotipo, padres->individuos[i + 1].genotipo, hijo1, longitud_genotipo);
             cycle_crossover(padres->individuos[i + 1].genotipo, padres->individuos[i].genotipo, hijo2, longitud_genotipo);
 
-            heuristica_abruptos(hijo1, longitud_genotipo, m, distancias);
-            heuristica_abruptos(hijo2, longitud_genotipo, m, distancias);
+            // Si la heurística está habilitada, se aplica a los hijos
+            if (heuristica == 1) {
+                // Aplica la heurística de remoción de abruptos a los hijos
+                heuristica_abruptos(hijo1, longitud_genotipo, m, distancias);
+                heuristica_abruptos(hijo2, longitud_genotipo, m, distancias);
+            }
 
             // Crea un array temporal para almacenar los individuos
             int **individuos = malloc(4 * sizeof(int *));

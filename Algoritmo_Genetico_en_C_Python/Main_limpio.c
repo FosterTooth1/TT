@@ -27,7 +27,8 @@ EXPORT ResultadoGenetico* ejecutar_algoritmo_genetico(
     int m,                        // Valor para considerar las m ciudades más cercanas en la heurística
     double probabilidad_mutacion, // Probabilidad de mutación
     double probabilidad_cruce,    // Probabilidad de cruce
-    const char* nombre_archivo    // Nombre del archivo con la matriz de distancias
+    const char* nombre_archivo,   // Nombre del archivo con la matriz de distancias
+    int heuristica                // Bandera para activar la heurística de remoción de abruptos 
 ) {
     // Iniciamos la medición del tiempo de ejecución
     time_t inicio = time(NULL);
@@ -103,7 +104,7 @@ EXPORT ResultadoGenetico* ejecutar_algoritmo_genetico(
         seleccionar_padres_torneo(Poblacion, padres, num_competidores, longitud_genotipo);
 
         // Cruce entre los padres para generar hijos
-        cruzar_individuos(padres, hijos, tamano_poblacion, longitud_genotipo, m, distancias, probabilidad_cruce);
+        cruzar_individuos(padres, hijos, tamano_poblacion, longitud_genotipo, m, distancias, probabilidad_cruce, heuristica);
 
         // Aplicación de mutación en los hijos
         for (int i = 0; i < tamano_poblacion; i++) {
