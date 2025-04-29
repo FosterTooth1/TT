@@ -1,0 +1,65 @@
+ALGORITHMS = [
+    {   # Algoritmo Genético
+        "name": "Genetico",
+        "class": AlgoritmoGenetico,
+        "library": "genetic_algo.dll" if os.name == 'nt' else "libgenetic_algo.so",
+        "params": {
+            "tamano_poblacion": 200,
+            "longitud_genotipo": 32,
+            "num_generaciones": 500,
+            "num_competidores": 2,
+            "m": 3,
+            "probabilidad_mutacion": 0.02,
+            "probabilidad_cruce": 0.8,
+            "nombre_archivo": "Distancias_no_head.csv",
+            "heuristica": 0
+        }
+    },
+    {   # PSO
+        "name": "PSO",
+        "class": AlgoritmoPSO,
+        "library": "pso.dll" if os.name == 'nt' else "libpso.so",
+        "params": {
+            "tamano_poblacion": 200,
+            "longitud_ruta": 32,
+            "num_generaciones": 500,
+            "prob_pbest": 0.4,
+            "prob_gbest": 0.6,
+            "nombre_archivo": "Distancias_no_head.csv",
+            "prob_inercia": 0.5,
+            "m": 3,
+            "heuristica": 0
+        }
+    },
+    {   # Recocido Simulado
+        "name": "Recocido",
+        "class": AlgoritmoRecocido,
+        "library": "recocido.dll" if os.name == 'nt' else "librecocido.so",
+        "params": {
+            "longitud_ruta": 32,
+            "num_generaciones": 10000,
+            "tasa_enfriamiento": 0.95,
+            "temperatura_final": 1e-3,
+            "max_neighbours": 10,
+            "m": 3,
+            "nombre_archivo": "Distancias_no_head.csv",
+            "heuristica": 0
+        }
+    },
+    {   # Búsqueda Tabú
+        "name": "Tabu",
+        "class": AlgoritmoTabu,
+        "library": "tabu.dll" if os.name == 'nt' else "libtabu.so",
+        "params": {
+            "longitud_ruta": 32,
+            "tenencia_tabu": 7,
+            "num_generaciones": 10000,
+            "max_neighbours": 10,
+            "umbral_est_global": 0.1,
+            "umbral_est_local": 0.05,
+            "m": 3,
+            "nombre_archivo": "Distancias_no_head.csv",
+            "heuristica": 0
+        }
+    }
+]

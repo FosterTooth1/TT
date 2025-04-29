@@ -70,10 +70,11 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     // 3) Preparar soluciones
     Solucion *sol = crear_solucion(longitud_ruta, longitud_ruta);
     crear_permutacion(sol, longitud_ruta);
-    if (heuristica == 1){
+    if (heuristica == 1)
+    {
         heuristica_abruptos(sol->ruta, longitud_ruta, m, distancias);
     }
-    
+
     Solucion *actual = crear_solucion(longitud_ruta, longitud_ruta);
     Solucion *mejor = crear_solucion(longitud_ruta, longitud_ruta);
     memcpy(actual->ruta, sol->ruta, longitud_ruta * sizeof(int));
@@ -88,8 +89,9 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     for (int i = 0; i < 100; i++)
     {
         generar_vecino(actual->ruta, vecino, longitud_ruta);
-        if (heuristica == 1){
-            heuristica_abruptos(vecino, longitud_ruta, m, distancias);     
+        if (heuristica == 1)
+        {
+            heuristica_abruptos(vecino, longitud_ruta, m, distancias);
         }
         double f = calcular_fitness(vecino, distancias, longitud_ruta);
         suma += f;
@@ -105,9 +107,12 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     double *hist = malloc(num_generaciones * sizeof(double));
 
     // 6) Bucle de recocido
-    for (int k = 0; k < num_generaciones && T > temperatura_final; k++)
+    // 6) Bucle de recocido
+    for (int k = 1; k <= num_generaciones && T > temperatura_final; k++)
     {
-        T = T0 / (k + 1); // Cauchy
+        // Enfriamiento logarítmico de Béltsman
+        T = T0 / log(k + 1.0);
+
         int neigh = 0, succ = 0;
         while (neigh < max_neighbours && succ < max_successes)
         {
@@ -120,21 +125,16 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
                 actual->fitness = fv;
                 succ++;
                 if (fv < mejor->fitness)
-                {
-                    memcpy(mejor->ruta, vecino, longitud_ruta * sizeof(int));
-                    mejor->fitness = fv;
-                }
+                    memcpy(mejor->ruta, vecino, longitud_ruta * sizeof(int)), mejor->fitness = fv;
             }
             neigh++;
         }
-        // heurística tras enfriar
 
-        if (heuristica == 1){
+        if (heuristica == 1)
             heuristica_abruptos(actual->ruta, longitud_ruta, m, distancias);
-        }
-        // Actualizar fitness
+
         actual->fitness = calcular_fitness(actual->ruta, distancias, longitud_ruta);
-        hist[k] = mejor->fitness;
+        hist[k - 1] = mejor->fitness; // recuerda que ahora k arranca en 1
     }
 
     time_t fin = time(NULL);

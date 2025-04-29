@@ -66,10 +66,10 @@ def main():
     sa = AlgoritmoRecocido(ruta)
     out = sa.ejecutar(
         longitud_ruta=32,
-        num_generaciones=75,
+        num_generaciones=25000,
         tasa_enfriamiento=0.92,
-        temperatura_final=0.001,
-        max_neighbours=1000,
+        temperatura_final=0.000000001,
+        max_neighbours=320,
         m=3,
         nombre_archivo="Distancias_no_head.csv",
         heuristica=0

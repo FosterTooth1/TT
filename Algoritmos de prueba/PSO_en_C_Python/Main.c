@@ -97,14 +97,14 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
         // Ordenamos el cumulo de acuerdo a su fitness
         ordenar_cumulo(cumulo);
 
-        // Guardamos el fitness de la generación actual
-        fitness_generaciones[generacion] = fitness_gbest; // Guardamos el fitness de la generación actual
-
         // Actualizamos la mejor ruta global (gbest) si es necesario
         if (cumulo->particulas[0].fitness_mejor < fitness_gbest) {
             fitness_gbest = cumulo->particulas[0].fitness_mejor;
             memcpy(gbest, cumulo->particulas[0].mejor_ruta, longitud_ruta * sizeof(int));
         }
+
+        // Guardamos el fitness de la generación actual
+        fitness_generaciones[generacion] = fitness_gbest; // Guardamos el fitness de la generación actual
         
     }
 

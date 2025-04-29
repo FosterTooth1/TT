@@ -23,9 +23,9 @@ class AlgoritmoPSO:
         self.bibl.ejecutar_algoritmo_pso.restype = POINTER(ResultadoPSO)
         self.bibl.ejecutar_algoritmo_pso.argtypes = [
             c_int, c_int, c_int,
-            c_float, c_float,
+            c_double, c_double,
             c_char_p,
-            c_float,
+            c_double,
             c_int, c_int
         ]
         self.bibl.liberar_resultado.argtypes = [POINTER(ResultadoPSO)]
@@ -73,7 +73,7 @@ def main():
     pso = AlgoritmoPSO(ruta_biblioteca)
     
     params = {
-        'tamano_poblacion': 150,
+        'tamano_poblacion': 20000,
         'longitud_ruta': 32,
         'num_generaciones': 500,
         'prob_pbest': 0.35,
@@ -81,7 +81,7 @@ def main():
         'nombre_archivo': "Distancias_no_head.csv",
         'prob_inercia': 0.3,
         'm': 3,
-        'heuristica': 1,
+        'heuristica': 0,
     }
     
     resultado = pso.ejecutar(params)

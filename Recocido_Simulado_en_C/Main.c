@@ -8,14 +8,13 @@ int main()
     srand(time(NULL));
     int longitud_ruta = 32;
     double temperatura_inicial;
-    double temperatura_final = 0.001;
-    double tasa_enfriamiento = 0.92; // 0.87
+    double temperatura_final = 0.000000001;
 
     // Parámetros adaptativos
-    const int max_neighbours = 1000; // L(T) = k·N, con k entre 10 y 100; N= 32
+    const int max_neighbours = 75; // L(T) = k·N, con k entre 10 y 100; N= 32
     const int max_successes = (int)(0.5 * max_neighbours);
 
-    int num_generaciones = 75;
+    int num_generaciones = 1000;
     int m = 3;
 
     // Nombre del archivo con las distancias
@@ -104,15 +103,17 @@ int main()
 
     double temperatura = temperatura_inicial;
 
-    // Ciclo principal de recocido
-    for (int iter = 0; iter < num_generaciones && temperatura > temperatura_final; iter++)
+    // Ciclo principal de recocido con enfriamiento logarítmico (Béltsman)
+    for (int iter = 1; iter <= num_generaciones && temperatura > temperatura_final; iter++)
     {
-        // Actualizar temperatura usando Cauchy: T_k = T0 / (1 + k)
-        temperatura = temperatura_inicial / (iter + 1); 
+        // Enfriamiento logarítmico de Béltsman:
+        // T_k = T0 / ln(k + 1)
+        temperatura = temperatura_inicial / log(iter + 1.0);
+
         int neighbours = 0;
         int successes = 0;
 
-        // Fase de equilibrio: L(T) vecinos o hasta max_successes
+        // Fase de equilibrio: hasta max_neighbours o max_successes
         while (neighbours < max_neighbours && successes < max_successes)
         {
             generar_vecino(actual->ruta, vecino, longitud_ruta);
@@ -120,13 +121,12 @@ int main()
 
             if (probabilidad_aceptacion(actual->fitness, fit_vecino, temperatura) > ((double)rand() / RAND_MAX))
             {
-
                 // Aceptamos el vecino
                 memcpy(actual->ruta, vecino, longitud_ruta * sizeof(int));
                 actual->fitness = fit_vecino;
                 successes++;
 
-                // Actualizamos mejor si procede
+                // Actualizamos el mejor si procede
                 if (actual->fitness < mejor->fitness)
                 {
                     memcpy(mejor->ruta, actual->ruta, longitud_ruta * sizeof(int));
@@ -137,12 +137,7 @@ int main()
             neighbours++;
         }
 
-        // Una vez cumplido L(T) o el nº de éxitos, bajamos temperatura:
-        //temperatura *= tasa_enfriamiento;
-
         // Aplicar heurística de remoción de abruptos tras cada enfriamiento
-        // (líneas comentadas para medir primero sin ella)
-
         heuristica_abruptos(actual->ruta,
                             longitud_ruta,
                             m,
@@ -152,8 +147,8 @@ int main()
                                            longitud_ruta);
 
         // (Opcional) Mostrar info de cada paso de enfriamiento
-        printf("Temp:= %.6f | Neighbors: %4d | Successes: %3d | Mejor: %.2f\n",
-               temperatura, neighbours, successes, mejor->fitness);
+        printf("Iter %3d | Temp = %.6f | Neighbors = %3d | Successes = %2d | Mejor = %.2f\n",
+               iter, temperatura, neighbours, successes, mejor->fitness);
     }
 
     // Mostrar tiempo de ejecución
