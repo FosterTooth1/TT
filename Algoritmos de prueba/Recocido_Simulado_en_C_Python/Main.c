@@ -1,3 +1,31 @@
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+
+// -----------------------------------------------------------
+// DllMain: activa la comprobación de fugas al cargar la DLL
+// -----------------------------------------------------------
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    if (fdwReason == DLL_PROCESS_ATTACH) {
+        // _CRTDBG_ALLOC_MEM_DF: activar seguimiento de asignaciones
+        // _CRTDBG_LEAK_CHECK_DF: al cerrar el proceso, volcar reporte de fugas
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
+        // (Opcional) redirigir el volcado a un fichero:
+        // _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+        // _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+    }
+    return TRUE;
+}
+
 #include "Biblioteca.h"
 #include <time.h>
 #include <stdlib.h>
