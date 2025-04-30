@@ -55,7 +55,7 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
     fclose(archivo);
 
     // Creamos un arreglo con los nombres de las ciudades
-    char nombres_ciudades[32][50] = {
+    const char nombres_ciudades[32][50] = {
         "Aguascalientes", "Baja California", "Baja California Sur",
         "Campeche", "Chiapas", "Chihuahua", "Coahuila", "Colima", "Durango",
         "Guanajuato", "Guerrero", "Hidalgo", "Jalisco", "Estado de Mexico",
@@ -87,7 +87,7 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
     double fitness_gbest = cumulo->particulas[0].fitness_mejor;
     
     // Array para almacenar el fitness de cada generación
-    double *fitness_generaciones = malloc(num_generaciones * sizeof(double));
+    double *fitness_generaciones = (double *)malloc(num_generaciones * sizeof(double));
 
     //Ejecutamos el PSO
     for (int generacion = 0; generacion < num_generaciones; generacion++) {
@@ -115,21 +115,17 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
     // Preparamos el resultado para devolverlo a Python
     ResultadoPSO* resultado = (ResultadoPSO*)malloc(sizeof(ResultadoPSO));
     resultado->recorrido = (int*)malloc(longitud_ruta * sizeof(int));
+    resultado->nombres_ciudades = malloc(longitud_ruta * sizeof(char[50]));
     resultado->fitness = fitness_gbest;
     resultado->tiempo_ejecucion = tiempo_ejecucion;
-    resultado->nombres_ciudades = (char (*)[50])malloc(longitud_ruta * sizeof(char[50]));
     resultado->longitud_recorrido = longitud_ruta;
-    resultado->fitness_generaciones = (double*)malloc(num_generaciones * sizeof(double));
+    resultado->fitness_generaciones = fitness_generaciones;
 
-    // Copiamos el recorrido y los nombres de las ciudades al resultado
+    // Rellenamos la estructura con el mejor recorrido y su información
     for (int i = 0; i < longitud_ruta; i++) {
         resultado->recorrido[i] = gbest[i];
-        strcpy(resultado->nombres_ciudades[i], nombres_ciudades[gbest[i]]);
-    }
-
-    // Copiamos el fitness de cada generación al resultado
-    for (int i = 0; i < num_generaciones; i++) {
-        resultado->fitness_generaciones[i] = fitness_generaciones[i];
+        strncpy(resultado->nombres_ciudades[i], nombres_ciudades[gbest[i]], 49);
+        resultado->nombres_ciudades[i][49] = '\0';
     }
     
     liberar_cumulo(cumulo);
@@ -138,7 +134,6 @@ EXPORT ResultadoPSO* ejecutar_algoritmo_pso(int tamano_poblacion, int longitud_r
     }
     free(distancias);
     free(gbest);
-    free(fitness_generaciones);
 
     return resultado;  // Devolvemos el resultado a Python
 }
@@ -147,7 +142,7 @@ EXPORT void liberar_resultado(ResultadoPSO* resultado) {
     if (resultado) {
         free(resultado->recorrido);
         free(resultado->nombres_ciudades);
-        free(resultado->fitness_generaciones); // Liberar primero
-        free(resultado); // Luego la estructura
+        free(resultado->fitness_generaciones); // Liberar aquí
+        free(resultado);
     }
 }

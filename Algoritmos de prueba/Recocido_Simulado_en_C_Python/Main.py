@@ -8,92 +8,109 @@ class ResultadoRecocido(Structure):
         ("recorrido", POINTER(c_int)),
         ("fitness", c_double),
         ("tiempo_ejecucion", c_double),
-        ("nombres_ciudades", POINTER(c_char)),  # Cambiado a c_char
+        ("nombres_ciudades", POINTER(c_char * 50 * 32)),  # Mismo formato que PSO/Genético
         ("longitud_recorrido", c_int),
         ("fitness_generaciones", POINTER(c_double)),
     ]
 
 class AlgoritmoRecocido:
     def __init__(self, ruta_biblioteca):
-        self.lib = ctypes.CDLL(ruta_biblioteca)
-        self.lib.ejecutar_algoritmo_recocido.restype = POINTER(ResultadoRecocido)
-        self.lib.ejecutar_algoritmo_recocido.argtypes = [
-            c_int,    # longitud_ruta
-            c_int,    # num_generaciones
-            c_double, # tasa_enfriamiento
-            c_double, # temperatura_final
-            c_int,    # max_neighbours
-            c_int,    # m
-            c_char_p, # nombre_archivo
-            c_int     # heuristica
+        self.biblioteca = ctypes.CDLL(ruta_biblioteca)
+        
+        # Configuración de tipos igual que en Genético/PSO
+        self.biblioteca.ejecutar_algoritmo_recocido.restype = POINTER(ResultadoRecocido)
+        self.biblioteca.ejecutar_algoritmo_recocido.argtypes = [
+            c_int,      # longitud_ruta
+            c_int,      # num_generaciones
+            c_double,   # tasa_enfriamiento
+            c_double,   # temperatura_final
+            c_int,      # max_neighbours
+            c_int,      # m
+            c_char_p,   # nombre_archivo
+            c_int       # heuristica
         ]
-        self.lib.liberar_resultado_recocido.argtypes = [POINTER(ResultadoRecocido)]
+        self.biblioteca.liberar_resultado.argtypes = [POINTER(ResultadoRecocido)]  # Mismo nombre de función
 
-    def ejecutar(self, longitud_ruta, num_generaciones,
-             tasa_enfriamiento, temperatura_final,
-             max_neighbours, m, nombre_archivo, heuristica):
-        ptr = self.lib.ejecutar_algoritmo_recocido(
-            c_int(longitud_ruta),
-            c_int(num_generaciones),
-            c_double(tasa_enfriamiento),
-            c_double(temperatura_final),
-            c_int(max_neighbours),
-            c_int(m),
-            c_char_p(nombre_archivo.encode('utf-8')),
-            c_int(heuristica)
-        )
-        if not ptr:
-            return None
+    def ejecutar(self, longitud_ruta, num_generaciones, tasa_enfriamiento,
+               temperatura_final, max_neighbours, m, nombre_archivo, heuristica):
+        try:
+            nombre_archivo_bytes = nombre_archivo.encode('utf-8')
             
-        res = ptr.contents
-        
-        # Obtener nombres como buffer de bytes
-        buffer = cast(res.nombres_ciudades, POINTER(c_char * (50 * res.longitud_recorrido))).contents
-        nombres = []
-        for i in range(res.longitud_recorrido):
-            nombre_bytes = buffer[50*i : 50*(i+1)]
-            nombre = nombre_bytes.split(b'\x00')[0].decode('utf-8')
-            nombres.append(nombre)
-        
-        ruta = [res.recorrido[i] for i in range(res.longitud_recorrido)]
-        gens = [res.fitness_generaciones[i] for i in range(num_generaciones)]
-        
-        self.lib.liberar_resultado_recocido(ptr)
-        
-        return {
-            "nombres_ciudades": nombres,
-            "recorrido": ruta,
-            "fitness": res.fitness,
-            "tiempo_ejecucion": res.tiempo_ejecucion,
-            "fitness_generaciones": gens
-        }
+            resultado_ptr = self.biblioteca.ejecutar_algoritmo_recocido(
+                c_int(longitud_ruta),
+                c_int(num_generaciones),
+                c_double(tasa_enfriamiento),
+                c_double(temperatura_final),
+                c_int(max_neighbours),
+                c_int(m),
+                nombre_archivo_bytes,
+                c_int(heuristica)
+            )
+            
+            if not resultado_ptr:
+                raise RuntimeError("Error en ejecución del Recocido")
+            
+            resultado = resultado_ptr.contents
+            
+            # Copia de datos
+            recorrido = [resultado.recorrido[i] for i in range(resultado.longitud_recorrido)]
+            
+            nombres_ciudades = []
+            ciudades_array = cast(resultado.nombres_ciudades, POINTER(c_char * 50 * 32))
+            for i in range(resultado.longitud_recorrido):
+                nombre_bytes = bytes(ciudades_array.contents[i])
+                nombre = nombre_bytes.decode('utf-8').split('\x00', 1)[0]
+                nombres_ciudades.append(nombre)
+            
+            fitness_hist = [resultado.fitness_generaciones[i] for i in range(num_generaciones)]
+            
+            salida = {
+                'recorrido': recorrido,
+                'nombres_ciudades': nombres_ciudades,
+                'fitness': resultado.fitness,
+                'tiempo_ejecucion': resultado.tiempo_ejecucion,
+                'fitness_generaciones': fitness_hist
+            }
+            
+            self.biblioteca.liberar_resultado(resultado_ptr)
+            
+            return salida
+            
+        except Exception as e:
+            raise RuntimeError(f"Error en Recocido Simulado: {str(e)}")
 
 def main():
-    base = os.path.dirname(os.path.abspath(__file__))
-    lib  = "recocido.dll" if os.name=='nt' else "librecocido.so"
-    ruta = os.path.join(base, lib)
-
-    sa = AlgoritmoRecocido(ruta)
-    out = sa.ejecutar(
-        longitud_ruta=32,
-        num_generaciones=25000,
-        tasa_enfriamiento=0.92,
-        temperatura_final=0.000000001,
-        max_neighbours=320,
-        m=3,
-        nombre_archivo="Distancias_no_head.csv",
-        heuristica=0
-    )
-
-    plt.plot(out["fitness_generaciones"])
-    plt.title("Evolución del Fitness en Recocido Simulado")
+    directorio_actual = os.path.dirname(os.path.abspath(__file__))
+    nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
+    ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
+    
+    rs = AlgoritmoRecocido(ruta_biblioteca)
+    
+    params = {
+        'longitud_ruta': 32,
+        'num_generaciones': 25000,
+        'tasa_enfriamiento': 0.92,
+        'temperatura_final': 0.000000001,
+        'max_neighbours': 320,
+        'm': 3,
+        'nombre_archivo': "Distancias_no_head.csv",
+        'heuristica': 0
+    }
+    
+    resultado = rs.ejecutar(**params)
+    
+    print("\nMejor ruta Recocido:")
+    for i, (idx, nombre) in enumerate(zip(resultado['recorrido'], resultado['nombres_ciudades'])):
+        print(f"{i+1}. {nombre} (índice: {idx})")
+    print(f"\nFitness: {resultado['fitness']:.2f}")
+    print(f"Tiempo: {resultado['tiempo_ejecucion']:.2f}s")
+    
+    plt.plot(resultado['fitness_generaciones'])
+    plt.title("Evolución del Fitness - Recocido Simulado")
     plt.xlabel("Generación")
     plt.ylabel("Fitness")
+    plt.grid()
     plt.show()
-
-    print(f"Mejor fitness: {out['fitness']:.2f}")
-    print(f"Tiempo: {out['tiempo_ejecucion']:.2f}s")
-    print("Ruta:", " -> ".join(out["nombres_ciudades"])+" -> "+out["nombres_ciudades"][0])
 
 if __name__ == "__main__":
     main()

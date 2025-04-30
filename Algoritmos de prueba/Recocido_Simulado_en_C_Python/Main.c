@@ -1,15 +1,4 @@
 #include "Biblioteca.h"
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
-#ifdef _WIN32
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif
 
 typedef struct
 {
@@ -21,23 +10,11 @@ typedef struct
     double *fitness_generaciones;
 } ResultadoRecocido;
 
-// Función para liberar todos los recursos en caso de error
-static void liberar_recursos(double **distancias, int filas_asignadas, 
-                           Solucion *sol, Solucion *actual, Solucion *mejor, 
-                           int *vecino, double *hist)
-{
-    if (distancias) {
-        for (int i = 0; i < filas_asignadas; i++) {
-            if (distancias[i]) free(distancias[i]);
-        }
-        free(distancias);
-    }
-    if (sol) liberar_solucion(sol);
-    if (actual) liberar_solucion(actual);
-    if (mejor) liberar_solucion(mejor);
-    if (vecino) free(vecino);
-    if (hist) free(hist);
-}
+#ifdef _WIN32
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif
 
 EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
                                                       int num_generaciones,
@@ -48,108 +25,69 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
                                                       char *nombre_archivo,
                                                       int heuristica)
 {
+    // Iniciamos la medición del tiempo
     time_t inicio = time(NULL);
-    srand((unsigned)inicio);
 
-    // Inicializar todos los punteros a NULL para garantizar una limpieza segura
-    double **distancias = NULL;
-    Solucion *sol = NULL, *actual = NULL, *mejor = NULL;
-    int *vecino = NULL;
-    double *hist = NULL;
-    ResultadoRecocido *R = NULL;
-    FILE *f = NULL;
-
-    // Asignar memoria para la matriz de distancias
-    distancias = malloc(longitud_ruta * sizeof(double *));
-    if (!distancias)
-    {
-        perror("malloc distancias");
-        return NULL;
-    }
-    
-    // Inicializar todos los punteros de fila a NULL para facilitar limpieza
-    int filas_asignadas = 0;
-    for (int i = 0; i < longitud_ruta; i++)
-    {
+    // Reservamos memoria para la matriz que almacena las distancias
+    double **distancias = malloc(longitud_ruta * sizeof(double *));
+    for (int i = 0; i < longitud_ruta; i++) {
         distancias[i] = malloc(longitud_ruta * sizeof(double));
-        if (!distancias[i])
-        {
-            perror("malloc distancias[i]");
-            liberar_recursos(distancias, filas_asignadas, NULL, NULL, NULL, NULL, NULL);
-            return NULL;
-        }
-        filas_asignadas++;
     }
 
-    // Abrir el archivo CSV
-    f = fopen(nombre_archivo, "r");
-    if (!f)
-    {
-        perror("abrir CSV");
-        liberar_recursos(distancias, longitud_ruta, NULL, NULL, NULL, NULL, NULL);
+    // Abrimos el archivo
+    FILE *archivo = fopen(nombre_archivo, "r");
+    if (!archivo) {
+        perror("Error al abrir el archivo");
         return NULL;
     }
 
-    // Leer el archivo CSV
+    // Leemos el archivo y llenamos la matriz
     char linea[8192];
     int fila = 0;
-    while (fgets(linea, sizeof(linea), f) && fila < longitud_ruta)
-    {
-        char *tok = strtok(linea, ",");
-        for (int col = 0; tok && col < longitud_ruta; col++)
-        {
-            distancias[fila][col] = atof(tok);
-            tok = strtok(NULL, ",");
+    while (fgets(linea, sizeof(linea), archivo) && fila < longitud_ruta) {
+        char *token = strtok(linea, ",");
+        int columna = 0;
+        while (token && columna < longitud_ruta) {
+            distancias[fila][columna] = atof(token);
+            token = strtok(NULL, ",");
+            columna++;
         }
         fila++;
+        //free(token);
     }
-    fclose(f);
-    f = NULL;
+    fclose(archivo);
 
-    // 2) Nombres de las ciudades
-    char nombres_arr[32][50] = {
-        "Aguascalientes", "Baja California", "Baja California Sur", "Campeche",
-        "Chiapas", "Chihuahua", "Coahuila", "Colima", "Durango", "Guanajuato",
-        "Guerrero", "Hidalgo", "Jalisco", "Estado de Mexico", "Michoacan",
-        "Morelos", "Nayarit", "Nuevo Leon", "Oaxaca", "Puebla", "Queretaro",
-        "Quintana Roo", "San Luis Potosi", "Sinaloa", "Sonora", "Tabasco",
-        "Tamaulipas", "Tlaxcala", "Veracruz", "Yucatan", "Zacatecas", "CDMX"};
+    // Creamos un arreglo con los nombres de las ciudades
+    const char nombres_ciudades[32][50] = {
+        "Aguascalientes", "Baja California", "Baja California Sur",
+        "Campeche", "Chiapas", "Chihuahua", "Coahuila", "Colima", "Durango",
+        "Guanajuato", "Guerrero", "Hidalgo", "Jalisco", "Estado de Mexico",
+        "Michoacan", "Morelos", "Nayarit", "Nuevo Leon", "Oaxaca", "Puebla",
+        "Queretaro", "Quintana Roo", "San Luis Potosi", "Sinaloa", "Sonora",
+        "Tabasco", "Tamaulipas", "Tlaxcala", "Veracruz", "Yucatan",
+        "Zacatecas", "CDMX"
+    };
 
     // 3) Preparar soluciones
-    sol = crear_solucion(longitud_ruta, longitud_ruta);
-    if (!sol) {
-        liberar_recursos(distancias, longitud_ruta, NULL, NULL, NULL, NULL, NULL);
-        return NULL;
-    }
-    
+    Solucion *sol = crear_solucion(1, longitud_ruta);
     crear_permutacion(sol, longitud_ruta);
+    sol->fitness = calcular_fitness(sol->ruta, distancias, longitud_ruta);
+
     if (heuristica == 1)
     {
         heuristica_abruptos(sol->ruta, longitud_ruta, m, distancias);
+        sol->fitness = calcular_fitness(sol->ruta, distancias, longitud_ruta);
     }
 
-    actual = crear_solucion(longitud_ruta, longitud_ruta);
-    if (!actual) {
-        liberar_recursos(distancias, longitud_ruta, sol, NULL, NULL, NULL, NULL);
-        return NULL;
-    }
-    
-    mejor = crear_solucion(longitud_ruta, longitud_ruta);
-    if (!mejor) {
-        liberar_recursos(distancias, longitud_ruta, sol, actual, NULL, NULL, NULL);
-        return NULL;
-    }
+    Solucion *actual = crear_solucion(1, longitud_ruta);    
+    Solucion *mejor = crear_solucion(1, longitud_ruta);
     
     memcpy(actual->ruta, sol->ruta, longitud_ruta * sizeof(int));
     actual->fitness = calcular_fitness(actual->ruta, distancias, longitud_ruta);
     memcpy(mejor->ruta, actual->ruta, longitud_ruta * sizeof(int));
     mejor->fitness = actual->fitness;
 
-    vecino = malloc(longitud_ruta * sizeof(int));
-    if (!vecino) {
-        liberar_recursos(distancias, longitud_ruta, sol, actual, mejor, NULL, NULL);
-        return NULL;
-    }
+    int *vecino = malloc(longitud_ruta * sizeof(int));
 
     // 4) Calcular temperatura inicial (desviación típica de 100 muestras)
     double suma = 0, suma2 = 0;
@@ -171,12 +109,7 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     const int max_successes = (int)(0.5 * max_neighbours);
 
     // 5) Array para histórico de fitness
-    hist = calloc(num_generaciones, sizeof(double));
-    if (!hist) {
-        perror("calloc hist");
-        liberar_recursos(distancias, longitud_ruta, sol, actual, mejor, vecino, NULL);
-        return NULL;
-    }
+    double *fitness_generaciones = (double *)malloc(num_generaciones * sizeof(double));
 
     int k;
 
@@ -207,48 +140,30 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
             heuristica_abruptos(actual->ruta, longitud_ruta, m, distancias);
 
         actual->fitness = calcular_fitness(actual->ruta, distancias, longitud_ruta);
-        hist[k - 1] = mejor->fitness; // recuerda que ahora k arranca en 1
+        fitness_generaciones[k - 1] = mejor->fitness; // recuerda que ahora k arranca en 1
     }
 
     // Si no se ha llegado a la última generación, rellenar el resto del histórico
     for (int i = k; i <= num_generaciones; i++) {
-        hist[i-1] = mejor->fitness;
+        fitness_generaciones[i-1] = mejor->fitness;
     }
 
     time_t fin = time(NULL);
     double t_total = difftime(fin, inicio);
 
     // 7) Empaquetar resultado
-    R = malloc(sizeof(ResultadoRecocido));
-    if (!R) {
-        liberar_recursos(distancias, longitud_ruta, sol, actual, mejor, vecino, hist);
-        return NULL;
-    }
-    
-    R->longitud_recorrido = longitud_ruta;
-    R->recorrido = malloc(longitud_ruta * sizeof(int));
-    if (!R->recorrido) {
-        free(R);
-        liberar_recursos(distancias, longitud_ruta, sol, actual, mejor, vecino, hist);
-        return NULL;
-    }
-    
+    ResultadoRecocido* R = (ResultadoRecocido*)malloc(sizeof(ResultadoRecocido));
+    R->recorrido = (int*)malloc(longitud_ruta * sizeof(int));
+    R->nombres_ciudades = malloc(longitud_ruta * sizeof(char[50]));
     R->fitness = mejor->fitness;
+    R->longitud_recorrido = longitud_ruta;
     R->tiempo_ejecucion = t_total;
-    R->fitness_generaciones = hist;
-    
-    R->nombres_ciudades = malloc(longitud_ruta * sizeof(*R->nombres_ciudades));
-    if (!R->nombres_ciudades) {
-        free(R->recorrido);
-        free(R);
-        liberar_recursos(distancias, longitud_ruta, sol, actual, mejor, vecino, hist);
-        return NULL;
-    }
+    R->fitness_generaciones = fitness_generaciones;
 
-    for (int i = 0; i < longitud_ruta; i++)
-    {
+    for (int i = 0; i < longitud_ruta; i++) {
         R->recorrido[i] = mejor->ruta[i];
-        strcpy(R->nombres_ciudades[i], nombres_arr[R->recorrido[i]]);
+        strncpy(R->nombres_ciudades[i], nombres_ciudades[mejor->ruta[i]], 49);
+        R->nombres_ciudades[i][49] = '\0';
     }
 
     // 8) Limpieza
@@ -256,21 +171,20 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     liberar_solucion(actual);
     liberar_solucion(mejor);
     free(vecino);
-    for (int i = 0; i < longitud_ruta; i++)
+    for (int i = 0; i < longitud_ruta; i++) {
         free(distancias[i]);
+    }
     free(distancias);
 
-    // Ya no liberamos hist porque ahora forma parte del resultado
     return R;
 }
 
-EXPORT void liberar_resultado_recocido(ResultadoRecocido *R)
+EXPORT void liberar_resultado(ResultadoRecocido *R)
 {
-    if (!R)
-        return;
-
+    if (R){
     free(R->recorrido);            // Liberar array de enteros
     free(R->nombres_ciudades);     // Liberar array de nombres
     free(R->fitness_generaciones); // Liberar array de doubles
-    free(R);                       // Liberar la estructura principal
+    free(R);    
+    }                   // Liberar la estructura principal
 }
