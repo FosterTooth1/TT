@@ -33,17 +33,35 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     time_t inicio = time(NULL);
     srand((unsigned)inicio);
 
-    // 1) Carga distancias
-    double **distancias = malloc(longitud_ruta * sizeof(double *));
-    for (int i = 0; i < longitud_ruta; i++)
-        distancias[i] = malloc(longitud_ruta * sizeof(double));
-
     FILE *f = fopen(nombre_archivo, "r");
+    double **distancias = malloc(longitud_ruta * sizeof(double *));
+    if (!distancias)
+    {
+        perror("malloc distancias");
+        return NULL;
+    }
+    for (int i = 0; i < longitud_ruta; i++)
+    {
+        distancias[i] = malloc(longitud_ruta * sizeof(double));
+        if (!distancias[i])
+        {
+            perror("malloc distancias[i]");
+            for (int j = 0; j < i; j++)
+                free(distancias[j]);
+            free(distancias);
+            return NULL;
+        }
+    }
+
     if (!f)
     {
         perror("abrir CSV");
+        for (int i = 0; i < longitud_ruta; i++)
+            free(distancias[i]);
+        free(distancias);
         return NULL;
     }
+
     char linea[8192];
     int fila = 0;
     while (fgets(linea, sizeof(linea), f) && fila < longitud_ruta)
@@ -104,10 +122,17 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     const int max_successes = (int)(0.5 * max_neighbours);
 
     // 5) Array para histórico de fitness
-    double *hist = malloc(num_generaciones * sizeof(double));
+    double *hist = calloc(num_generaciones, sizeof(double));
+    if (!hist) {
+        perror("calloc hist");
+        // (liberar recursos previos si hiciera falta)
+        return NULL;
+    }
+
+    int k;
 
     // 6) Bucle de recocido
-    for (int k = 1; k <= num_generaciones && T > temperatura_final; k++)
+    for (k = 1; k <= num_generaciones && T > temperatura_final; k++)
     {
         // Enfriamiento logarítmico de Béltsman
         T = T0 / log(k + 1.0);
@@ -134,6 +159,11 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
 
         actual->fitness = calcular_fitness(actual->ruta, distancias, longitud_ruta);
         hist[k - 1] = mejor->fitness; // recuerda que ahora k arranca en 1
+    }
+
+    // Si no se ha llegado a la última generación, rellenar el resto del histórico
+    for (int i = k; i <= num_generaciones; i++) {
+        hist[i-1] = mejor->fitness;
     }
 
     time_t fin = time(NULL);
@@ -170,8 +200,9 @@ EXPORT void liberar_resultado_recocido(ResultadoRecocido *R)
 {
     if (!R)
         return;
-    free(R->recorrido);
-    free(R->nombres_ciudades);
-    free(R->fitness_generaciones);
-    free(R);
+
+    free(R->recorrido);            // Liberar array de enteros
+    free(R->nombres_ciudades);     // Liberar array de nombres
+    free(R->fitness_generaciones); // Liberar array de doubles
+    free(R);                       // Liberar la estructura principal
 }

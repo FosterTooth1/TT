@@ -1,5 +1,5 @@
 import ctypes
-from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char
+from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char, cast
 import os
 import matplotlib.pyplot as plt
 
@@ -8,7 +8,7 @@ class ResultadoRecocido(Structure):
         ("recorrido", POINTER(c_int)),
         ("fitness", c_double),
         ("tiempo_ejecucion", c_double),
-        ("nombres_ciudades", POINTER(c_char * 50)),
+        ("nombres_ciudades", POINTER(c_char)),  # Cambiado a c_char
         ("longitud_recorrido", c_int),
         ("fitness_generaciones", POINTER(c_double)),
     ]
@@ -30,29 +30,39 @@ class AlgoritmoRecocido:
         self.lib.liberar_resultado_recocido.argtypes = [POINTER(ResultadoRecocido)]
 
     def ejecutar(self, longitud_ruta, num_generaciones,
-                 tasa_enfriamiento, temperatura_final,
-                 max_neighbours, m, nombre_archivo, heuristica):
+             tasa_enfriamiento, temperatura_final,
+             max_neighbours, m, nombre_archivo, heuristica):
         ptr = self.lib.ejecutar_algoritmo_recocido(
-            longitud_ruta,
-            num_generaciones,
-            tasa_enfriamiento,
-            temperatura_final,
-            max_neighbours,
-            m,
-            nombre_archivo.encode('utf-8'),
-            heuristica
+            c_int(longitud_ruta),
+            c_int(num_generaciones),
+            c_double(tasa_enfriamiento),
+            c_double(temperatura_final),
+            c_int(max_neighbours),
+            c_int(m),
+            c_char_p(nombre_archivo.encode('utf-8')),
+            c_int(heuristica)
         )
+        if not ptr:
+            return None
+            
         res = ptr.contents
-
+        
+        # Obtener nombres como buffer de bytes
+        buffer = cast(res.nombres_ciudades, POINTER(c_char * (50 * res.longitud_recorrido))).contents
+        nombres = []
+        for i in range(res.longitud_recorrido):
+            nombre_bytes = buffer[50*i : 50*(i+1)]
+            nombre = nombre_bytes.split(b'\x00')[0].decode('utf-8')
+            nombres.append(nombre)
+        
+        ruta = [res.recorrido[i] for i in range(res.longitud_recorrido)]
         gens = [res.fitness_generaciones[i] for i in range(num_generaciones)]
-        nombres = [ res.nombres_ciudades[i].value.decode('utf-8')
-                    for i in range(res.longitud_recorrido) ]
-        ruta   = [res.recorrido[i] for i in range(res.longitud_recorrido)]
-
+        
         self.lib.liberar_resultado_recocido(ptr)
+        
         return {
-            "recorrido": ruta,
             "nombres_ciudades": nombres,
+            "recorrido": ruta,
             "fitness": res.fitness,
             "tiempo_ejecucion": res.tiempo_ejecucion,
             "fitness_generaciones": gens
