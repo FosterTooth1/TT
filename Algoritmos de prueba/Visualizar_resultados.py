@@ -48,11 +48,13 @@ def generar_grafico_por_tamaño(df, titulo_base, ylabel, unidad='', tamaño=''):
     for i, metrica in enumerate(metricas):
         ax = axs[i//2, i%2]
         sns.barplot(data=df_filtrado[df_filtrado['Metrica'] == metrica], 
-                    x='Algoritmo', 
-                    y='Valor', 
-                    order=orden,
-                    palette=COLOR_PALETTE,
-                    ax=ax)
+                            x='Algoritmo', 
+                            y='Valor', 
+                            order=orden,
+                            hue='Algoritmo',  # <- Añade esto
+                            palette=COLOR_PALETTE,
+                            legend=False,     # <- Y esto
+                            ax=ax)
         ax.set_title(f'{metrica}')
         ax.set_xlabel('')
         ax.set_ylabel(ylabel if i%2 == 0 else '')
@@ -60,12 +62,13 @@ def generar_grafico_por_tamaño(df, titulo_base, ylabel, unidad='', tamaño=''):
         
         # Añadir valores
         for p in ax.patches:
-            texto = f"{p.get_height():.2f}{unidad}" if unidad else f"{p.get_height():.2f}"
+            texto = f"{p.get_height():.5f}{unidad}" if unidad else f"{p.get_height():.5f}"
             ax.annotate(texto, 
                         (p.get_x() + p.get_width() / 2., p.get_height()),
                         ha='center', va='center', 
                         xytext=(0, 5), 
-                        textcoords='offset points')
+                        textcoords='offset points',
+                        fontsize=8)
     
     plt.tight_layout()
     return fig

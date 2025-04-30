@@ -10,6 +10,7 @@ from ctypes import (
 )
 import os
 import matplotlib.pyplot as plt
+import gc
 
 # --------------------------------------------
 # Estructuras y clases para Algoritmo Genético
@@ -305,9 +306,9 @@ M_PARAMS = [
         "class": AlgoritmoGenetico,
         "library": "genetic_algo.dll" if os.name == 'nt' else "libgenetic_algo.so",
         "params": {
-            "tamano_poblacion": 400,       # 400 ×  500 = 200 000 evals
+            "tamano_poblacion": 500,     
             "longitud_genotipo": 32,
-            "num_generaciones": 500,       
+            "num_generaciones": 1000,       
             "num_competidores": 2,
             "m": 3,
             "probabilidad_mutacion": 0.02,
@@ -321,9 +322,9 @@ M_PARAMS = [
         "class": AlgoritmoPSO,
         "library": "pso.dll" if os.name == 'nt' else "libpso.so",
         "params": {
-            "tamano_poblacion": 400,       # 400 ×  500 = 200 000 evals
+            "tamano_poblacion": 500,      
             "longitud_ruta": 32,
-            "num_generaciones": 500,       
+            "num_generaciones": 1000,       
             "prob_pbest": 0.35,
             "prob_gbest": 0.7,
             "prob_inercia": 0.3,
@@ -338,10 +339,10 @@ M_PARAMS = [
         "library": "recocido.dll" if os.name == 'nt' else "librecocido.so",
         "params": {
             "longitud_ruta": 32,
-            "num_generaciones": 20000,     # 20 000 × 10 = 200 000 evals
+            "num_generaciones": 20000,   
             "tasa_enfriamiento": 0.95,
             "temperatura_final": 1e-3,
-            "max_neighbours": 10,
+            "max_neighbours": 25,
             "m": 3,
             "nombre_archivo": "Distancias_no_head.csv",
             "heuristica": 0
@@ -354,8 +355,8 @@ M_PARAMS = [
         "params": {
             "longitud_ruta": 32,
             "tenencia_tabu": 7,
-            "num_generaciones": 20000,     # 20 000 × 10 = 200 000 evals
-            "max_neighbours": 10,
+            "num_generaciones": 20000,
+            "max_neighbours": 25,
             "umbral_est_global": 0.1,
             "umbral_est_local": 0.05,
             "m": 3,
@@ -371,9 +372,9 @@ B_PARAMS = [
         "class": AlgoritmoGenetico,
         "library": "genetic_algo.dll" if os.name == 'nt' else "libgenetic_algo.so",
         "params": {
-            "tamano_poblacion": 1000,      # 1000 ×  500 = 500 000 evals
+            "tamano_poblacion": 1000,   
             "longitud_genotipo": 32,
-            "num_generaciones": 500,
+            "num_generaciones": 2000,
             "num_competidores": 2,
             "m": 3,
             "probabilidad_mutacion": 0.02,
@@ -387,9 +388,9 @@ B_PARAMS = [
         "class": AlgoritmoPSO,
         "library": "pso.dll" if os.name == 'nt' else "libpso.so",
         "params": {
-            "tamano_poblacion": 1000,      # 1000 ×  500 = 500 000 evals
+            "tamano_poblacion": 1000,      
             "longitud_ruta": 32,
-            "num_generaciones": 500,
+            "num_generaciones": 2000,
             "prob_pbest": 0.35,
             "prob_gbest": 0.7,
             "prob_inercia": 0.3,
@@ -404,10 +405,10 @@ B_PARAMS = [
         "library": "recocido.dll" if os.name == 'nt' else "librecocido.so",
         "params": {
             "longitud_ruta": 32,
-            "num_generaciones": 50000,     # 50 000 × 10 = 500 000 evals
+            "num_generaciones": 40000,   
             "tasa_enfriamiento": 0.95,
             "temperatura_final": 1e-3,
-            "max_neighbours": 10,
+            "max_neighbours": 50,
             "m": 3,
             "nombre_archivo": "Distancias_no_head.csv",
             "heuristica": 0
@@ -420,8 +421,8 @@ B_PARAMS = [
         "params": {
             "longitud_ruta": 32,
             "tenencia_tabu": 7,
-            "num_generaciones": 50000,     # 50 000 × 10 = 500 000 evals
-            "max_neighbours": 10,
+            "num_generaciones": 40000,   
+            "max_neighbours": 50,
             "umbral_est_global": 0.1,
             "umbral_est_local": 0.05,
             "m": 3,
@@ -436,6 +437,7 @@ ALGORITHMS = S_PARAMS + M_PARAMS + B_PARAMS
 
 # ------------------------- Función para realizar las comparaciones -------------------------
 def realizar_comparaciones():
+    import tracemalloc  # Importar aquí para evitar conflictos
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
     
     # Inicializar archivos CSV con nueva estructura
@@ -463,10 +465,11 @@ def realizar_comparaciones():
 
         for _ in range(30):
             try:
-                # Mediciones
+                # Iniciar seguimiento de memoria
+                tracemalloc.start()
+                
+                # Mediciones de tiempo
                 start_time = time.time()
-                process = psutil.Process(os.getpid())
-                start_mem = process.memory_info().rss
                 
                 # Ejecución
                 instance = algoritmo['class'](lib_path)
@@ -475,18 +478,26 @@ def realizar_comparaciones():
                 else:
                     result = instance.ejecutar(**algoritmo['params'])
 
-                
-                # Resultados
+                # Calcular tiempo
                 elapsed_time = time.time() - start_time
-                end_mem = process.memory_info().rss
-                mem_used = (end_mem - start_mem) / 1024**2  # MB
                 
+                # Obtener pico de memoria
+                current, peak = tracemalloc.get_traced_memory()
+                tracemalloc.stop()
+                tracemalloc.clear_traces()  # Limpiar para próxima iteración
+                
+                # Convertir a MB
+                mem_used = peak / (1024**2)  # MB
+                
+                # Almacenar resultados
                 fitness_results.append(result['fitness'])
                 time_results.append(elapsed_time)
                 memory_results.append(mem_used)
                 
             except Exception as e:
                 print(f"Error en iteración {_+1}: {str(e)}")
+                tracemalloc.stop()  # Asegurar limpieza en caso de error
+                tracemalloc.clear_traces()
                 continue
 
         # Calcular estadísticas
