@@ -1,0 +1,13 @@
+Algoritmo,Tamaño,CoeficienteVariacion
+Genetico,"100,000 evaluaciones",8.57
+PSO,"100,000 evaluaciones",8.55
+Recocido,"100,000 evaluaciones",0.95
+Tabu,"100,000 evaluaciones",1.1
+Genetico,"500,000 evaluaciones",7.57
+PSO,"500,000 evaluaciones",8.03
+Recocido,"500,000 evaluaciones",0.56
+Tabu,"500,000 evaluaciones",0.32
+Genetico,"2,000,000 evaluaciones",7.51
+PSO,"2,000,000 evaluaciones",6.97
+Recocido,"2,000,000 evaluaciones",0.18
+Tabu,"2,000,000 evaluaciones",0.0
