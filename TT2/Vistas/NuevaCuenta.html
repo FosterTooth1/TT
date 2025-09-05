@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>LogistiClima - Nueva Cuenta</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Enlace al CSS -->
+    <link rel="stylesheet" href="./estilo/estilo_NuevaCuenta.css" type="text/css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="./imagenes/logo.jpg" alt="Logo LogistiClima" class="logo">
+            <div class="title-container">
+                <h1>LogistiClima</h1>
+                <p class="subtitle">Nueva Cuenta</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="form-section">
+            <form id="registroForm">
+                <div class="input-container">
+                    <span class="icon">📧</span>
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+
+                <div class="input-container">
+                    <span class="icon">👤</span>
+                    <input type="text" id="nombre" placeholder="Nombre" required>
+                </div>
+
+                <div class="input-container">
+                    <span class="icon">🔒</span>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+
+                <button type="submit"><b>Registrarse</b></button>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        document.getElementById("registroForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            let email = document.getElementById("email").value;
+            let nombre = document.getElementById("nombre").value;
+            let password = document.getElementById("password").value;
+
+            if(email && nombre && password){
+                alert("¡Registro exitoso! Bienvenido, " + nombre);
+            } else {
+                alert("Por favor, completa todos los campos.");
+            }
+        });
+    </script>
+</body>
+</html>

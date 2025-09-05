@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Optimizador de Rutas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Enlace al CSS -->
+    <link rel="stylesheet" href="./estilo/estilo_SeleccionarNaves.css" type="text/css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="./imagenes/logo.jpg" alt="Logo LogistiClima" class="logo">
+            <div class="title-container">
+                <h1>LogistiClima</h1>
+                <p class="subtitle">Optimizador de Rutas</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="tabla-section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Seleccionar lugares deseados</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-lugares">
+                </tbody>
+            </table>
+        </section>
+        <button id="generarRuta"><b>Generar Ruta</b></button>
+    </main>
+
+    <script>
+        const tbody = document.getElementById("tabla-lugares");
+        for (let i = 1; i <= 200; i++) {
+            let row = document.createElement("tr");
+            let cell = document.createElement("td");
+
+            let checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.id = "nave" + i;
+
+            let label = document.createElement("label");
+            label.htmlFor = "nave" + i;
+            label.textContent = "Nave Industrial " + i;
+
+            cell.appendChild(checkbox);
+            cell.appendChild(label);
+            row.appendChild(cell);
+            tbody.appendChild(row);
+        }
+
+        document.getElementById("generarRuta").addEventListener("click", () => {
+            let seleccionados = [];
+            for (let i = 1; i <= 200; i++) {
+                let check = document.getElementById("nave" + i);
+                if (check.checked) {
+                    seleccionados.push("Nave Industrial " + i);
+                }
+            }
+
+            if (seleccionados.length > 5) {
+                alert("Generando ruta para: \n" + seleccionados.join(", "));
+            } else {
+                alert("Por favor selecciona al menos 5 naves industriales.");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>LogistiClima - Rutas Recientes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./estilo/estilo_RutasRecientes.css" type="text/css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="./imagenes/logo.jpg" alt="Logo LogistiClima" class="logo">
+            <div class="title-container">
+                <h1>LogistiClima</h1>
+                <p class="subtitle">Bienvenido @usuario</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <h2>Rutas recientes:</h2>
+        <section class="rutas-recientes-section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ruta</th>
+                        <th>Detalles</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-rutas">
+                    <tr>
+                        <td>Ruta 1</td>
+                        <td>Detalles de la ruta 1</td>
+                    </tr>
+                    <tr>
+                        <td>Ruta 2</td>
+                        <td>Detalles de la ruta 2</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <button id="generarNuevaRuta"><b>Generar nueva ruta</b></button>
+    </main>
+
+    <script>
+        document.getElementById("generarNuevaRuta").addEventListener("click", () => {
+            alert("Función para generar nueva ruta aún no implementada.");
+        });
+    </script>
+</body>
+</html>

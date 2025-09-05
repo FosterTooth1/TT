@@ -1,0 +1,100 @@
+:root { /* PALETA DE COLORES */
+    --primary-100: #08564d; /* Letras LogistiClima*/
+    --accent-100: #169db3;  /* Boton por defecto */
+    --accent-200: #0a5f78;  /* Mantener boton */
+    --text-100: #000000;    /* Letras */
+    --bg-100: #eaf6f8;      /* Fondo*/
+    --bg-200: #ffffff;      /* Contenedor texto */
+}
+
+body {
+    margin: 0;
+    font-family: Helvetica, sans-serif;
+    background-color: var(--bg-100);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    margin-top: 110px;
+}
+
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 60px;
+    height: auto;
+}
+
+.title-container h1 {
+    color: var(--primary-100);
+    margin: 2px 0;  
+}
+
+.subtitle {
+    font-size: 14px;
+    color: var(--text-100);
+    margin: 2px 0; 
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.form-section {
+    margin-top: 15px; 
+    background-color: var(--bg-200);
+    padding: 2em;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 320px;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    padding: 0.5em;
+}
+
+.input-container .icon {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+input {
+    border: none;
+    background: transparent;
+    outline: none;
+    flex: 1;
+    font-size: 14px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent-100);
+    border: none;
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: var(--accent-200);
+}

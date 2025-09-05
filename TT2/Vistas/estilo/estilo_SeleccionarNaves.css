@@ -1,0 +1,107 @@
+:root {
+    --primary-100: #08564d;
+    --primary-200: #417fc6;
+    --accent-100: #169db3;
+    --accent-200: #0a5f78;
+    --text-100: #000000;
+    --text-200: #222020;
+    --bg-100: #eaf6f8;
+    --bg-200: #ffffff;
+}
+
+body {
+    margin: 0;
+    font-family: Helvetica, sans-serif;
+    background-color: var(--bg-100);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    padding: 10px 20px; /* reducimos un poco el padding */
+}
+
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.logo {
+    width: 60px;
+    height: auto;
+}
+
+.title-container h1 {
+    color: var(--primary-100);
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: var(--text-200);
+    margin: 0;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 70px;
+    margin-top: 10px;
+}   
+
+.tabla-section {
+    background-color: var(--bg-200);
+    padding: 1.5em;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 400px;
+    max-height: 400px;
+    overflow-y: auto; 
+    margin-bottom: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+th {
+    text-align: left;
+    font-size: 16px;
+    color: var(--primary-200);
+    border-bottom: 2px solid var(--primary-200);
+    padding: 8px 0;
+}
+
+td {
+    padding: 6px 0;
+    font-size: 14px;
+}
+
+input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+button {
+    width: 20%;
+    padding: 12px;
+    background-color: var(--accent-100);
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: var(--accent-200);
+}

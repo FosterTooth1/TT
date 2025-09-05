@@ -1,0 +1,118 @@
+:root {
+    --primary-100: #08564d;
+    --primary-200: #417fc6;
+    --accent-100: #169db3;
+    --accent-200: #0a5f78;
+    --text-100: #000000;
+    --text-200: #222020;
+    --bg-100: #eaf6f8;
+    --bg-200: #ffffff;
+}
+
+body {
+    margin: 0;
+    font-family: Helvetica, sans-serif;
+    background-color: var(--bg-100);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 60px;
+    height: auto;
+}
+
+.title-container h1 {
+    color: var(--primary-100);
+    margin: 0;
+    font-size: 20px;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: var(--text-200);
+    margin: 0;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.contenido-principal {
+    display: flex;
+    gap: 20px; /* espacio entre mapa y tabla */
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Mapa */
+.mapa-container {
+    flex: 1;
+}
+
+#mapa {
+    height: 400px;
+    width: 100%;
+    border-radius: 15px;
+}
+
+/* Tabla y botón */
+.tabla-container {
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--bg-200);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+th {
+    text-align: left;
+    font-size: 14px;
+    color: var(--primary-200);
+    border-bottom: 2px solid var(--primary-200);
+    padding: 6px;
+}
+
+td {
+    padding: 6px;
+    font-size: 14px;
+    border-bottom: 1px solid #ddd;
+}
+
+button {
+    padding: 12px;
+    background-color: var(--accent-100);
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: var(--accent-200);
+}
