@@ -596,7 +596,7 @@ def main():
     hora_inicio = 7.00 # 7:00 AM
     
     # Tiempo holgura para llegar a cada lugar
-    tiempo_holgura = 30 # 30 minutos
+    tiempo_holgura = 5 # 30 minutos
     
     # Encontrar la ruta optima
     ruta_optima, costo_optimo = optimizar_ruta(
