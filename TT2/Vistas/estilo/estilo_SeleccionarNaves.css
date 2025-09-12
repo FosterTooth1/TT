@@ -1,12 +1,11 @@
 :root {
-    --primary-100: #08564d;
-    --primary-200: #417fc6;
-    --accent-100: #169db3;
-    --accent-200: #0a5f78;
-    --text-100: #000000;
-    --text-200: #222020;
-    --bg-100: #eaf6f8;
-    --bg-200: #ffffff;
+    --primary-100: #08564d; /* Letras LogistiClima*/
+    --primary-200: #417fc6; /* Texto Seleccionar Lugares Deseados */
+    --accent-100: #169db3;  /* Boton por defecto */
+    --accent-200: #0a5f78;  /* Mantener boton */
+    --text-100: #222020;    /* Letras */
+    --bg-100: #eaf6f8;      /* Fondo*/
+    --bg-200: #ffffff;      /* Contenedor 200 Naves */
 }
 
 body {
@@ -20,7 +19,7 @@ body {
 
 header {
     text-align: center;
-    padding: 10px 20px; /* reducimos un poco el padding */
+    padding: 10px 20px;
 }
 
 .logo-container {
@@ -43,7 +42,7 @@ header {
 
 .subtitle {
     font-size: 14px;
-    color: var(--text-200);
+    color: var(--text-100);
     margin: 0;
 }
 

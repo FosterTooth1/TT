@@ -1,10 +1,10 @@
-:root { /* PALETA DE COLORES*/
+:root { 
     --primary-100: #08564d; /* Letras LogistiClima*/
-    --accent-100: #169db3; /* Boton por defecto */
-    --accent-200: #0a5f78; /* Mantener boton */
-    --text-100: #000000; /* Letras */
-    --bg-100: #eaf6f8; /* Fondo*/
-    --bg-200: #ffffff; /* Contenedor texto */
+    --accent-100: #169db3;  /* Boton por defecto */
+    --accent-200: #0a5f78;  /* Mantener boton */
+    --text-100: #000000;    /* Letras */
+    --bg-100: #eaf6f8;      /* Fondo*/
+    --bg-200: #ffffff;      /* Contenedor texto */
 }
 
 body {

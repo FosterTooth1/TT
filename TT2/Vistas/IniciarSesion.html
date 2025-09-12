@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <title>LogistiClima - Iniciar Sesión</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Enlace al CSS -->
-    <link rel="stylesheet" href="./estilo/estilo_NuevaCuenta.css" type="text/css">
+    <link rel="stylesheet" href="./estilo/estilo_NuevaCuenta.css" type="text/css"> <!-- Enlace al CSS -->
 </head>
 <body>
     <header>
@@ -36,19 +35,6 @@
         </section>
     </main>
 
-    <script>
-        document.getElementById("registroForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            let email = document.getElementById("email").value;
-            let nombre = document.getElementById("nombre").value;
-            let password = document.getElementById("password").value;
-
-            if(email && nombre && password){
-                alert("¡Registro exitoso! Bienvenido, " + nombre);
-            } else {
-                alert("Por favor, completa todos los campos.");
-            }
-        });
-    </script>
+    <script src="./js/js_IniciarSesion.js"></script> <!-- Enlace al JS -->
 </body>
 </html>
