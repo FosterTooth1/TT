@@ -1,9 +1,80 @@
- import joblib
+import joblib
 import pandas as pd
 import numpy as np
 import requests
 import json
 from datetime import datetime
+import ctypes
+from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char, cast
+import os
+import matplotlib.pyplot as plt
+
+class ResultadoRecocido(Structure):
+    _fields_ = [
+        ("recorrido", POINTER(c_int)),
+        ("fitness", c_double),
+        ("tiempo_ejecucion", c_double),
+        ("longitud_recorrido", c_int),
+        ("fitness_generaciones", POINTER(c_double)),
+    ]
+
+class AlgoritmoRecocido:
+    def __init__(self, ruta_biblioteca):
+        self.biblioteca = ctypes.CDLL(ruta_biblioteca)
+        
+        # Configuración de tipos igual que en Genético/PSO
+        self.biblioteca.ejecutar_algoritmo_recocido.restype = POINTER(ResultadoRecocido)
+        self.biblioteca.ejecutar_algoritmo_recocido.argtypes = [
+            c_int,      # longitud_ruta
+            c_int,      # num_generaciones
+            c_double,   # tasa_enfriamiento
+            c_double,   # temperatura_final
+            c_int,      # max_neighbours
+            c_int,      # m
+            c_char_p,   # nombre_archivo
+            c_int       # heuristica
+        ]
+        self.biblioteca.liberar_resultado.argtypes = [POINTER(ResultadoRecocido)]  # Mismo nombre de función
+
+    def ejecutar(self, longitud_ruta, num_generaciones, tasa_enfriamiento,
+               temperatura_final, max_neighbours, m, nombre_archivo, heuristica):
+        try:
+            nombre_archivo_bytes = nombre_archivo.encode('utf-8')
+            
+            resultado_ptr = self.biblioteca.ejecutar_algoritmo_recocido(
+                c_int(longitud_ruta),
+                c_int(num_generaciones),
+                c_double(tasa_enfriamiento),
+                c_double(temperatura_final),
+                c_int(max_neighbours),
+                c_int(m),
+                nombre_archivo_bytes,
+                c_int(heuristica)
+            )
+            
+            if not resultado_ptr:
+                raise RuntimeError("Error en ejecución del Recocido")
+            
+            resultado = resultado_ptr.contents
+            
+            # Copia de datos
+            recorrido = [resultado.recorrido[i] for i in range(resultado.longitud_recorrido)]
+            
+            fitness_hist = [resultado.fitness_generaciones[i] for i in range(num_generaciones)]
+            
+            salida = {
+                'recorrido': recorrido,
+                'fitness': resultado.fitness,
+                'tiempo_ejecucion': resultado.tiempo_ejecucion,
+                'fitness_generaciones': fitness_hist
+            }
+            
+            self.biblioteca.liberar_resultado(resultado_ptr)
+            
+            return salida
+            
+        except Exception as e:
+            raise RuntimeError(f"Error en Recocido Simulado: {str(e)}")
 
 def cargar_CSV(nombre_archivo):
     """
@@ -16,7 +87,6 @@ def cargar_CSV(nombre_archivo):
         print(f"El archivo {nombre_archivo} no se encuentra.")
         return None
     
-
 # Funciones para cambiar formato de los datos HORA y DIRECCION VIENTO
 def cambiarFormatoHora(fecha_hora_str):
     """
@@ -164,9 +234,7 @@ def realizar_predicciones(modelo, df_naves_industriales_filtrado, api_key):
 def crear_matriz_distancias(df_naves_industriales):
     """
     Crea una matriz de distancias entre lugares turísticos usando la fórmula de Haversine.
-    Devuelve un DataFrame cuadrado con índices y columnas como IDs de lugares.
     """
-    ids = df_naves_industriales['id'].values
     lats = df_naves_industriales['latitud'].astype(float).values
     lons = df_naves_industriales['longitud'].astype(float).values
 
@@ -196,7 +264,7 @@ def crear_matriz_distancias(df_naves_industriales):
     dist_matrix = R * c  # forma (N, N)
 
     # Construir DataFrame con índices y columnas = IDs
-    df_dist = pd.DataFrame(dist_matrix, index=ids, columns=ids)
+    df_dist = pd.DataFrame(dist_matrix)
     
     return df_dist
 
@@ -211,335 +279,33 @@ def decimal_to_hhmm(val):
         horas += minutos // 60
         minutos = minutos % 60
     return f"{horas:02d}:{minutos:02d}"
-
-
-def optimizar_ruta(df_matriz_distancias, df_naves_industriales_filtrado, nave_industrial_inicio, hora_inicio, hora_fin, tiempo_holgura):
-    """
-    Optimiza la ruta para visitar la mayor cantidad de lugares dentro de las horas disponibles
-    y minimizar la distancia recorrida, usando recocido simulado sobre permutaciones,
-    con inicialización greedy y temperatura inicial basada en desviación estándar de vecinos.
-
-    Parámetros:
-    - df_matriz_distancias: DataFrame cuadrado con distancias penalizadas entre lugares. Índices y columnas deben ser IDs.
-    - df_naves_industriales_filtrado: DataFrame con columnas:
-        - 'id': identificador que coincide con índices de df_matriz_distancias
-        - 'latitud', 'longitud': coordenadas
-        - 'Tiempo_Estancia_Promedio': tiempo en horas de estancia para cada lugar.
-        - 'Hora_Apertura' y 'Hora_Cierre': ventanas de tiempo para cada lugar.
-    - nave_industrial_inicio: Series o dict con 'latitud', 'longitud' del punto de partida.
-    - hora_inicio: float, hora inicio del viaje en decimal.
-    - hora_fin: float, hora fin del viaje en decimal.
-    - tiempo_holgura: float, horas de tiempo "extra" por viaje.
-
-    Retorna:
-    - best_route_info: DataFrame con ['id','arrival','departure','travel_distance_prev','travel_time_prev']
-    - best_score: tupla (count_visitas, total_distance)
-    """
-    # Velocidad promedio km/h
-    velocidad_promedio_kmph = 50.0
-
-    # Lista de IDs y longitud
-    lugares = list(df_naves_industriales_filtrado['id'].astype(int).values)
-    n = len(lugares)
-    if n == 0:
-        print("No hay lugares para optimizar la ruta.")
-        return None, None
-
-    if len(set(lugares)) != n:
-        print("[Error] IDs de lugares no únicos.")
-        return None, None
-
-    # Construir matriz de distancias alineada
-    dist_matrix = np.zeros((n, n))
-    for i, id_i in enumerate(lugares):
-        for j, id_j in enumerate(lugares):
-            dist_matrix[i, j] = df_matriz_distancias.loc[int(id_i), int(id_j)]
-
-    # Calcular distancias desde inicio a cada lugar
-    def haversine(lat1, lon1, lat2, lon2):
-        R = 6371.0
-        lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        a = np.sin(dlat/2.0)**2 + np.cos(lat1)*np.cos(lat2)*np.sin(dlon/2.0)**2
-        c = 2 * np.arctan2(np.sqrt(a), np.sqrt(np.maximum(0.0, 1.0 - a)))
-        return R * c
-
-    try:
-        lat0 = float(nave_industrial_inicio['latitud'])
-        lon0 = float(nave_industrial_inicio['longitud'])
-    except Exception:
-        print("[Aviso] Coordenadas de inicio inválidas.")
-        lat0 = lon0 = None
-
-    dist_start = np.zeros(n)
-    if lat0 is not None and lon0 is not None:
-        for i, row in enumerate(df_naves_industriales_filtrado.itertuples()):
-            try:
-                lat_i = float(row.latitud)
-                lon_i = float(row.longitud)
-                dist_start[i] = haversine(lat0, lon0, lat_i, lon_i)
-            except Exception:
-                dist_start[i] = np.inf
-    else:
-        dist_start[:] = np.inf
-
-    # Ventanas
-    has_window = ('Hora_Apertura' in df_naves_industriales_filtrado.columns and 'Hora_Cierre' in df_naves_industriales_filtrado.columns)
-    apertura = np.zeros(n)
-    cierre = np.full(n, 24.0)
-    if has_window:
-        for i, row in enumerate(df_naves_industriales_filtrado.itertuples()):
-            ha = getattr(row, 'Hora_Apertura')
-            hc = getattr(row, 'Hora_Cierre')
-            def parse_hora(x):
-                if pd.isnull(x):
-                    return 0.0
-                if isinstance(x, (int, float)):
-                    return float(x)
-                if isinstance(x, str):
-                    try:
-                        dt = datetime.strptime(x.strip(), "%H:%M")
-                        return dt.hour + dt.minute/60.0
-                    except Exception:
-                        try:
-                            return float(x)
-                        except:
-                            return 0.0
-                return 0.0
-            apertura[i] = parse_hora(ha)
-            cierre[i] = parse_hora(hc)
-
-    # Tiempos de estancia
-    stay_times = np.zeros(n)
-    for i, row in enumerate(df_naves_industriales_filtrado.itertuples()):
-        val = getattr(row, 'Tiempo_Estancia_Promedio', None)
-        try:
-            stay_times[i] = float(val)
-        except Exception:
-            stay_times[i] = 0.0
-
-    # Evaluar ruta: simula hasta hora_fin, devuelve (count, total_distance)
-    def evaluar_ruta(order):
-        current_time = hora_inicio
-        total_distance = 0.0
-        count = 0
-        # Primer lugar
-        idx0 = order[0]
-        d0 = dist_start[idx0]
-        t0 = d0/velocidad_promedio_kmph + tiempo_holgura
-        arrival0 = current_time + t0
-        if has_window:
-            if arrival0 + stay_times[idx0] > cierre[idx0]:
-                return (0, np.inf)
-            if arrival0 < apertura[idx0]:
-                arrival0 = apertura[idx0]
-        departure0 = arrival0 + stay_times[idx0]
-        if departure0 > hora_fin:
-            return (0, np.inf)
-        current_time = departure0
-        total_distance += d0
-        count = 1
-        # Siguientes
-        for prev, curr in zip(order[:-1], order[1:]):
-            dij = dist_matrix[prev, curr]
-            tij = dij/velocidad_promedio_kmph + tiempo_holgura
-            arrival = current_time + tij
-            if has_window:
-                if arrival + stay_times[curr] > cierre[curr]:
-                    break
-                if arrival < apertura[curr]:
-                    arrival = apertura[curr]
-            departure = arrival + stay_times[curr]
-            if departure > hora_fin:
-                break
-            current_time = departure
-            total_distance += dij
-            count += 1
-        return (count, total_distance)
-
-    # Cost function: minimizar => -count * BIG + total_distance
-    BIG = n * (df_matriz_distancias.values.max() + 1)
-
-    # Construir solución inicial greedy
-    unvisited = set(range(n))
-    order_greedy = []
-    current_time = hora_inicio
-    current_idx = None  # desde inicio
-    # elegir primer lugar: mínimo dist_start factible
-    best_first = None
-    best_d0 = np.inf
-    for i in range(n):
-        d0 = dist_start[i]
-        t0 = d0/velocidad_promedio_kmph + tiempo_holgura
-        arrival = current_time + t0
-        if has_window:
-            if arrival + stay_times[i] > cierre[i]:
-                continue
-            if arrival < apertura[i]:
-                arrival_mod = apertura[i]
-            else:
-                arrival_mod = arrival
-        else:
-            arrival_mod = arrival
-        departure = arrival_mod + stay_times[i]
-        if departure <= hora_fin and d0 < best_d0:
-            best_d0 = d0
-            best_first = i
-    if best_first is not None:
-        order_greedy.append(best_first)
-        unvisited.remove(best_first)
-        # actualizar tiempo y posición
-        arrival = current_time + best_d0/velocidad_promedio_kmph + tiempo_holgura
-        if has_window and arrival < apertura[best_first]:
-            arrival = apertura[best_first]
-        current_time = arrival + stay_times[best_first]
-        current_idx = best_first
-
-        # iterar greedy siguientes
-        while unvisited:
-            mejor = None
-            best_dist = np.inf
-            for j in unvisited:
-                d = dist_matrix[current_idx, j]
-                t_viaje = d/velocidad_promedio_kmph + tiempo_holgura
-                arrival_j = current_time + t_viaje
-                if has_window:
-                    if arrival_j + stay_times[j] > cierre[j]:
-                        continue
-                    if arrival_j < apertura[j]:
-                        arrival_j_mod = apertura[j]
-                    else:
-                        arrival_j_mod = arrival_j
-                else:
-                    arrival_j_mod = arrival_j
-                departure_j = arrival_j_mod + stay_times[j]
-                if departure_j <= hora_fin and d < best_dist:
-                    best_dist = d
-                    mejor = j
-            if mejor is None:
-                break
-            # agregar mejor
-            order_greedy.append(mejor)
-            unvisited.remove(mejor)
-            # actualizar tiempo y posición
-            d = best_dist
-            arrival = current_time + d/velocidad_promedio_kmph + tiempo_holgura
-            if has_window and arrival < apertura[mejor]:
-                arrival = apertura[mejor]
-            current_time = arrival + stay_times[mejor]
-            current_idx = mejor
-    else:
-        # no hay lugar factible como primero
-        order_greedy = list(range(n))
-        np.random.shuffle(order_greedy)
-
-    # Completar orden inicial con el resto en orden aleatorio
-    remaining = list(unvisited)
-    np.random.shuffle(remaining)
-    initial_order = order_greedy + remaining
-
-    # Evaluar inicial
-    cnt_init, dist_init = evaluar_ruta(initial_order)
-    current_order = initial_order.copy()
-    current_cost = -cnt_init * BIG + dist_init
-    best_order = current_order.copy()
-    best_cost = current_cost
-    best_score = (cnt_init, dist_init)
-
-    # Calcular temperatura inicial T0 como desviación estándar de diferencias de 100 primeros vecinos
-    diffs = []
-    for _ in range(100):
-        # vecino: swap en la parte visitable
-        i, j = np.random.choice(n, 2, replace=False)
-        neigh = current_order.copy()
-        neigh[i], neigh[j] = neigh[j], neigh[i]
-        cnt_n, dist_n = evaluar_ruta(neigh)
-        cost_n = -cnt_n * BIG + dist_n
-        diffs.append(abs(cost_n - current_cost))
-    T0 = np.std(diffs)
-    if T0 <= 0:
-        T0 = 1.0  # Temperatura inicial minima para evitar división por cero
-
-    # Parám. recocido
-    T = T0
-    T_end = 1e-5
-    alpha = 0.999
-    iter_per_T = max(100, n * 10)
-
-    # Simulated annealing
-    while T > T_end:
-        for _ in range(iter_per_T):
-            i, j = np.random.choice(n, 2, replace=False)
-            new_order = current_order.copy()
-            new_order[i], new_order[j] = new_order[j], new_order[i]
-            cnt_new, dist_new = evaluar_ruta(new_order)
-            cost_new = -cnt_new * BIG + dist_new
-            delta = cost_new - current_cost
-            if cost_new < current_cost or np.random.rand() < np.exp(-delta / T):
-                current_order = new_order
-                current_cost = cost_new
-                if cost_new < best_cost:
-                    best_order = new_order.copy()
-                    best_cost = cost_new
-                    best_score = (cnt_new, dist_new)
-        T *= alpha
-
-    # Construir DataFrame de la mejor ruta
-    cnt_best, _ = best_score
-    if cnt_best == 0:
-        print("No es posible visitar ningún lugar dentro del tiempo dado.")
-        return None, None
-
-    rows = []
-    current_time = hora_inicio
-    # Primer lugar
-    idx0 = best_order[0]
-    d0 = dist_start[idx0]
-    t0 = d0/velocidad_promedio_kmph + tiempo_holgura
-    arrival0 = current_time + t0
-    if has_window and arrival0 < apertura[idx0]:
-        arrival0 = apertura[idx0]
-    departure0 = arrival0 + stay_times[idx0]
-    rows.append({'id': lugares[idx0], 'arrival': arrival0, 'departure': departure0,
-                 'travel_distance_prev': d0, 'travel_time_prev': t0})
-    current_time = departure0
-    visits = 1
-    for prev, curr in zip(best_order[:-1], best_order[1:]):
-        if visits >= cnt_best:
-            break
-        dij = dist_matrix[prev, curr]
-        tij = dij/velocidad_promedio_kmph + tiempo_holgura
-        arrival = current_time + tij
-        if has_window:
-            if arrival + stay_times[curr] > cierre[curr]:
-                break
-            if arrival < apertura[curr]:
-                arrival = apertura[curr]
-        departure = arrival + stay_times[curr]
-        if departure > hora_fin:
-            break
-        rows.append({'id': lugares[curr], 'arrival': arrival, 'departure': departure,
-                     'travel_distance_prev': dij, 'travel_time_prev': tij})
-        current_time = departure
-        visits += 1
-
-    best_route_info = pd.DataFrame(rows)
-    return best_route_info, best_score
         
 def main():
+    
     # Cargar el CSV con la informacion completa de las naves industriales
-    df_naves_industriales = cargar_CSV('Naves_Industriales.csv')
+    df_naves_industriales = cargar_CSV('Naves_Industriales_Limpio.csv')
     
     print("Listado de Naves Industriales:")
     print(df_naves_industriales)
     
-    #Seleccionar las naves industriales
-    df_naves_industriales_filtrado = df_naves_industriales.copy()
+    # Ingresar el listado de numeros con ","; si se ingresa -1 se seleccionan todas
+    entrada_usuario = input("Selecciona los índices de las naves industriales, separados por comas (ej. 0,1,3,5,7), si ingresa -1 se seleccionan todos: ")    
+    
+    # Convertir la entrada en una lista de números enteros
+    # '1,3,5' -> ['1', '3', '5'] -> [1, 3, 5]
+    indices_seleccionados = [int(indice.strip()) for indice in entrada_usuario.split(',')]
+    
+    if indices_seleccionados == [-1]:
+        indices_seleccionados = list(range(len(df_naves_industriales)))
+
+    # Seleccionar las filas del DataFrame usando .iloc
+    # .iloc se usa para seleccionar filas por su posición entera
+    df_naves_industriales_filtrado = df_naves_industriales.iloc[indices_seleccionados]
 
     # Crear la matriz de distancias entre los lugares filtrados
     df_matriz_distancias = crear_matriz_distancias(df_naves_industriales_filtrado)
     
+    # Prototipo 2
     # Definir el tiempo de estancia promedio en cada nave industrial (en minutos)
     tiempo_estancia = 30  # 30 minutos
     
@@ -549,9 +315,17 @@ def main():
 
     # Solicitud a la API de weatherapi.com
     api_key = "7f25124e580c4de6a2e00312251205"
+    
+    # Medir tiempo de ejecución de las predicciones
+    inicio_tiempo = datetime.now()
+    print("Realizando predicciones climáticas para las naves industriales seleccionadas...")
 
     # Añadir la columna con su predicción al CSV
     df_naves_industriales_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_industriales_filtrado, api_key)
+    
+    fin_tiempo = datetime.now()
+    duracion = fin_tiempo - inicio_tiempo
+    print(f"Predicciones completadas en {duracion.total_seconds():.2f} segundos.")
     
     #Establecer penalizaciones por condiciones climáticas
     penalizaciones = {
@@ -569,70 +343,91 @@ def main():
     
     lambda_penalizacion = 1.0
     
-    # Multiplicar las distancias por la penalización de la predicción
-    for pos, fila in df_naves_industriales_filtrado.reset_index(drop=True).iterrows():
-        id_lugar = int(fila['id'])
-        pred = fila['Prediccion']
-        if pred in penalizaciones:
-            penal = penalizaciones[pred] * lambda_penalizacion
-            # Multiplicar toda la fila y columna correspondiente:
-            mask = df_matriz_distancias.index != id_lugar
-            df_matriz_distancias.loc[id_lugar, mask] *= penal
-            df_matriz_distancias.loc[mask, id_lugar] *= penal
-            # Mantener diagonal a 0:
-            df_matriz_distancias.loc[id_lugar, id_lugar] = 0.0
-            
+    # Preguntar al usuario si desea aplicar penalizaciones
+    aplicar_penalizaciones = input("¿Desea aplicar penalizaciones por condiciones climáticas? (s/n): ").strip().lower()
+    
+    if aplicar_penalizaciones == 's':
+        # Multiplicar las distancias por la penalización de la predicción
+        for pos, fila in df_naves_industriales_filtrado.reset_index(drop=True).iterrows():
+            id_lugar = pos 
+            pred = fila['Prediccion']
+            if pred in penalizaciones:
+                penal = penalizaciones[pred] * lambda_penalizacion
+                # Multiplicar toda la fila y columna correspondiente:
+                mask = df_matriz_distancias.index != id_lugar
+                df_matriz_distancias.loc[id_lugar, mask] *= penal
+                df_matriz_distancias.loc[mask, id_lugar] *= penal
+                # Mantener diagonal a 0:
+                df_matriz_distancias.loc[id_lugar, id_lugar] = 0.0
+        else:   
+            print("No se aplicarán penalizaciones por condiciones climáticas.")
+    
     # Mostrar las naves industriales disponibles
     print("Naves Industriales disponibles para iniciar el recorrido:")
     print(df_naves_industriales_filtrado)
     
-    # Elegir un nave_industrial de inicio
-    nave_industrial_inicio = 'Nave Industrial A'
+    # Seleccionar la nave industrial de inicio
+    nave_industrial_inicio = int(input("Ingrese el indice de la Nave industrial de inicio: "))
 
-    #Elegir el dia de comienzo del viaje
+    # Prototipo 2
+    # Elegir el dia de comienzo del viaje
     dia_comienzo = '2025-10-01'
     
+    # Prototipo 2
     # Elegir la hora de comienzo del viaje
     hora_inicio = 7.00 # 7:00 AM
     
+    # Prototipo 2
     # Tiempo holgura para llegar a cada lugar
     tiempo_holgura = 5 # 30 minutos
     
-    # Encontrar la ruta optima
-    ruta_optima, costo_optimo = optimizar_ruta(
-        df_matriz_distancias, 
-        df_naves_industriales_filtrado, 
-        nave_industrial_inicio, 
-        hora_inicio,  
-        tiempo_holgura
-    )
-
-    print("Ruta óptima encontrada:")
-    if ruta_optima is not None:
-        count_visitas, dist_total = costo_optimo
-        print(f"Cant. visitas: {count_visitas}, distancia total: {dist_total:.2f} km")
-        ruta_optima.to_csv('ruta_optima.csv', index=False)
-    else:
-        print("No se pudo encontrar una ruta óptima viable.")
-        
-    # Imprimir la ruta con el nombre de los lugares, la hora de llegada, 
-    # la hora de salida, la distancia recorrida y el tiempo de viaje entre los lugares
-    # Las horas se mostraran en formato HH:MM
-    if ruta_optima is not None:
-        for index, row in ruta_optima.iterrows():
-            id_lugar = row['id']
-            lugar_info = df_naves_industriales_filtrado[df_naves_industriales_filtrado['id'] == id_lugar].iloc[0]
-            nombre_lugar = lugar_info['nombre']
-            arrival_time = decimal_to_hhmm(row['arrival'])
-            departure_time = decimal_to_hhmm(row['departure'])
-            travel_distance = row['travel_distance_prev']
-            travel_time = row['travel_time_prev']
-            travel_time_str = decimal_to_hhmm(travel_time)
-            print(f"Id: {id_lugar}, Lugar: {nombre_lugar}, Llegada: {arrival_time}, Salida: {departure_time}, "
-                    f"Distancia recorrida: {travel_distance:.2f} km, Tiempo de viaje total: {travel_time_str} hrs")
-    else:
-        print("No se pudo generar la ruta con los detalles de los lugares.")
+    # Obtener el numero totl de naves industriales seleccionadas
+    num_naves = len(df_naves_industriales_filtrado) 
+    num_naves = int(num_naves)
+    
+    print(f"Número total de naves industriales seleccionadas: {num_naves}")
+    
+    # Guardar la matriz de distancias en un CSV para usar en el algoritmo
+    df_matriz_distancias.to_csv("Distancias_no_head.csv", index=False, header=False)
+       
+    directorio_actual = os.path.dirname(os.path.abspath(__file__))
+    nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
+    ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
+    
+    rs = AlgoritmoRecocido(ruta_biblioteca)
+    
+    params = {
+        'longitud_ruta': num_naves,
+        'num_generaciones': 25000,
+        'tasa_enfriamiento': 0.92,
+        'temperatura_final': 0.000000001,
+        'max_neighbours': 320,
+        'm': 3,
+        'nombre_archivo': "Distancias_no_head.csv",
+        'heuristica': 0
+    }
+    
+    resultado = rs.ejecutar(**params)
+    
+    print("\nRecorrido óptimo encontrado (índices):")
+    print(resultado['recorrido'])
+    # Imprimirlo por los nombres de las naves industriales
+    print("\nRecorrido óptimo encontrado (nombres de naves industriales):")
+    for idx in resultado['recorrido']:
+        nombre_nave = df_naves_industriales_filtrado.iloc[idx]['nombre']
+        print(f"- {nombre_nave}")
+    print(f"\nFitness: {resultado['fitness']:.2f}")
+    print(f"Tiempo: {resultado['tiempo_ejecucion']:.2f}s")
+    
+    plt.plot(resultado['fitness_generaciones'])
+    plt.title("Evolución del Fitness - Recocido Simulado")
+    plt.xlabel("Generación")
+    plt.ylabel("Fitness")
+    plt.grid()
+    plt.show()
     
 
 if __name__ == "__main__":
     main()
+
+

@@ -4,17 +4,13 @@
     <meta charset="UTF-8">
     <title>LogistiClima - Mejor Ruta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="./estilo/estilo_MejorRuta.css" />
-
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="estilo/estilo_MejorRuta.css" /> <!-- Enlace al CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" /> <!-- Para mostrar el Mapa -->
 </head>
 <body>
     <header>
         <div class="logo-container">
-            <img src="./imagenes/logo.jpg" alt="Logo LogistiClima" class="logo">
+            <img src="imagenes/logo.jpg" alt="Logo LogistiClima" class="logo">
             <div class="title-container">
                 <h1>LogistiClima</h1>
                 <p class="subtitle">Mejor Ruta Generada</p>
@@ -24,33 +20,19 @@
 
     <main>
         <div class="contenido-principal">
-            <!-- Mapa a la izquierda -->
             <div class="mapa-container">
                 <div id="mapa"></div>
             </div>
-
-            <!-- Tabla a la derecha -->
             <div class="tabla-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Ruta</th>
-                            <th>Detalles</th>
+                            <th>Destino</th>
+                            <th>Nombre</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-mejor-ruta">
-                        <tr>
-                            <td>Ruta 1</td>
-                            <td>Detalle 1</td>
-                        </tr>
-                        <tr>
-                            <td>Ruta 2</td>
-                            <td>Detalle 2</td>
-                        </tr>
-                        <tr>
-                            <td>Ruta 3</td>
-                            <td>Detalle 3</td>
-                        </tr>
+                        <!-- Los detalles de la ruta se mostraran aqui dinamicamente -->
                     </tbody>
                 </table>
                 <button id="guardarRuta">Guardar Ruta</button>
@@ -58,24 +40,7 @@
         </div>
     </main>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-    <!-- JS propio -->
-    <script>
-        // Inicializar mapa Leaflet en coordenadas de ejemplo (CDMX)
-        const map = L.map('mapa').setView([19.4326, -99.1332], 12);
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 19
-        }).addTo(map);
-
-        // Botón guardar ruta
-        document.getElementById("guardarRuta").addEventListener("click", () => {
-            alert("Función para guardar ruta aún no implementada.");
-        });
-    </script>
+    <script src="js/js_MejorRuta.js"></script> <!-- Enlace al JS -->
 </body>
 </html>
