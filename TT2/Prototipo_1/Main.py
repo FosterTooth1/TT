@@ -315,9 +315,17 @@ def main():
 
     # Solicitud a la API de weatherapi.com
     api_key = "7f25124e580c4de6a2e00312251205"
+    
+    # Medir tiempo de ejecución de las predicciones
+    inicio_tiempo = datetime.now()
+    print("Realizando predicciones climáticas para las naves industriales seleccionadas...")
 
     # Añadir la columna con su predicción al CSV
     df_naves_industriales_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_industriales_filtrado, api_key)
+    
+    fin_tiempo = datetime.now()
+    duracion = fin_tiempo - inicio_tiempo
+    print(f"Predicciones completadas en {duracion.total_seconds():.2f} segundos.")
     
     #Establecer penalizaciones por condiciones climáticas
     penalizaciones = {
@@ -335,19 +343,25 @@ def main():
     
     lambda_penalizacion = 1.0
     
-    # Multiplicar las distancias por la penalización de la predicción
-    for pos, fila in df_naves_industriales_filtrado.reset_index(drop=True).iterrows():
-        id_lugar = pos 
-        pred = fila['Prediccion']
-        if pred in penalizaciones:
-            penal = penalizaciones[pred] * lambda_penalizacion
-            # Multiplicar toda la fila y columna correspondiente:
-            mask = df_matriz_distancias.index != id_lugar
-            df_matriz_distancias.loc[id_lugar, mask] *= penal
-            df_matriz_distancias.loc[mask, id_lugar] *= penal
-            # Mantener diagonal a 0:
-            df_matriz_distancias.loc[id_lugar, id_lugar] = 0.0
-            
+    # Preguntar al usuario si desea aplicar penalizaciones
+    aplicar_penalizaciones = input("¿Desea aplicar penalizaciones por condiciones climáticas? (s/n): ").strip().lower()
+    
+    if aplicar_penalizaciones == 's':
+        # Multiplicar las distancias por la penalización de la predicción
+        for pos, fila in df_naves_industriales_filtrado.reset_index(drop=True).iterrows():
+            id_lugar = pos 
+            pred = fila['Prediccion']
+            if pred in penalizaciones:
+                penal = penalizaciones[pred] * lambda_penalizacion
+                # Multiplicar toda la fila y columna correspondiente:
+                mask = df_matriz_distancias.index != id_lugar
+                df_matriz_distancias.loc[id_lugar, mask] *= penal
+                df_matriz_distancias.loc[mask, id_lugar] *= penal
+                # Mantener diagonal a 0:
+                df_matriz_distancias.loc[id_lugar, id_lugar] = 0.0
+        else:   
+            print("No se aplicarán penalizaciones por condiciones climáticas.")
+    
     # Mostrar las naves industriales disponibles
     print("Naves Industriales disponibles para iniciar el recorrido:")
     print(df_naves_industriales_filtrado)
