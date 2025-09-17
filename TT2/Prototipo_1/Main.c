@@ -7,6 +7,8 @@ typedef struct
     double tiempo_ejecucion;
     int longitud_recorrido;
     double *fitness_generaciones;
+    double temperatura_inicial;
+    double temperatura_final;
 } ResultadoRecocido;
 
 #ifdef _WIN32
@@ -146,6 +148,8 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     R->longitud_recorrido = longitud_ruta;
     R->tiempo_ejecucion = t_total;
     R->fitness_generaciones = fitness_generaciones;
+    R->temperatura_inicial = T0;
+    R->temperatura_final = T;
 
     for (int i = 0; i < longitud_ruta; i++) {
         R->recorrido[i] = mejor->ruta[i];

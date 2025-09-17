@@ -16,6 +16,8 @@ class ResultadoRecocido(Structure):
         ("tiempo_ejecucion", c_double),
         ("longitud_recorrido", c_int),
         ("fitness_generaciones", POINTER(c_double)),
+        ("temperatura_inicial", c_double),
+        ("temperatura_final", c_double),
     ]
 
 class AlgoritmoRecocido:
@@ -66,7 +68,9 @@ class AlgoritmoRecocido:
                 'recorrido': recorrido,
                 'fitness': resultado.fitness,
                 'tiempo_ejecucion': resultado.tiempo_ejecucion,
-                'fitness_generaciones': fitness_hist
+                'fitness_generaciones': fitness_hist,
+                'temperatura_inicial': resultado.temperatura_inicial,
+                'temperatura_final': resultado.temperatura_final
             }
             
             self.biblioteca.liberar_resultado(resultado_ptr)
@@ -398,10 +402,10 @@ def main():
     
     params = {
         'longitud_ruta': num_naves,
-        'num_generaciones': 25000,
-        'tasa_enfriamiento': 0.92,
-        'temperatura_final': 0.000000001,
-        'max_neighbours': 320,
+        'num_generaciones': 250000,
+        'tasa_enfriamiento': 0.98,
+        'temperatura_final': 0.1,
+        'max_neighbours': num_naves * 10,
         'm': 3,
         'nombre_archivo': "Distancias_no_head.csv",
         'heuristica': 0
@@ -418,6 +422,8 @@ def main():
         print(f"- {nombre_nave}")
     print(f"\nFitness: {resultado['fitness']:.2f}")
     print(f"Tiempo: {resultado['tiempo_ejecucion']:.2f}s")
+    print(f"Temperatura inicial: {resultado['temperatura_inicial']:.2f}")
+    print(f"Temperatura final: {resultado['temperatura_final']:.2f}")
     
     plt.plot(resultado['fitness_generaciones'])
     plt.title("Evolución del Fitness - Recocido Simulado")
