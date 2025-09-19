@@ -320,16 +320,29 @@ def main():
     # Solicitud a la API de weatherapi.com
     api_key = "7f25124e580c4de6a2e00312251205"
     
-    # Medir tiempo de ejecución de las predicciones
-    inicio_tiempo = datetime.now()
-    print("Realizando predicciones climáticas para las naves industriales seleccionadas...")
+    # Preguntar al usuario si desea realizar predicciones climáticas
+    realizar_predicciones_climaticas = input("¿Desea realizar predicciones climáticas para las naves industriales seleccionadas? (s/n): ").strip().lower()
+    if realizar_predicciones_climaticas == 's':
+        
+       # Medir tiempo de ejecución de las predicciones
+        inicio_tiempo = datetime.now()
+        print("Realizando predicciones climáticas para las naves industriales seleccionadas...")
 
-    # Añadir la columna con su predicción al CSV
-    df_naves_industriales_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_industriales_filtrado, api_key)
-    
-    fin_tiempo = datetime.now()
-    duracion = fin_tiempo - inicio_tiempo
-    print(f"Predicciones completadas en {duracion.total_seconds():.2f} segundos.")
+        # Añadir la columna con su predicción al CSV
+        df_naves_industriales_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_industriales_filtrado, api_key)
+        
+        fin_tiempo = datetime.now()
+        duracion = fin_tiempo - inicio_tiempo
+        print(f"Predicciones completadas en {duracion.total_seconds():.2f} segundos.")
+        
+        # Guardar el DataFrame actualizado con predicciones en un nuevo CSV
+        df_naves_industriales_filtrado.to_csv('Naves_Industriales_Con_Predicciones.csv', index=False)
+        print("Se han guardado las predicciones climáticas en 'Naves_Industriales_Con_Predicciones.csv'.") 
+        
+    else:
+        # Cargar CSV preexistente con predicciones
+        df_naves_industriales_filtrado = cargar_CSV('Naves_Industriales_Con_Predicciones.csv')
+        print("Se han cargado las predicciones climáticas desde 'Naves_Industriales_Con_Predicciones.csv'.")
     
     #Establecer penalizaciones por condiciones climáticas
     penalizaciones = {
@@ -402,9 +415,9 @@ def main():
     
     params = {
         'longitud_ruta': num_naves,
-        'num_generaciones': 250000,
-        'tasa_enfriamiento': 0.98,
-        'temperatura_final': 0.1,
+        'num_generaciones': 25000,
+        'tasa_enfriamiento': 0.99,
+        'temperatura_final': 0.001,
         'max_neighbours': num_naves * 10,
         'm': 3,
         'nombre_archivo': "Distancias_no_head.csv",
@@ -423,7 +436,7 @@ def main():
     print(f"\nFitness: {resultado['fitness']:.2f}")
     print(f"Tiempo: {resultado['tiempo_ejecucion']:.2f}s")
     print(f"Temperatura inicial: {resultado['temperatura_inicial']:.2f}")
-    print(f"Temperatura final: {resultado['temperatura_final']:.2f}")
+    print(f"Temperatura final: {resultado['temperatura_final']:.5f}")
     
     plt.plot(resultado['fitness_generaciones'])
     plt.title("Evolución del Fitness - Recocido Simulado")
