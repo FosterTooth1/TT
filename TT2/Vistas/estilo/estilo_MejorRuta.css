@@ -66,7 +66,7 @@ main {
 }
 
 #mapa {
-    height: 400px;
+    height: 600px;
     width: 100%;
     border-radius: 15px;
 }
@@ -79,13 +79,19 @@ main {
     gap: 10px;
 }
 
+/* Contenedor con scroll */
+#tabla-scroll {
+    max-height: 550px;   /* altura máxima de la tabla visible */
+    overflow-y: auto;    /* activa scroll vertical */
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Estilos de la tabla */
 table {
     width: 100%;
     border-collapse: collapse;
     background-color: var(--bg-200);
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 th {
@@ -94,6 +100,10 @@ th {
     color: var(--primary-200);
     border-bottom: 2px solid var(--primary-200);
     padding: 6px;
+    position: sticky; /* Mantener encabezado fijo al hacer scroll */
+    top: 0;
+    background: var(--bg-200);
+    z-index: 2;
 }
 
 td {
@@ -102,6 +112,21 @@ td {
     border-bottom: 1px solid #ddd;
 }
 
+/* Estilo del scroll */
+#tabla-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+#tabla-scroll::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 4px;
+}
+
+#tabla-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
+}
+
+/* Botón */
 button {
     padding: 12px;
     background-color: var(--accent-100);
