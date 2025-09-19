@@ -107,7 +107,10 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     for (k = 1; k <= num_generaciones && T > temperatura_final; k++)
     {
         // Enfriamiento logarítmico de Béltsman
-        T = T0 / log(k + 1.0);
+        // T = T0 / log(k + 1.0);
+
+        // Enfriamiento geométrico
+        T = T * tasa_enfriamiento;
 
         int neigh = 0, succ = 0;
         while (neigh < max_neighbours && succ < max_successes)
