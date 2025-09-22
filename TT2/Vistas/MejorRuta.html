@@ -20,21 +20,27 @@
 
     <main>
         <div class="contenido-principal">
+            <!-- Contenedor del mapa -->
             <div class="mapa-container">
                 <div id="mapa"></div>
             </div>
+
+            <!-- Contenedor de la tabla -->
             <div class="tabla-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Destino</th>
-                            <th>Nombre</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-mejor-ruta">
-                        <!-- Los detalles de la ruta se mostraran aqui dinamicamente -->
-                    </tbody>
-                </table>
+                <div id="tabla-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Destino</th>
+                                <th>Nombre</th>
+                                <th>Condición</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-mejor-ruta">
+                            <!-- Los detalles de la ruta se mostraran aqui -->
+                        </tbody>
+                    </table>
+                </div>
                 <button id="guardarRuta">Guardar Ruta</button>
             </div>
         </div>
