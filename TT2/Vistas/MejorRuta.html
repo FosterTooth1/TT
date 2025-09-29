@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <title>LogistiClima - Mejor Ruta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="estilo/estilo_MejorRuta.css" /> 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" /> 
-    <script src="https://unpkg.com/polyline-encoded@0.0.9/Polyline/Polyline.js"></script>
+    <link rel="stylesheet" href="estilo/estilo_MejorRuta.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 </head>
 <body>
     <header>
@@ -21,12 +20,9 @@
 
     <main>
         <div class="contenido-principal">
-            <!-- Contenedor del mapa -->
             <div class="mapa-container">
                 <div id="mapa"></div>
             </div>
-
-            <!-- Contenedor de la tabla -->
             <div class="tabla-container">
                 <div id="tabla-scroll">
                     <table>
@@ -38,8 +34,7 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-mejor-ruta">
-                            <!-- Los detalles de la ruta se mostraran aqui -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
                 <button id="guardarRuta">Guardar Ruta</button>
@@ -47,7 +42,9 @@
         </div>
     </main>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="js/js_MejorRuta.js"></script> <!-- Enlace al JS -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-encoded@0.5.1/Polyline.Encoded.js"></script>
+    
+    <script src="js/js_MejorRuta.js"></script>
 </body>
 </html>
