@@ -241,8 +241,14 @@ def main(): # Rutas a los archivos de data
 
     df_naves_industriales_filtrado = df_naves_industriales.iloc[indices_seleccionados]
 
-    # Leer directamente la matriz de distancias
-    df_matriz_distancias = pd.read_csv(ruta_matriz_distancias)
+    df_matriz_distancias_original = pd.read_csv(ruta_matriz_distancias, header=None)
+    
+    # Filtrar la matriz para que contenga solo las filas y columnas de las naves seleccionadas
+    df_matriz_distancias = df_matriz_distancias_original.iloc[indices_seleccionados, indices_seleccionados].copy()
+    
+    # Reiniciar los índices y nombres de columnas para que sea una matriz de 0 a N-1
+    df_matriz_distancias.reset_index(drop=True, inplace=True)
+    df_matriz_distancias.columns = range(df_matriz_distancias.shape[1])
     
     # Cargar modelo para predicciones climáticas
     Modelo_RandomForest = joblib.load(ruta_modelo)
@@ -263,8 +269,13 @@ def main(): # Rutas a los archivos de data
         df_naves_industriales_filtrado.to_csv(ruta_csv_predicciones, index=False)
         print(f"Se han guardado las predicciones climáticas en '{ruta_csv_predicciones}'.") 
     else:
-        df_naves_industriales_filtrado = cargar_CSV(ruta_csv_predicciones)
-        print(f"Se han cargado las predicciones climáticas desde '{ruta_csv_predicciones}'.")
+        # Carga el archivo completo que contiene las predicciones
+        df_predicciones_cargadas = cargar_CSV(ruta_csv_predicciones)
+        
+        # Filtrar el DataFrame usando los índices que el usuario seleccionó
+        df_naves_industriales_filtrado = df_predicciones_cargadas.iloc[indices_seleccionados].copy()
+        
+        print(f"Se han cargado y filtrado las predicciones climáticas desde '{ruta_csv_predicciones}'.")
 
     # Penalizaciones por condiciones climáticas
     penalizaciones = {'Nublado': 1.1,
