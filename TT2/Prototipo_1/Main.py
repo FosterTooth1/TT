@@ -7,6 +7,7 @@ from datetime import datetime
 import ctypes
 from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char, cast
 import os
+import matplotlib.pyplot as plt
 
 class ResultadoRecocido(Structure):
     _fields_ = [("recorrido", POINTER(c_int)),
@@ -219,10 +220,10 @@ def decimal_to_hhmm(val):
         
 def main(): # Rutas a los archivos de data
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
-    ruta_csv_naves = os.path.join(directorio_actual, "..", "data", "Naves_Industriles.csv")
-    ruta_csv_predicciones = os.path.join(directorio_actual, "..", "data", "Predicciones_Naves_Industriales.csv")
-    ruta_matriz_distancias = os.path.join(directorio_actual, "..", "data", "Distancias_no_head.csv")
-    ruta_modelo = os.path.join(directorio_actual, "..", "data", "prediccion_clima.pkl")
+    ruta_csv_naves = os.path.join(directorio_actual, "Naves_Industriales.csv")
+    ruta_csv_predicciones = os.path.join(directorio_actual, "Naves_Industriales_Con_Predicciones.csv")
+    ruta_matriz_distancias = os.path.join(directorio_actual, "Matriz_Distancias_Carretera.csv")
+    ruta_modelo = os.path.join(directorio_actual, "prediccion_clima.pkl")
 
     # Cargar el CSV con la informacion completa de las naves industriales
     df_naves_industriales = cargar_CSV(ruta_csv_naves)
@@ -240,7 +241,7 @@ def main(): # Rutas a los archivos de data
 
     df_naves_industriales_filtrado = df_naves_industriales.iloc[indices_seleccionados]
 
-    # Leer directamente Distancias_no_head.csv
+    # Leer directamente la matriz de distancias
     df_matriz_distancias = pd.read_csv(ruta_matriz_distancias)
     
     # Cargar modelo para predicciones climáticas
@@ -299,7 +300,6 @@ def main(): # Rutas a los archivos de data
     num_naves = len(df_naves_industriales_filtrado)
     print(f"Número total de naves industriales seleccionadas: {num_naves}")
     
-    # Ya no se guarda Distancias_no_head.csv porque ya esta para las 219 naves
     nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
     ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
     
@@ -308,12 +308,12 @@ def main(): # Rutas a los archivos de data
     rs = AlgoritmoRecocido(ruta_biblioteca)
     
     params = {'longitud_ruta': num_naves,
-              'num_generaciones': 25000,
+              'num_generaciones': 800,
               'tasa_enfriamiento': 0.99,
               'temperatura_final': 0.001,
               'max_neighbours': num_naves * 10,
               'm': 3,
-              'nombre_archivo': "Distancias_no_head.csv",
+              'nombre_archivo': "Matriz_Distancias_Carretera.csv",
               'heuristica': 0}
         
     resultado = rs.ejecutar(**params)
@@ -328,6 +328,14 @@ def main(): # Rutas a los archivos de data
     print(f"Tiempo: {resultado['tiempo_ejecucion']:.2f}s")
     print(f"Temperatura inicial: {resultado['temperatura_inicial']:.2f}")
     print(f"Temperatura final: {resultado['temperatura_final']:.5f}")
+    
+    # Mostrar tabla del fitness durante las generaciones
+    plt.plot(resultado['fitness_generaciones'])
+    plt.title("Evolución del Fitness - Recocido Simulado")
+    plt.xlabel("Generación")
+    plt.ylabel("Fitness")
+    plt.show()
+    
 
     salida_json = []
     for idx in resultado['recorrido']:
@@ -342,7 +350,6 @@ def main(): # Rutas a los archivos de data
     with open("ruta_Ejemplo.json", "w", encoding="utf-8") as f:
         json.dump(salida_json, f, ensure_ascii=False, indent=4)
 
-    ###########################################################################################################################  
 if __name__ == "__main__":
     main()
 

@@ -27,13 +27,34 @@ fetch('ruta_Ejemplo.json')
     .then(data => {
         // Crear grupo de marcadores para ajustar la vista
         const markersGroup = [];
+        const coordinates = []; // Array para guardar las coordenadas para la ruta
 
         data.forEach((coord, i) => {
             const marker = L.marker(coord)
                 .addTo(map)
-                .bindPopup(`Punto ${i + 1}`);
+                .bindPopup(`Punto ${i + 1}: ${coord.nombre}`);
             markersGroup.push(marker);
+            // Añade las coordenadas al array para la API de enrutamiento
+            coordinates.push([coord.lng, coord.lat]);
         });
+
+        // Formatear las coordenadas para la URL de la API de OSRM
+        const urlCoordinates = coordinates.map(coord => coord.join(',')).join(';');
+        const apiUrl = `https://router.project-osrm.org/route/v1/driving/${urlCoordinates}?overview=full&geometries=polyline`;
+
+        // Llamar a la API de OSRM para obtener la geometría de la ruta
+        fetch(apiUrl)
+            .then(res => res.json())
+            .then(routeData => {
+                if (routeData.routes && routeData.routes.length > 0) {
+                    const routeGeometry = routeData.routes[0].geometry;
+                    
+                    // Decodificar la geometría y dibujarla en el mapa
+                    const decodedPolyline = L.Polyline.fromEncoded(routeGeometry).getLatLngs();
+                    L.polyline(decodedPolyline, { color: 'blue', weight: 5 }).addTo(map);
+                }
+            })
+            .catch(err => console.error("Error al obtener la ruta de OSRM:", err));
 
         // Ajustar la vista inicial al grupo de marcadores, pero dentro de los límites
         const groupBounds = L.featureGroup(markersGroup).getBounds();
