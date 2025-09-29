@@ -284,10 +284,9 @@ def decimal_to_hhmm(val):
         minutos = minutos % 60
     return f"{horas:02d}:{minutos:02d}"
         
-def main():
-    
+def main(): 
     # Cargar el CSV con la informacion completa de las naves industriales
-    df_naves_industriales = cargar_CSV('Naves_Industriales_Limpio.csv')
+    df_naves_industriales = cargar_CSV("C:/Users/Legion/Documents/Naves_Industriles.csv")
     
     print("Listado de Naves Industriales:")
     print(df_naves_industriales)
@@ -314,7 +313,7 @@ def main():
     tiempo_estancia = 30  # 30 minutos
     
     # Cargar modelo para predicciones climaticas
-    model_path_local = "random_forest_model.pkl"
+    model_path_local = "C:/Users/Legion/Documents/prediccion_clima.pkl"
     Modelo_RandomForest = joblib.load(model_path_local)
 
     # Solicitud a la API de weatherapi.com
@@ -345,18 +344,16 @@ def main():
         print("Se han cargado las predicciones climáticas desde 'Naves_Industriales_Con_Predicciones.csv'.")
     
     #Establecer penalizaciones por condiciones climáticas
-    penalizaciones = {
-        'Nublado': 1.1,
-        'Considerablemente nublado': 1.2,
-        'Despejado': 1.0,
-        'Niebla': 1.8,
-        'Bruma': 1.3,
-        'Lluvia intensa': 1.7,
-        'Tormenta electrica intensa': 1.9,
-        'Neblina': 1.6,
-        'Lluvia': 1.5,
-        'Truenos': 1.4
-    }
+    penalizaciones = {'Nublado': 1.1,
+                      'Considerablemente nublado': 1.2,
+                      'Despejado': 1.0,
+                      'Niebla': 1.8,
+                      'Bruma': 1.3,
+                      'Lluvia intensa': 1.7,
+                      'Tormenta electrica intensa': 1.9,
+                      'Neblina': 1.6,
+                      'Lluvia': 1.5,
+                      'Truenos': 1.4}
     
     lambda_penalizacion = 1.0
     
@@ -413,17 +410,15 @@ def main():
     
     rs = AlgoritmoRecocido(ruta_biblioteca)
     
-    params = {
-        'longitud_ruta': num_naves,
-        'num_generaciones': 25000,
-        'tasa_enfriamiento': 0.99,
-        'temperatura_final': 0.001,
-        'max_neighbours': num_naves * 10,
-        'm': 3,
-        'nombre_archivo': "Distancias_no_head.csv",
-        'heuristica': 0
-    }
-    
+    params = {'longitud_ruta': num_naves,
+              'num_generaciones': 25000,
+              'tasa_enfriamiento': 0.99,
+              'temperatura_final': 0.001,
+              'max_neighbours': num_naves * 10,
+              'm': 3,
+              'nombre_archivo': "Distancias_no_head.csv",
+              'heuristica': 0}
+        
     resultado = rs.ejecutar(**params)
     
     print("\nRecorrido óptimo encontrado (índices):")
@@ -437,7 +432,25 @@ def main():
     print(f"Tiempo: {resultado['tiempo_ejecucion']:.2f}s")
     print(f"Temperatura inicial: {resultado['temperatura_inicial']:.2f}")
     print(f"Temperatura final: {resultado['temperatura_final']:.5f}")
+
+    ###########################################################################################################################
+    # CREAR EL ARCHIVO json PARA MOSTRAR EN EL MAPA
+    salida_json = []
+    for idx in resultado['recorrido']:
+        fila = df_naves_industriales_filtrado.iloc[idx]
+        salida_json.append({
+            "lat": float(fila['latitud']),
+            "lng": float(fila['longitud']),
+            "nombre": fila['nombre'],
+            "condicion": fila['Prediccion']
+        })
+
+    # GUARDAR EN json PARA VISUALIZAR LA RUTA
+    with open("ruta_Ejemplo.json", "w", encoding="utf-8") as f:
+        json.dump(salida_json, f, ensure_ascii=False, indent=4)
+    ###########################################################################################################################
     
+    # Mostrar tabla del fitness durante las generaciones
     plt.plot(resultado['fitness_generaciones'])
     plt.title("Evolución del Fitness - Recocido Simulado")
     plt.xlabel("Generación")
