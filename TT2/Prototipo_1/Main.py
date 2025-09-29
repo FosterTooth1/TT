@@ -7,18 +7,15 @@ from datetime import datetime
 import ctypes
 from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char, cast
 import os
-import matplotlib.pyplot as plt
 
 class ResultadoRecocido(Structure):
-    _fields_ = [
-        ("recorrido", POINTER(c_int)),
+    _fields_ = [("recorrido", POINTER(c_int)),
         ("fitness", c_double),
         ("tiempo_ejecucion", c_double),
         ("longitud_recorrido", c_int),
         ("fitness_generaciones", POINTER(c_double)),
         ("temperatura_inicial", c_double),
-        ("temperatura_final", c_double),
-    ]
+        ("temperatura_final", c_double),]
 
 class AlgoritmoRecocido:
     def __init__(self, ruta_biblioteca):
@@ -81,9 +78,6 @@ class AlgoritmoRecocido:
             raise RuntimeError(f"Error en Recocido Simulado: {str(e)}")
 
 def cargar_CSV(nombre_archivo):
-    """
-    Carga un archivo CSV y devuelve un DataFrame de pandas.
-    """
     try:
         df = pd.read_csv(nombre_archivo)
         return df
@@ -91,40 +85,19 @@ def cargar_CSV(nombre_archivo):
         print(f"El archivo {nombre_archivo} no se encuentra.")
         return None
     
-# Funciones para cambiar formato de los datos HORA y DIRECCION VIENTO
 def cambiarFormatoHora(fecha_hora_str):
-    """
-    Convierte una cadena de fecha y hora en formato "YYYY-MM-DD HH:MM" a minutos desde medianoche.
-    Devuelve el total de minutos transcurridos desde la medianoche.
-    Ejemplo: "2023-10-01 14:30" -> 870
-    """
     dt = datetime.strptime(fecha_hora_str, "%Y-%m-%d %H:%M")
     return dt.hour * 60 + dt.minute
 
 def cambiarFormatoViento(dir):
-    """ Convierte una dirección de viento en texto a un valor numérico en grados.
-    Devuelve -1 si es "CALM" (sin viento).
-    Ejemplo: "N" -> 0, "NE" -> 45, "CALM" -> -1
-    """
     mapa = {"CALM": -1, "N": 0, "NNE": 22.5, "NE": 45, "ENE": 67.5, "E": 90,
             "ESE": 112.5, "SE": 135, "SSE": 157.5, "S": 180, "SSW": 202.5,
             "SW": 225, "WSW": 247.5, "W": 270, "WNW": 292.5, "NW": 315, "NNW": 337.5}
     return mapa.get(dir)
 
 def realizar_predicciones(modelo, df_naves_industriales_filtrado, api_key):
-    """
-    Para cada fila de df_naves_industriales_filtrado:
-      - Verifica latitud/longitud válidas
-      - Llama a la API de weatherapi.com current.json
-      - Extrae y transforma localtime, temp_c, dewpoint_c, humidity, wind_dir, wind_kph
-      - Construye DataFrame con ['Time', 'Temperature', 'Dew Point', 'Humidity', 'Wind', 'Wind Speed']
-      - Llama modelo.predict, mapea índice a texto con lista condiciones
-      - Añade columna 'Prediccion'
-    """
-    condiciones = [
-        'Nublado', 'Considerablemente nublado', 'Despejado', 'Niebla', 'Bruma',
-        'Lluvia intensa', 'Tormenta electrica intensa', 'Neblina', 'Lluvia', 'Truenos'
-    ]
+    condiciones = ['Nublado', 'Considerablemente nublado', 'Despejado', 'Niebla', 'Bruma',
+        'Lluvia intensa', 'Tormenta electrica intensa', 'Neblina', 'Lluvia', 'Truenos']
     predicciones = []
     # Recorremos con iterrows sobre copia para no modificar original
     for idx, fila in df_naves_industriales_filtrado.iterrows():
@@ -235,47 +208,7 @@ def realizar_predicciones(modelo, df_naves_industriales_filtrado, api_key):
     df.loc[:, 'Prediccion'] = predicciones
     return df
 
-def crear_matriz_distancias(df_naves_industriales):
-    """
-    Crea una matriz de distancias entre lugares turísticos usando la fórmula de Haversine.
-    """
-    lats = df_naves_industriales['latitud'].astype(float).values
-    lons = df_naves_industriales['longitud'].astype(float).values
-
-    # Convertir grados a radianes
-    lat_rad = np.radians(lats)
-    lon_rad = np.radians(lons)
-
-    # Preparar matrices 
-    # lat1 tendrá forma (N,1), lat2 (1,N), similar para lon
-    lat1 = lat_rad[:, np.newaxis]
-    lat2 = lat_rad[np.newaxis, :]
-    lon1 = lon_rad[:, np.newaxis]
-    lon2 = lon_rad[np.newaxis, :]
-
-    # Diferencias
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-
-    # Fórmula de Haversine
-    # a = sin^2(dlat/2) + cos(lat1)*cos(lat2)*sin^2(dlon/2)
-    a = np.sin(dlat/2.0)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2.0)**2
-    # c = 2 * arcsin(min(1, sqrt(a)))  — usamos arctan2 para estabilidad
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(np.maximum(0.0, 1.0 - a)))
-
-    # Radio de la Tierra en km
-    R = 6371.0
-    dist_matrix = R * c  # forma (N, N)
-
-    # Construir DataFrame con índices y columnas = IDs
-    df_dist = pd.DataFrame(dist_matrix)
-    
-    return df_dist
-
 def decimal_to_hhmm(val):
-    """
-    Convierte un valor en horas decimales (por ejemplo 11.5) a cadena "HH:MM".
-    """
     horas = int(val)
     minutos = int(round((val - horas) * 60))
     # Ajuste si el redondeo llega a 60
@@ -284,66 +217,55 @@ def decimal_to_hhmm(val):
         minutos = minutos % 60
     return f"{horas:02d}:{minutos:02d}"
         
-def main(): 
+def main(): # Rutas a los archivos de data
+    directorio_actual = os.path.dirname(os.path.abspath(__file__))
+    ruta_csv_naves = os.path.join(directorio_actual, "..", "data", "Naves_Industriles.csv")
+    ruta_csv_predicciones = os.path.join(directorio_actual, "..", "data", "Predicciones_Naves_Industriales.csv")
+    ruta_matriz_distancias = os.path.join(directorio_actual, "..", "data", "Distancias_no_head.csv")
+    ruta_modelo = os.path.join(directorio_actual, "..", "data", "prediccion_clima.pkl")
+
     # Cargar el CSV con la informacion completa de las naves industriales
-    df_naves_industriales = cargar_CSV("C:/Users/Legion/Documents/Naves_Industriles.csv")
+    df_naves_industriales = cargar_CSV(ruta_csv_naves)
     
     print("Listado de Naves Industriales:")
     print(df_naves_industriales)
     
-    # Ingresar el listado de numeros con ","; si se ingresa -1 se seleccionan todas
+    # Ingresar el listado de números con ","; si se ingresa -1 se seleccionan todas
     entrada_usuario = input("Selecciona los índices de las naves industriales, separados por comas (ej. 0,1,3,5,7), si ingresa -1 se seleccionan todos: ")    
     
-    # Convertir la entrada en una lista de números enteros
-    # '1,3,5' -> ['1', '3', '5'] -> [1, 3, 5]
     indices_seleccionados = [int(indice.strip()) for indice in entrada_usuario.split(',')]
     
     if indices_seleccionados == [-1]:
         indices_seleccionados = list(range(len(df_naves_industriales)))
 
-    # Seleccionar las filas del DataFrame usando .iloc
-    # .iloc se usa para seleccionar filas por su posición entera
     df_naves_industriales_filtrado = df_naves_industriales.iloc[indices_seleccionados]
 
-    # Crear la matriz de distancias entre los lugares filtrados
-    df_matriz_distancias = crear_matriz_distancias(df_naves_industriales_filtrado)
+    # Leer directamente Distancias_no_head.csv
+    df_matriz_distancias = pd.read_csv(ruta_matriz_distancias)
     
-    # Prototipo 2
-    # Definir el tiempo de estancia promedio en cada nave industrial (en minutos)
-    tiempo_estancia = 30  # 30 minutos
-    
-    # Cargar modelo para predicciones climaticas
-    model_path_local = "C:/Users/Legion/Documents/prediccion_clima.pkl"
-    Modelo_RandomForest = joblib.load(model_path_local)
+    # Cargar modelo para predicciones climáticas
+    Modelo_RandomForest = joblib.load(ruta_modelo)
 
-    # Solicitud a la API de weatherapi.com
     api_key = "7f25124e580c4de6a2e00312251205"
     
-    # Preguntar al usuario si desea realizar predicciones climáticas
     realizar_predicciones_climaticas = input("¿Desea realizar predicciones climáticas para las naves industriales seleccionadas? (s/n): ").strip().lower()
     if realizar_predicciones_climaticas == 's':
-        
-       # Medir tiempo de ejecución de las predicciones
         inicio_tiempo = datetime.now()
         print("Realizando predicciones climáticas para las naves industriales seleccionadas...")
 
-        # Añadir la columna con su predicción al CSV
         df_naves_industriales_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_industriales_filtrado, api_key)
-        
+
         fin_tiempo = datetime.now()
         duracion = fin_tiempo - inicio_tiempo
         print(f"Predicciones completadas en {duracion.total_seconds():.2f} segundos.")
-        
-        # Guardar el DataFrame actualizado con predicciones en un nuevo CSV
-        df_naves_industriales_filtrado.to_csv('Naves_Industriales_Con_Predicciones.csv', index=False)
-        print("Se han guardado las predicciones climáticas en 'Naves_Industriales_Con_Predicciones.csv'.") 
-        
+
+        df_naves_industriales_filtrado.to_csv(ruta_csv_predicciones, index=False)
+        print(f"Se han guardado las predicciones climáticas en '{ruta_csv_predicciones}'.") 
     else:
-        # Cargar CSV preexistente con predicciones
-        df_naves_industriales_filtrado = cargar_CSV('Naves_Industriales_Con_Predicciones.csv')
-        print("Se han cargado las predicciones climáticas desde 'Naves_Industriales_Con_Predicciones.csv'.")
-    
-    #Establecer penalizaciones por condiciones climáticas
+        df_naves_industriales_filtrado = cargar_CSV(ruta_csv_predicciones)
+        print(f"Se han cargado las predicciones climáticas desde '{ruta_csv_predicciones}'.")
+
+    # Penalizaciones por condiciones climáticas
     penalizaciones = {'Nublado': 1.1,
                       'Considerablemente nublado': 1.2,
                       'Despejado': 1.0,
@@ -357,57 +279,32 @@ def main():
     
     lambda_penalizacion = 1.0
     
-    # Preguntar al usuario si desea aplicar penalizaciones
     aplicar_penalizaciones = input("¿Desea aplicar penalizaciones por condiciones climáticas? (s/n): ").strip().lower()
     
     if aplicar_penalizaciones == 's':
-        # Multiplicar las distancias por la penalización de la predicción
         for pos, fila in df_naves_industriales_filtrado.reset_index(drop=True).iterrows():
-            id_lugar = pos 
             pred = fila['Prediccion']
             if pred in penalizaciones:
                 penal = penalizaciones[pred] * lambda_penalizacion
-                # Multiplicar toda la fila y columna correspondiente:
-                mask = df_matriz_distancias.index != id_lugar
-                df_matriz_distancias.loc[id_lugar, mask] *= penal
-                df_matriz_distancias.loc[mask, id_lugar] *= penal
-                # Mantener diagonal a 0:
-                df_matriz_distancias.loc[id_lugar, id_lugar] = 0.0
-        else:   
-            print("No se aplicarán penalizaciones por condiciones climáticas.")
-    
-    # Mostrar las naves industriales disponibles
+                # Multiplicar fila y columna usando .iloc
+                df_matriz_distancias.iloc[pos, :] *= penal   # fila
+                df_matriz_distancias.iloc[:, pos] *= penal   # columna
+                df_matriz_distancias.iloc[pos, pos] = 0.0   # diagonal
+    else:   
+        print("No se aplicarán penalizaciones por condiciones climáticas.")
+
     print("Naves Industriales disponibles para iniciar el recorrido:")
     print(df_naves_industriales_filtrado)
-    
-    # Seleccionar la nave industrial de inicio
-    nave_industrial_inicio = int(input("Ingrese el indice de la Nave industrial de inicio: "))
-
-    # Prototipo 2
-    # Elegir el dia de comienzo del viaje
-    dia_comienzo = '2025-10-01'
-    
-    # Prototipo 2
-    # Elegir la hora de comienzo del viaje
-    hora_inicio = 7.00 # 7:00 AM
-    
-    # Prototipo 2
-    # Tiempo holgura para llegar a cada lugar
-    tiempo_holgura = 5 # 30 minutos
-    
-    # Obtener el numero totl de naves industriales seleccionadas
-    num_naves = len(df_naves_industriales_filtrado) 
-    num_naves = int(num_naves)
-    
+       
+    num_naves = len(df_naves_industriales_filtrado)
     print(f"Número total de naves industriales seleccionadas: {num_naves}")
     
-    # Guardar la matriz de distancias en un CSV para usar en el algoritmo
-    df_matriz_distancias.to_csv("Distancias_no_head.csv", index=False, header=False)
-       
-    directorio_actual = os.path.dirname(os.path.abspath(__file__))
+    # Ya no se guarda Distancias_no_head.csv porque ya esta para las 219 naves
     nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
     ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
     
+    print(f"Llamando a DLL con ruta: {ruta_biblioteca}")
+
     rs = AlgoritmoRecocido(ruta_biblioteca)
     
     params = {'longitud_ruta': num_naves,
@@ -423,7 +320,6 @@ def main():
     
     print("\nRecorrido óptimo encontrado (índices):")
     print(resultado['recorrido'])
-    # Imprimirlo por los nombres de las naves industriales
     print("\nRecorrido óptimo encontrado (nombres de naves industriales):")
     for idx in resultado['recorrido']:
         nombre_nave = df_naves_industriales_filtrado.iloc[idx]['nombre']
@@ -433,8 +329,6 @@ def main():
     print(f"Temperatura inicial: {resultado['temperatura_inicial']:.2f}")
     print(f"Temperatura final: {resultado['temperatura_final']:.5f}")
 
-    ###########################################################################################################################
-    # CREAR EL ARCHIVO json PARA MOSTRAR EN EL MAPA
     salida_json = []
     for idx in resultado['recorrido']:
         fila = df_naves_industriales_filtrado.iloc[idx]
@@ -445,20 +339,10 @@ def main():
             "condicion": fila['Prediccion']
         })
 
-    # GUARDAR EN json PARA VISUALIZAR LA RUTA
     with open("ruta_Ejemplo.json", "w", encoding="utf-8") as f:
         json.dump(salida_json, f, ensure_ascii=False, indent=4)
-    ###########################################################################################################################
-    
-    # Mostrar tabla del fitness durante las generaciones
-    plt.plot(resultado['fitness_generaciones'])
-    plt.title("Evolución del Fitness - Recocido Simulado")
-    plt.xlabel("Generación")
-    plt.ylabel("Fitness")
-    plt.grid()
-    plt.show()
-    
 
+    ###########################################################################################################################  
 if __name__ == "__main__":
     main()
 
