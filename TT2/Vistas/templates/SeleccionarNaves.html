@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <title>LogistiClima - Optimizador de Rutas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./estilo/estilo_SeleccionarNaves.css" type="text/css"> <!-- Enlace al CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_SeleccionarNaves.css') }}" type="text/css">
 </head>
 <body>
     <header>
         <div class="logo-container">
-            <img src="./imagenes/logo.jpg" alt="Logo LogistiClima" class="logo">
+            <img src="{{ url_for('static', filename='imagenes/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
             <div class="title-container">
                 <h1>LogistiClima</h1>
                 <p class="subtitle">Optimizador de Rutas</p>
@@ -30,8 +30,11 @@
             </table>
         </section>
         <button id="generarRuta"><b>Generar Ruta</b></button>
+        <div id="loading" style="display: none;">
+            <p>Generando ruta optimizada... Esto puede tomar unos minutos.</p>
+        </div>
     </main>
 
-    <script src="./js/js_SeleccionarNaves.js"></script> <!-- Enlace al JS -->
+    <script src="{{ url_for('static', filename='js/js_SeleccionarNaves.js') }}"></script>
 </body>
 </html>

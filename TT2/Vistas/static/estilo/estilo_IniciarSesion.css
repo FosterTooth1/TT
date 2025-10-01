@@ -29,20 +29,27 @@ header {
     gap: 12px;
 }
 
-.logo {
+.logo, .logo-placeholder {
     width: 60px;
-    height: auto;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    background-color: var(--accent-100);
+    border-radius: 50%;
+    color: white;
 }
 
 .title-container h1 {
     color: var(--primary-100);
-    margin: 2px 0;  
+    margin: 2px 0;   /* antes era margin: 0; */
 }
 
 .subtitle {
     font-size: 14px;
-    color: var(--text-100);
-    margin: 2px 0; 
+    color: var(--text-200);
+    margin: 2px 0;   /* antes era margin: 0; */
 }
 
 main {
@@ -50,11 +57,11 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 10px; /* acercamos el formulario al logo */
 }
 
 .form-section {
-    margin-top: 15px; 
+    margin-top: 15px; /* controla distancia del logo al formulario */
     background-color: var(--bg-200);
     padding: 2em;
     border-radius: 15px;
@@ -87,14 +94,14 @@ input {
 button {
     width: 100%;
     padding: 12px;
-    background-color: var(--accent-100);
+    background-color: var(--accent-200);
     border: none;
-    color: rgb(255, 255, 255);
+    color: white;
     font-size: 16px;
     border-radius: 20px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: var(--accent-200);
+    background-color: var(--primary-100);
 }

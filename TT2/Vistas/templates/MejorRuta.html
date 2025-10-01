@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <title>LogistiClima - Mejor Ruta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="estilo/estilo_MejorRuta.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_MejorRuta.css') }}" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 </head>
 <body>
     <header>
         <div class="logo-container">
-            <img src="imagenes/logo.jpg" alt="Logo LogistiClima" class="logo">
+            <img src="{{ url_for('static', filename='imagenes/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
             <div class="title-container">
                 <h1>LogistiClima</h1>
                 <p class="subtitle">Mejor Ruta Generada</p>
@@ -34,10 +34,11 @@
                             </tr>
                         </thead>
                         <tbody id="tabla-mejor-ruta">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
                 <button id="guardarRuta">Guardar Ruta</button>
+                <button id="nuevaRuta">Nueva Ruta</button>
             </div>
         </div>
     </main>
@@ -45,6 +46,6 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-encoded@0.5.1/Polyline.Encoded.js"></script>
     
-    <script src="js/js_MejorRuta.js"></script>
+    <script src="{{ url_for('static', filename='js/js_MejorRuta.js') }}"></script>
 </body>
 </html>

@@ -6,7 +6,10 @@ document.getElementById("registroForm").addEventListener("submit", function(e) {
     let password = document.getElementById("password").value;
 
     if (email && nombre && password) {
-        alert("¡Registro exitoso! Bienvenido, " + nombre);
+        alert("¡Cuenta creada exitosamente! Bienvenido, " + nombre);
+        // Aquí se implementaría la lógica de registro real
+        // Por ahora, redirigir a rutas recientes
+        window.location.href = '/rutas-recientes';
     } else {
         alert("Por favor, completa todos los campos.");
     }

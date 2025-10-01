@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <title>LogistiClima - Iniciar Sesión</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./estilo/estilo_NuevaCuenta.css" type="text/css"> <!-- Enlace al CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_IniciarSesion.css') }}" type="text/css">
 </head>
 <body>
     <header>
         <div class="logo-container">
-            <img src="./imagenes/logo.jpg" alt="Logo LogistiClima" class="logo">
+            <img src="{{ url_for('static', filename='imagenes/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
             <div class="title-container">
                 <h1>LogistiClima</h1>
                 <p class="subtitle">Ingresa</p>
@@ -35,6 +35,6 @@
         </section>
     </main>
 
-    <script src="./js/js_IniciarSesion.js"></script> <!-- Enlace al JS -->
+    <script src="{{ url_for('static', filename='js/js_IniciarSesion.js') }}"></script>
 </body>
 </html>

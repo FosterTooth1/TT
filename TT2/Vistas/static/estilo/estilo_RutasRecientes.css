@@ -29,9 +29,16 @@ header {
     gap: 12px;
 }
 
-.logo {
+.logo, .logo-placeholder {
     width: 60px;
-    height: auto;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    background-color: var(--accent-100);
+    border-radius: 50%;
+    color: white;
 }
 
 .title-container h1 {
