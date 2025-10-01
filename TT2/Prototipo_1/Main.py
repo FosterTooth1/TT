@@ -223,7 +223,7 @@ def main(): # Rutas a los archivos de data
     ruta_csv_naves = os.path.join(directorio_actual, "Naves_Industriales.csv")
     ruta_csv_predicciones = os.path.join(directorio_actual, "Naves_Industriales_Con_Predicciones.csv")
     ruta_matriz_distancias = os.path.join(directorio_actual, "Matriz_Distancias_Carretera.csv")
-    ruta_modelo = os.path.join(directorio_actual, "prediccion_clima.pkl")
+    ruta_modelo = "C:/Users/Legion/Documents/prediccion_clima.pkl"
 
     # Cargar el CSV con la informacion completa de las naves industriales
     df_naves_industriales = cargar_CSV(ruta_csv_naves)
