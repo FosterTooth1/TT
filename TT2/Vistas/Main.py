@@ -298,13 +298,19 @@ def generar_ruta():
                          'Niebla': 1.8, 'Bruma': 1.3, 'Lluvia intensa': 1.7,
                          'Tormenta electrica intensa': 1.9, 'Neblina': 1.6, 'Lluvia': 1.5, 'Truenos': 1.4}
         
+        # Aplicar penalizaciones climáticas todas con valor 0 para pruebas
+        penalizaciones = {clave: 1.0 for clave in penalizaciones}
+        
+        #Definir lambda_penalizacion
+        lambda_penalizacion = 1.0
+        
         for pos, fila in df_naves_filtrado.reset_index(drop=True).iterrows():
             pred = fila['Prediccion']
             if pred in penalizaciones:
-                penal = penalizaciones[pred]
-                df_matriz_distancias.iloc[pos, :] *= penal
-                df_matriz_distancias.iloc[:, pos] *= penal
-                df_matriz_distancias.iloc[pos, pos] = 0.0
+                penal = penalizaciones[pred] * lambda_penalizacion
+                df_matriz_distancias.iloc[pos, :] *= penal   # fila
+                df_matriz_distancias.iloc[:, pos] *= penal   # columna
+                df_matriz_distancias.iloc[pos, pos] = 0.0   # diagonal
         
         # Guardar matriz temporal para el algoritmo
         df_matriz_distancias.to_csv("Matriz_Distancias_Temporal.csv", header=False, index=False)
