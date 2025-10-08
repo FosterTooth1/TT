@@ -157,36 +157,13 @@ def realizar_predicciones(modelo, df_naves_industriales_filtrado, api_key):
     df.loc[:, 'Prediccion'] = predicciones
     return df
 
-def crear_matriz_distancias(df_naves_industriales):
-    lats = df_naves_industriales['latitud'].astype(float).values
-    lons = df_naves_industriales['longitud'].astype(float).values
-
-    lat_rad = np.radians(lats)
-    lon_rad = np.radians(lons)
-
-    lat1 = lat_rad[:, np.newaxis]
-    lat2 = lat_rad[np.newaxis, :]
-    lon1 = lon_rad[:, np.newaxis]
-    lon2 = lon_rad[np.newaxis, :]
-
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-
-    a = np.sin(dlat/2.0)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2.0)**2
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(np.maximum(0.0, 1.0 - a)))
-
-    R = 6371.0
-    dist_matrix = R * c
-
-    df_dist = pd.DataFrame(dist_matrix)
-    return df_dist
-
 def inicializar_datos():
     global df_naves_industriales, df_matriz_distancias_original, Modelo_RandomForest
     
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
     ruta_csv_naves = os.path.join(directorio_actual, "Naves_Industriales.csv")
     ruta_modelo = os.path.join(directorio_actual, "prediccion_clima.pkl")
+    ruta_matriz_distancias = os.path.join(directorio_actual, "Matriz_Distancias_Carretera.csv")
     
     if df_naves_industriales is None:
         df_naves_industriales = cargar_CSV(ruta_csv_naves)
@@ -249,7 +226,7 @@ def generar_ruta():
             return jsonify({"error": "Selecciona al menos 5 naves industriales"}), 400
         inicializar_datos()
         df_naves_filtrado = df_naves_industriales.iloc[indices_seleccionados]
-        df_matriz_distancias = crear_matriz_distancias(df_naves_filtrado)
+        df_matriz_distancias = cargar_CSV("Matriz_Distancias_Carretera.csv").iloc[indices_seleccionados, indices_seleccionados].reset_index(drop=True)
         
         df_naves_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_filtrado, api_key)
         
