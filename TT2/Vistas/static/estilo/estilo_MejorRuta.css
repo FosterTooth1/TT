@@ -88,8 +88,8 @@ main {
 
 /* Contenedor con scroll */
 #tabla-scroll {
-    max-height: 550px;   /* altura máxima de la tabla visible */
-    overflow-y: auto;    /* activa scroll vertical */
+    max-height: 510px;   /* altura máxima de la tabla visible */
+    overflow-y: auto;   
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
@@ -142,6 +142,7 @@ button {
     font-size: 16px;
     border-radius: 20px;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 button:hover {

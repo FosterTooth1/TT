@@ -12,7 +12,7 @@
             <img src="{{ url_for('static', filename='imagenes/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
             <div class="title-container">
                 <h1>LogistiClima</h1>
-                <p class="subtitle">Ingresa</p>
+                <p class="subtitle">Iniciar Sesión</p>
             </div>
         </div>
     </header>
@@ -30,11 +30,22 @@
                     <input type="password" id="password" placeholder="Password" required>
                 </div>
 
-                <button type="submit"><b>Iniciar Sesión</b></button>
+                <div class="login-button-container">
+                    <button type="submit"><b>Iniciar Sesión</b></button>
+                </div>
+
+                <div class="create-button-container">
+                    <br>
+                    <a href="{{ url_for('nueva_cuenta') }}">
+                        <button type="button"><b>Crear Cuenta</b></button>
+                    </a>
+                </div>
+
+                
             </form>
         </section>
     </main>
-
+    
     <script src="{{ url_for('static', filename='js/js_IniciarSesion.js') }}"></script>
 </body>
 </html>

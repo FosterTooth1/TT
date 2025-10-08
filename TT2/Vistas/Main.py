@@ -1,14 +1,15 @@
 import os
-import json
 import ctypes
 import joblib
 import requests
 import numpy as np
 import pandas as pd
+import mysql.connector
 from datetime import datetime
-import matplotlib.pyplot as plt
 from flask import Flask, request, jsonify, render_template
-from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char, cast
+from ctypes import c_int, c_double, c_char_p, POINTER, Structure
+from werkzeug.security import generate_password_hash, check_password_hash
+
 ###########################################################################################################################
 class ResultadoRecocido(Structure):
     _fields_ = [("recorrido", POINTER(c_int)),
@@ -192,7 +193,18 @@ def inicializar_datos():
         Modelo_RandomForest = joblib.load(ruta_modelo)
 
 ###########################################################################################################################
-# Configuración de Flask
+# --- CONFIG DB (ajusta estos valores) ---
+DB_CONFIG = {"host": "localhost",
+             "user": "root",
+             "password": "Sergio2",
+             "database": "BDD_LogistiClima"}
+
+def get_db_connection():
+    """Devuelve una nueva conexión a la BD."""
+    return mysql.connector.connect(**DB_CONFIG)
+
+###########################################################################################################################
+# Configuracion de Flask
 app = Flask(__name__)
 
 df_naves_industriales = None
@@ -267,105 +279,23 @@ def generar_ruta():
         ruta_optimizada = []
         for idx in resultado['recorrido']:
             fila = df_naves_filtrado.iloc[idx]
-            ruta_optimizada.append({
-                "lat": float(fila['latitud']),
-                "lng": float(fila['longitud']),
-                "nombre": fila['nombre'],
-                "condicion": fila['Prediccion']
-            })
+            ruta_optimizada.append({"lat": float(fila['latitud']),
+                                    "lng": float(fila['longitud']),
+                                    "nombre": fila['nombre'],
+                                    "condicion": fila['Prediccion']})
 
         if os.path.exists("Matriz_Distancias_Temporal.csv"):
             os.remove("Matriz_Distancias_Temporal.csv")
 
-        return jsonify({
-            "ruta": ruta_optimizada,
+        return jsonify({"ruta": ruta_optimizada,
             "fitness": resultado['fitness'],
             "tiempo_ejecucion": resultado['tiempo_ejecucion'],
             "temperatura_inicial": resultado['temperatura_inicial'],
-            "temperatura_final": resultado['temperatura_final']
-        })
+            "temperatura_final": resultado['temperatura_final']})
 
     except Exception as e:
         return jsonify({"error": f"Error al generar la ruta: {str(e)}"}), 500
 
 ###########################################################################################################################
-def main():
-    directorio_actual = os.path.dirname(os.path.abspath(__file__))
-    ruta_csv_naves = os.path.join(directorio_actual, "Naves_Industriales.csv")
-    ruta_modelo = os.path.join(directorio_actual, "prediccion_clima.pkl")
-
-    df_naves_industriales_local = cargar_CSV(ruta_csv_naves)
-    Modelo_RandomForest_local = joblib.load(ruta_modelo)
-    api_key_local = "7f25124e580c4de6a2e00312251205"
-
-    entrada_usuario = input("Selecciona los índices de las naves industriales, separados por comas (ej. 0,1,3,5,7), si ingresa -1 se seleccionan todos: ")    
-    indices_seleccionados = [int(indice.strip()) for indice in entrada_usuario.split(',')]
-    if indices_seleccionados == [-1]:
-        indices_seleccionados = list(range(len(df_naves_industriales_local)))
-
-    df_naves_filtrado = df_naves_industriales_local.iloc[indices_seleccionados]
-    df_matriz_distancias = crear_matriz_distancias(df_naves_filtrado)
-    
-    df_naves_filtrado = realizar_predicciones(Modelo_RandomForest_local, df_naves_filtrado, api_key_local)
-
-    print("Predicciones completadas.")
-
-    penalizaciones = {'Nublado': 1.1,'Considerablemente nublado': 1.2,'Despejado': 1.0,'Niebla': 1.8,'Bruma': 1.3,
-                      'Lluvia intensa': 1.7,'Tormenta electrica intensa': 1.9,'Neblina': 1.6,'Lluvia': 1.5,'Truenos': 1.4}
-    lambda_penalizacion = 1.0
-    for pos, fila in df_naves_filtrado.reset_index(drop=True).iterrows():
-        pred = fila['Prediccion']
-        if pred in penalizaciones:
-            penal = penalizaciones[pred] * lambda_penalizacion
-            df_matriz_distancias.iloc[pos, :] *= penal
-            df_matriz_distancias.iloc[:, pos] *= penal
-            df_matriz_distancias.iloc[pos, pos] = 0.0
-
-    num_naves = len(df_naves_filtrado)
-    nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
-    ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
-    rs = AlgoritmoRecocido(ruta_biblioteca)
-    params = {'longitud_ruta': num_naves, 'num_generaciones': 800, 'tasa_enfriamiento': 0.99,
-              'temperatura_final': 0.001, 'max_neighbours': num_naves * 10, 'm': 3,
-              'nombre_archivo': "Matriz_Distancias_Temporal.csv", 'heuristica': 0}
-    
-    df_matriz_distancias.to_csv("Matriz_Distancias_Temporal.csv", header=False, index=False)
-    resultado = rs.ejecutar(**params)
-    os.remove("Matriz_Distancias_Temporal.csv")
-
-    print("\nRecorrido óptimo encontrado (índices):")
-    print(resultado['recorrido'])
-    print("\nRecorrido óptimo encontrado (nombres de naves industriales):")
-    for idx in resultado['recorrido']:
-        print(f"- {df_naves_filtrado.iloc[idx]['nombre']}")
-
-    print(f"\nFitness: {resultado['fitness']:.2f}")
-    print(f"Tiempo: {resultado['tiempo_ejecucion']:.2f}s")
-    print(f"Temperatura inicial: {resultado['temperatura_inicial']:.2f}")
-    print(f"Temperatura final: {resultado['temperatura_final']:.5f}")
-
-    plt.plot(resultado['fitness_generaciones'])
-    plt.title("Evolución del Fitness - Recocido Simulado")
-    plt.xlabel("Generación")
-    plt.ylabel("Fitness")
-    plt.show()
-
-    salida_json = []
-    for idx in resultado['recorrido']:
-        fila = df_naves_filtrado.iloc[idx]
-        salida_json.append({
-            "lat": float(fila['latitud']),
-            "lng": float(fila['longitud']),
-            "nombre": fila['nombre'],
-            "condicion": fila['Prediccion']
-        })
-
-    with open("ruta_Ejemplo.json", "w", encoding="utf-8") as f:
-        json.dump(salida_json, f, ensure_ascii=False, indent=4)
-
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1 and sys.argv[1] == "web":
-        app.run(debug=True, host='0.0.0.0', port=5000)
-    else:
-        main()
+    app.run(debug=True)
