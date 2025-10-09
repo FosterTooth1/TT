@@ -5,6 +5,7 @@
     <title>LogistiClima - Optimizador de Rutas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_SeleccionarNaves.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_auth.css') }}" type="text/css">
 </head>
 <body>
     <header>
@@ -17,7 +18,15 @@
         </div>
         
         <div class="login-button-container">
-            <a href="{{ url_for('iniciar_sesion') }}" class="login-button">Iniciar Sesión</a>
+            {% if user_authenticated %}
+                <div class="user-info">
+                    <span class="welcome-text">¡Hola, {{ user_name }}!</span>
+                    <a href="{{ url_for('rutas_recientes') }}" class="rutas-button">Mis Rutas</a>
+                    <button id="cerrarSesion" class="logout-button">Cerrar Sesión</button>
+                </div>
+            {% else %}
+                <a href="{{ url_for('iniciar_sesion') }}" class="login-button">Iniciar Sesión</a>
+            {% endif %}
         </div>
     </header>
 

@@ -6,9 +6,10 @@ import numpy as np
 import pandas as pd
 import mysql.connector
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 from ctypes import c_int, c_double, c_char_p, POINTER, Structure
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 ###########################################################################################################################
 class ResultadoRecocido(Structure):
@@ -157,44 +158,82 @@ def realizar_predicciones(modelo, df_naves_industriales_filtrado, api_key):
     df.loc[:, 'Prediccion'] = predicciones
     return df
 
+def crear_matriz_distancias(df_naves_industriales):
+    lats = df_naves_industriales['latitud'].astype(float).values
+    lons = df_naves_industriales['longitud'].astype(float).values
+
+    lat_rad = np.radians(lats)
+    lon_rad = np.radians(lons)
+
+    lat1 = lat_rad[:, np.newaxis]
+    lat2 = lat_rad[np.newaxis, :]
+    lon1 = lon_rad[:, np.newaxis]
+    lon2 = lon_rad[np.newaxis, :]
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = np.sin(dlat/2.0)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2.0)**2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(np.maximum(0.0, 1.0 - a)))
+
+    R = 6371.0
+    dist_matrix = R * c
+
+    df_dist = pd.DataFrame(dist_matrix)
+    return df_dist
+
 def inicializar_datos():
     global df_naves_industriales, df_matriz_distancias_original, Modelo_RandomForest
     
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
     ruta_csv_naves = os.path.join(directorio_actual, "Naves_Industriales.csv")
     ruta_modelo = os.path.join(directorio_actual, "prediccion_clima.pkl")
-    ruta_matriz_distancias = os.path.join(directorio_actual, "Matriz_Distancias_Carretera.csv")
     
     if df_naves_industriales is None:
         df_naves_industriales = cargar_CSV(ruta_csv_naves)
         Modelo_RandomForest = joblib.load(ruta_modelo)
 
 ###########################################################################################################################
-# --- CONFIG DB (ajusta estos valores) ---
-DB_CONFIG = {"host": "localhost",
-             "user": "root",
-             "password": "Sergio2",
-             "database": "BDD_LogistiClima"}
-
+# CONFIG DB
+DB_CONFIG = {"host": "localhost", 
+             "user": "root", 
+             "password": "Sergio2",            # El password y nombre de la BDD se cambia por la que tienen en su instancia
+             "database": "BDD_LogistiClima"    # local de MySQL Workbench
+            }
 def get_db_connection():
-    """Devuelve una nueva conexión a la BD."""
     return mysql.connector.connect(**DB_CONFIG)
 
 ###########################################################################################################################
 # Configuracion de Flask
 app = Flask(__name__)
+app.secret_key = 'logisticlima_secret_key_2024'  # Clave secreta para sesiones, ¡¡¡¡¡ EN PRODUCCION SE DEBE DE CAMBIAR!!!!!
 
 df_naves_industriales = None
 Modelo_RandomForest = None
 api_key = "7f25124e580c4de6a2e00312251205"
 
+# Decorador para verificar autenticación
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({"status": "error", "message": "Debes iniciar sesión para acceder a esta función"}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+###########################################################################################################################
+# Definir las Rutas del Sistema
 @app.route('/')
 def index():
-    return render_template('SeleccionarNaves.html')
+    user_authenticated = 'user_id' in session
+    user_name = session.get('user_name', '')
+    return render_template('SeleccionarNaves.html', user_authenticated=user_authenticated, user_name=user_name)
 
 @app.route('/mejor-ruta')
 def mejor_ruta():
-    return render_template('MejorRuta.html')
+    user_authenticated = 'user_id' in session
+    user_name = session.get('user_name', '')
+    return render_template('MejorRuta.html', user_authenticated=user_authenticated, user_name=user_name)
 
 @app.route('/iniciar-sesion')
 def iniciar_sesion():
@@ -206,8 +245,302 @@ def nueva_cuenta():
 
 @app.route('/rutas-recientes')
 def rutas_recientes():
-    return render_template('RutasRecientes.html')
+    user_authenticated = 'user_id' in session
+    user_name = session.get('user_name', '')
+    if not user_authenticated:
+        return redirect(url_for('iniciar_sesion'))
+    return render_template('RutasRecientes.html', user_authenticated=user_authenticated, user_name=user_name)
 
+###########################################################################################################################
+# Registro de Usuario en la Base de Datos
+@app.route('/registrar_usuario', methods=['POST'])
+def registrar_usuario():
+    try:
+        data = request.get_json(force=True)
+        nombre = (data.get('nombre') or "").strip()
+        correo = (data.get('email') or "").strip().lower()
+        password = data.get('password') or ""
+
+        # Realizar conexion con la base de datos
+        conexion  = get_db_connection()
+        if not conexion :
+            return jsonify({"status": "error", "message": "Error de conexión con la base de datos."}), 500
+        cur = conexion .cursor(buffered=True)
+
+        # Verificar si el correo ya está registrado
+        cur.execute("SELECT id_usuario FROM Usuario WHERE correo = %s", (correo,))
+        if cur.fetchone():
+            cur.close()
+            conexion .close()
+            return jsonify({"status": "error", "message": "El correo ya está registrado."}), 400
+
+        # Hashear la contraseña antes de guardarla
+        contraseña_hash = generate_password_hash(password)
+
+        # Insertar el nuevo usuario
+        cur.execute("INSERT INTO Usuario (nombre, correo, contraseña_hash) VALUES (%s, %s, %s)",
+                    (nombre, correo, contraseña_hash))
+        conexion .commit()
+        nuevo_id = cur.lastrowid
+
+        cur.close()
+        conexion .close()
+
+        # Establecer sesión automáticamente después del registro
+        session['user_id'] = nuevo_id
+        session['user_name'] = nombre
+        session['user_email'] = correo
+
+        return jsonify({"status": "ok", "message": f"¡Bienvenido, {nombre}!", "id": nuevo_id}), 201
+
+    except Exception as e:
+        print("Error en /registrar_usuario:", e)
+        return jsonify({"status": "error", "message": "Error interno al registrar usuario."}), 500
+
+###########################################################################################################################
+# Iniciar Sesión en el Sistema
+@app.route('/login_usuario', methods=['POST'])
+def login_usuario():
+    try:
+        data = request.get_json(force=True)
+        correo = (data.get('email') or "").strip().lower()
+        password = data.get('password') or ""
+
+        if not correo or not password:
+            return jsonify({"status": "error", "message": "Faltan campos requeridos."}), 400
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"status": "error", "message": "Error de conexión con la base de datos."}), 500
+
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM Usuario WHERE correo = %s", (correo,))
+        usuario = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if not usuario:
+            return jsonify({"status": "error", "message": "Correo no encontrado."}), 400
+
+        if not check_password_hash(usuario["contraseña_hash"], password):
+            return jsonify({"status": "error", "message": "Contraseña incorrecta."}), 400
+
+        # Establecer sesión
+        session['user_id'] = usuario["id_usuario"]
+        session['user_name'] = usuario['nombre']
+        session['user_email'] = usuario['correo']
+
+        return jsonify({"status": "ok", "message": f"Bienvenido, {usuario['nombre']}!", "id": usuario["id_usuario"]}), 200
+
+    except Exception as e:
+        print("Error en /login_usuario:", e)
+        return jsonify({"status": "error", "message": "Error interno al iniciar sesión."}), 500
+
+###########################################################################################################################
+# Mostrar las Rutas del usuario en el Sistema
+@app.route('/obtener_rutas', methods=['GET'])
+@login_required
+def obtener_rutas():
+    user_id = session['user_id']
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"status": "error", "message": "Error de conexión con la base de datos."}), 500
+
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT id_ruta, destinos FROM Ruta WHERE id_usuario = %s", (user_id,))
+        rutas = cur.fetchall()
+        print(f"Rutas encontradas para usuario {user_id}: {len(rutas)} rutas")
+
+        cur.close()
+        conn.close()
+
+        # Convertir los índices guardados en nombres de naves legibles
+        for r in rutas:
+            try:
+                # Convertir string de índices a lista de enteros
+                indices_string = r['destinos']
+                print(f"Procesando ruta {r['id_ruta']}: indices_string='{indices_string}'")
+                indices = [int(x.strip()) for x in indices_string.split(',') if x.strip().isdigit()]
+                print(f"Índices convertidos: {indices}")
+                
+                # Obtener nombres de las naves usando los índices
+                nombres_destinos = []
+                for indice in indices:
+                    if 0 <= indice < len(df_naves_industriales):
+                        nombre_nave = df_naves_industriales.iloc[indice]['nombre']
+                        nombres_destinos.append(nombre_nave)
+                
+                r['detalles'] = ' → '.join(nombres_destinos) if nombres_destinos else 'Ruta sin destinos'
+                r['indices'] = indices  # Guardar también los índices para uso futuro
+                print(f"Detalles finales: {r['detalles']}")
+            except Exception as e:
+                print(f"Error procesando ruta {r.get('id_ruta', 'desconocida')}: {e}")
+                r['detalles'] = 'Ruta con formato inválido'
+                r['indices'] = []
+
+        return jsonify({"status": "ok", "rutas": rutas}), 200
+
+    except Exception as e:
+        print("Error en /obtener_rutas:", e)
+        return jsonify({"status": "error", "message": "Error al obtener rutas."}), 500
+
+###########################################################################################################################
+# Regenerar ruta desde índices guardados
+@app.route('/regenerar-ruta/<int:ruta_id>', methods=['GET'])
+@login_required
+def regenerar_ruta(ruta_id):
+    try:
+        user_id = session['user_id']
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"status": "error", "message": "Error de conexión con la base de datos."}), 500
+        
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT destinos FROM Ruta WHERE id_ruta = %s AND id_usuario = %s", (ruta_id, user_id))
+        ruta = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        
+        if not ruta:
+            return jsonify({"status": "error", "message": "Ruta no encontrada"}), 404
+        
+        # Obtener los índices guardados
+        indices_string = ruta['destinos']
+        indices = [int(x.strip()) for x in indices_string.split(',') if x.strip().isdigit()]
+        
+        # Filtrar las naves usando los índices
+        df_naves_filtrado = df_naves_industriales.iloc[indices]
+        
+        # Crear matriz de distancias
+        df_matriz_distancias = crear_matriz_distancias(df_naves_filtrado)
+        
+        # Realizar predicciones climáticas
+        df_naves_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_filtrado, api_key)
+        
+        # Aplicar penalizaciones climáticas
+        penalizaciones = {clave: 1.0 for clave in ['Nublado','Considerablemente nublado','Despejado','Niebla','Bruma',
+                                                  'Lluvia intensa','Tormenta electrica intensa','Neblina','Lluvia','Truenos']}
+        lambda_penalizacion = 1.0
+        for pos, fila in df_naves_filtrado.reset_index(drop=True).iterrows():
+            pred = fila['Prediccion']
+            if pred in penalizaciones:
+                penal = penalizaciones[pred] * lambda_penalizacion
+                df_matriz_distancias.iloc[pos, :] *= penal
+                df_matriz_distancias.iloc[:, pos] *= penal
+                df_matriz_distancias.iloc[pos, pos] = 0.0
+
+        df_matriz_distancias.to_csv("Matriz_Distancias_Temporal.csv", header=False, index=False)
+
+        # Ejecutar optimización
+        num_naves = len(df_naves_filtrado)
+        directorio_actual = os.path.dirname(os.path.abspath(__file__))
+        nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
+        ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
+        rs = AlgoritmoRecocido(ruta_biblioteca)
+        params = {'longitud_ruta': num_naves, 'num_generaciones': 800, 'tasa_enfriamiento': 0.99,
+                  'temperatura_final': 0.001, 'max_neighbours': num_naves * 10, 'm': 3,
+                  'nombre_archivo': "Matriz_Distancias_Temporal.csv", 'heuristica': 0}
+        resultado = rs.ejecutar(**params)
+
+        # Construir ruta optimizada
+        ruta_optimizada = []
+        for idx in resultado['recorrido']:
+            fila = df_naves_filtrado.iloc[idx]
+            ruta_optimizada.append({"lat": float(fila['latitud']),
+                                    "lng": float(fila['longitud']),
+                                    "nombre": fila['nombre'],
+                                    "condicion": fila['Prediccion']})
+
+        # Limpiar archivo temporal
+        if os.path.exists("Matriz_Distancias_Temporal.csv"):
+            os.remove("Matriz_Distancias_Temporal.csv")
+
+        return jsonify({"ruta": ruta_optimizada,
+            "fitness": resultado['fitness'],
+            "tiempo_ejecucion": resultado['tiempo_ejecucion'],
+            "temperatura_inicial": resultado['temperatura_inicial'],
+            "temperatura_final": resultado['temperatura_final']})
+
+    except Exception as e:
+        print("Error en /regenerar-ruta:", e)
+        return jsonify({"status": "error", "message": "Error al regenerar la ruta."}), 500
+
+###########################################################################################################################
+# Cerrar Sesión
+@app.route('/cerrar-sesion', methods=['POST'])
+def cerrar_sesion():
+    session.clear()
+    return jsonify({"status": "ok", "message": "Sesión cerrada correctamente"}), 200
+
+###########################################################################################################################
+# Guardar Ruta 
+@app.route('/guardar-ruta', methods=['POST'])
+@login_required
+def guardar_ruta():
+    try:
+        data = request.get_json()
+        destinos = data.get('destinos', [])
+        indices = data.get('indices', []) 
+        user_id = session['user_id']
+
+        print(f"Guardando ruta para usuario {user_id}")
+        print(f"Destinos recibidos: {len(destinos)} | Índices recibidos: {indices}")
+
+        # Validaciones básicas
+        if not destinos:
+            return jsonify({"status": "error", "message": "No hay destinos para guardar"}), 400
+        if not indices or len(indices) != len(destinos):
+            return jsonify({"status": "error", "message": "Los índices no coinciden con los destinos"}), 400
+
+        # Asegurarse de que user_id sea entero
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            return jsonify({"status": "error", "message": "ID de usuario inválido"}), 400
+
+        # Crear string de índices
+        indices_string = ','.join(map(str, indices))
+        print(f"Índices finales para insertar: {indices_string}")
+
+        # Verificar longitud antes de insertar
+        if len(indices_string) > 1000:
+            return jsonify({"status": "error", "message": "Ruta demasiado larga para almacenarse"}), 400
+
+        # Conexión con la base de datos
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"status": "error", "message": "Error de conexión con la base de datos."}), 500
+        
+        cur = conn.cursor()
+
+        # Insertar ruta en la base de datos
+        print(f"Insertando: user_id={user_id}, destinos='{indices_string}'")
+        cur.execute("INSERT INTO Ruta (id_usuario, destinos) VALUES (%s, %s)", 
+                    (user_id, indices_string))
+        conn.commit()
+
+        ruta_id = cur.lastrowid
+        print(f"Ruta insertada correctamente con ID {ruta_id}")
+
+        cur.close()
+        conn.close()
+
+        return jsonify({"status": "ok", "message": "Ruta guardada correctamente", "ruta_id": ruta_id}), 200
+
+    except Exception as e:
+        print(f"Error al guardar la ruta: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": "Error interno al guardar la ruta",
+            "exception": str(e)
+        }), 500
+
+###########################################################################################################################
+# Obtener naves para la Optimizacion
 @app.route('/api/naves', methods=['GET'])
 def obtener_naves():
     inicializar_datos()
@@ -217,6 +550,7 @@ def obtener_naves():
     return jsonify(naves)
 
 ###########################################################################################################################
+# Realizar la Optimizacion
 @app.route('/api/generar-ruta', methods=['POST'])
 def generar_ruta():
     try:
@@ -226,7 +560,7 @@ def generar_ruta():
             return jsonify({"error": "Selecciona al menos 5 naves industriales"}), 400
         inicializar_datos()
         df_naves_filtrado = df_naves_industriales.iloc[indices_seleccionados]
-        df_matriz_distancias = cargar_CSV("Matriz_Distancias_Carretera.csv").iloc[indices_seleccionados, indices_seleccionados].reset_index(drop=True)
+        df_matriz_distancias = crear_matriz_distancias(df_naves_filtrado)
         
         df_naves_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_filtrado, api_key)
         
@@ -265,10 +599,11 @@ def generar_ruta():
             os.remove("Matriz_Distancias_Temporal.csv")
 
         return jsonify({"ruta": ruta_optimizada,
-            "fitness": resultado['fitness'],
-            "tiempo_ejecucion": resultado['tiempo_ejecucion'],
-            "temperatura_inicial": resultado['temperatura_inicial'],
-            "temperatura_final": resultado['temperatura_final']})
+                        "indices": indices_seleccionados,
+                        "fitness": resultado['fitness'],
+                        "tiempo_ejecucion": resultado['tiempo_ejecucion'],
+                        "temperatura_inicial": resultado['temperatura_inicial'],
+                        "temperatura_final": resultado['temperatura_final']})
 
     except Exception as e:
         return jsonify({"error": f"Error al generar la ruta: {str(e)}"}), 500
@@ -276,3 +611,4 @@ def generar_ruta():
 ###########################################################################################################################
 if __name__ == "__main__":
     app.run(debug=True)
+

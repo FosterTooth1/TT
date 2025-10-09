@@ -5,6 +5,7 @@
     <title>LogistiClima - Mejor Ruta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_MejorRuta.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_auth.css') }}" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 </head>
 <body>
@@ -15,6 +16,18 @@
                 <h1>LogistiClima</h1>
                 <p class="subtitle">Mejor Ruta Generada</p>
             </div>
+        </div>
+        
+        <div class="login-button-container">
+            {% if user_authenticated %}
+                <div class="user-info">
+                    <span class="welcome-text">¡Hola, {{ user_name }}!</span>
+                    <a href="{{ url_for('rutas_recientes') }}" class="rutas-button">Mis Rutas</a>
+                    <button id="cerrarSesion" class="logout-button">Cerrar Sesión</button>
+                </div>
+            {% else %}
+                <a href="{{ url_for('iniciar_sesion') }}" class="login-button">Iniciar Sesión</a>
+            {% endif %}
         </div>
     </header>
 
@@ -37,7 +50,14 @@
                         </tbody>
                     </table>
                 </div>
-                <button id="guardarRuta">Guardar Ruta</button>
+                {% if user_authenticated %}
+                    <button id="guardarRuta">Guardar Ruta</button>
+                {% else %}
+                    <div class="auth-message">
+                        <p>💡 <strong>Inicia sesión</strong> para guardar tus rutas</p>
+                        <a href="{{ url_for('iniciar_sesion') }}" class="login-link">Iniciar Sesión</a>
+                    </div>
+                {% endif %}
                 <button id="nuevaRuta">Nueva Ruta</button>
             </div>
         </div>

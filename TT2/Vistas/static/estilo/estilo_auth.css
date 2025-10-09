@@ -1,0 +1,139 @@
+/* Estilos para elementos de autenticación */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Posicionar contenedor de acciones de usuario en la esquina superior derecha */
+header {
+    position: relative;
+}
+
+.login-button-container {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+}
+
+.welcome-text {
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.rutas-button {
+    background-color: #3498db;
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+    min-width: 140px; /* Mantener ancho consistente */
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.rutas-button:hover {
+    background-color: #2980b9;
+    color: white;
+    text-decoration: none;
+}
+
+.logout-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+    min-width: 140px; /* Mantener ancho consistente */
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.logout-button:hover {
+    background-color: #c0392b;
+}
+
+.auth-message {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.auth-message p {
+    margin: 0 0 15px 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.login-link {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.login-link:hover {
+    background-color: #218838;
+    color: white;
+    text-decoration: none;
+}
+
+/* Estilos para la tabla de rutas */
+.btn-ver {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+.btn-ver:hover {
+    background-color: #138496;
+}
+
+.btn-eliminar {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-eliminar:hover {
+    background-color: #c82333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .user-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .welcome-text {
+        font-size: 12px;
+    }
+    
+    .rutas-button, .logout-button {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-width: 120px;
+    }
+}

@@ -37,7 +37,34 @@ async function cargarNaves() {
 }
 
 // Cargar naves al cargar la página
-document.addEventListener("DOMContentLoaded", cargarNaves);
+document.addEventListener("DOMContentLoaded", function() {
+    cargarNaves();
+    
+    // Manejar cerrar sesión
+    const cerrarSesionBtn = document.getElementById('cerrarSesion');
+    if (cerrarSesionBtn) {
+        cerrarSesionBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/cerrar-sesion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    // Recargar la página para actualizar la interfaz
+                    window.location.reload();
+                } else {
+                    alert('Error al cerrar sesión');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cerrar sesión');
+            }
+        });
+    }
+});
 
 // Botón generar ruta
 document.getElementById("generarRuta").addEventListener("click", async () => {

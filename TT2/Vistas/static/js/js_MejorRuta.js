@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function() {
-    
     // 1. Inicializar el mapa
     const map = L.map('mapa', {
         minZoom: 8,
@@ -18,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
         attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; CARTO',
     }).addTo(map);
 
+    /* ########################################################################################################################### */ 
     // 4. Obtener datos del sessionStorage
     const rutaData = sessionStorage.getItem('rutaOptimizada');
     
@@ -31,6 +31,9 @@ document.addEventListener("DOMContentLoaded", function() {
     try {
         const data = JSON.parse(rutaData);
         console.log("Datos de ruta cargados:", data);
+
+        console.log("Índices originales:", data.indices);
+        const indicesRuta = data.indices; // Indices de la ruta seleccionada por el usuario
 
         const markersGroup = [];
         const tabla = document.getElementById('tabla-mejor-ruta');
@@ -57,29 +60,22 @@ document.addEventListener("DOMContentLoaded", function() {
             row.cells[0].style.textAlign = "center";
         });
 
-        // Ajustar el zoom del mapa
         if (markersGroup.length > 0) {
-            map.fitBounds(L.featureGroup(markersGroup).getBounds().pad(0.2));
+            map.fitBounds(L.featureGroup(markersGroup).getBounds().pad(0.2)); // Ajustar el zoom del mapa
         }
-        
-        // Dibujar la ruta en el mapa
-        dibujarRuta(data.ruta);
-
-        // Mostrar información adicional
-        console.log(`Fitness: ${data.fitness.toFixed(2)}`);
-        console.log(`Tiempo de ejecución: ${data.tiempo_ejecucion.toFixed(2)}s`);
+        dibujarRuta(data.ruta); // Dibujar la ruta en el mapa
 
     } catch (error) {
         console.error("Error al procesar datos de ruta:", error);
         alert("Error al procesar los datos de la ruta");
     }
 
+    /* ########################################################################################################################### */ 
     // 5. Función para dibujar la ruta
     function dibujarRuta(coordenadas) {
         const urlCoordinates = coordenadas.map(c => `${c.lng},${c.lat}`).join(';');
         const apiUrl = `https://router.project-osrm.org/route/v1/driving/${urlCoordinates}?overview=full&geometries=geojson`;
         
-        console.log("Llamando a la API de OSRM...");
         fetch(apiUrl)
             .then(res => res.json())
             .then(routeData => {
@@ -99,19 +95,78 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 }).addTo(map);
 
-                console.log("¡Ruta dibujada correctamente!");
             })
             .catch(err => console.error("Error al dibujar la ruta:", err));
     }
     
+    /* ########################################################################################################################### */
     // 6. Funcionalidad de los botones
-    document.getElementById("guardarRuta").addEventListener("click", () => {
-        alert("Función para guardar ruta aún no implementada.");
-    });
+    const guardarRutaBtn = document.getElementById("guardarRuta");
+    if (guardarRutaBtn) {
+        guardarRutaBtn.addEventListener("click", async () => {
+            try {
+                const rutaData = sessionStorage.getItem('rutaOptimizada');
+                if (!rutaData) {
+                    alert("No hay datos de ruta para guardar.");
+                    return;
+                }
 
+                const data = JSON.parse(rutaData);
+
+                const body = {
+                    destinos: data.ruta,
+                    indices: data.indices  // ✅ enviamos los índices originales
+                };
+
+                const response = await fetch('/guardar-ruta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const resultado = await response.json();
+
+                if (response.ok) {
+                    alert("Ruta guardada correctamente");
+                } else {
+                    alert("Error al guardar ruta: " + resultado.message);
+                }
+            } catch (error) {
+                console.error("Error al guardar ruta:", error);
+                alert("Error al guardar la ruta");
+            }
+        });
+    }
+    
+    /* ########################################################################################################################### */
+    // Botón para generar nueva ruta
     document.getElementById("nuevaRuta").addEventListener("click", () => {
-        // Limpiar sessionStorage y regresar a selección
-        sessionStorage.removeItem('rutaOptimizada');
         window.location.href = '/';
     });
+
+    /* ########################################################################################################################### */
+    // Manejar cerrar sesión
+    const cerrarSesionBtn = document.getElementById('cerrarSesion');
+    if (cerrarSesionBtn) {
+        cerrarSesionBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/cerrar-sesion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    // Recargar la página para actualizar la interfaz
+                    window.location.reload();
+                } else {
+                    alert('Error al cerrar sesión');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cerrar sesión');
+            }
+        });
+    }
 });

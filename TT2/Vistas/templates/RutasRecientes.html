@@ -5,6 +5,7 @@
     <title>LogistiClima - Rutas Recientes</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_RutasRecientes.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_auth.css') }}" type="text/css">
 </head>
 <body>
     <header>
@@ -12,30 +13,35 @@
             <img src="{{ url_for('static', filename='imagenes/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
             <div class="title-container">
                 <h1>LogistiClima</h1>
-                <p class="subtitle">Bienvenido @usuario</p>
+                <p class="subtitle">Mis Rutas Guardadas</p>
+            </div>
+        </div>
+        
+        <div class="login-button-container">
+            <div class="user-info">
+                <span class="welcome-text">¡Hola, {{ user_name }}!</span>
+                <a href="{{ url_for('index') }}" class="rutas-button">Nueva Ruta</a>
+                <button id="cerrarSesion" class="logout-button">Cerrar Sesión</button>
             </div>
         </div>
     </header>
 
     <main>
-        <h2>Rutas recientes:</h2>
+        <h2>Mis Rutas Guardadas</h2>
         <section class="rutas-recientes-section">
-            <table>
+            <div id="loading-rutas" style="display: none;">
+                <p>Cargando rutas...</p>
+            </div>
+            <div id="no-rutas" style="display: none;">
+                <p>No tienes rutas guardadas aún. <a href="{{ url_for('index') }}">¡Crea tu primera ruta!</a></p>
+            </div>
+            <table id="tabla-rutas" style="display: none;">
                 <thead>
                     <tr>
-                        <th>Ruta</th>
                         <th>Detalles</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-rutas">
-                    <tr>
-                        <td>Ruta 1</td>
-                        <td>Detalles de la ruta 1</td>
-                    </tr>
-                    <tr>
-                        <td>Ruta 2</td>
-                        <td>Detalles de la ruta 2</td>
-                    </tr>
+                <tbody id="tabla-rutas-body">
                 </tbody>
             </table>
         </section>
