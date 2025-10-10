@@ -27,7 +27,7 @@ header {
     justify-content: center;
     align-items: center;
     gap: 12px;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 .logo, .logo-placeholder {
@@ -59,7 +59,7 @@ main {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 70px;
+    gap: 30px;
     margin-top: 10px;
 }   
 
@@ -71,7 +71,7 @@ main {
     width: 400px;
     max-height: 400px;
     overflow-y: auto; 
-    margin-bottom: 0;
+    margin-bottom: 10px; /* antes 0 */
 }
 
 table {
@@ -133,3 +133,7 @@ button:hover {
     background-color: var(--accent-200);
 }
 
+#loading {
+    margin-top: 5px; /* antes no tenía, ahora se pega más al botón */
+    text-align: center;
+}

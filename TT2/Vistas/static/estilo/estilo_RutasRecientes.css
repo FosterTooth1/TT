@@ -63,12 +63,20 @@ main {
     margin-top: 20px;
 }
 
+main h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: var(--text-100);
+    font-size: 22px;
+}
+
 .rutas-recientes-section {
     background-color: var(--bg-200);
-    padding: 1.5em;
+    padding: 0.5em;
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    width: 500px;
+    width: 600px;
+    margin-top: 0;
 }
 
 .rutas-recientes-section h2 {
@@ -97,9 +105,24 @@ td {
     border-bottom: 1px solid #ddd;
 }
 
+#tabla-rutas th:first-child,
+#tabla-rutas td.columna-indice {
+    text-align: center;
+    width: 55px;
+    font-weight: bold;
+    color: var(--primary-200);
+}
+
+#tabla-scroll {
+    max-height: 400px;   /* altura máxima de la tabla visible */
+    overflow-y: auto;   
+    border-radius: 10px;
+}
+
 button {
-    width: 20%;
-    padding: 12px;
+    min-width: 140px; /* ancho mínimo */
+    max-width: 220px; /* ancho máximo */
+    padding: 12px 20px;
     background-color: var(--accent-100);
     border: none;
     color: white;
@@ -107,8 +130,41 @@ button {
     border-radius: 20px;
     cursor: pointer;
     transition: background-color 0.3s;
+    white-space: nowrap; /* evita que el texto se rompa en varias líneas */
+    text-align: center;
 }
+
 
 button:hover {
     background-color: var(--accent-200);
+}
+
+.botones-rutas {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+
+#rehacerOptim:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#rehacerOptim {
+    font-weight: bold;
+    padding: 12px 24px;
+}
+
+#rehacerOptim:hover:not(:disabled) {
+    background-color: var(--accent-200);
+}
+
+#loading-rutas {
+    margin-top: 2px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-100);
 }

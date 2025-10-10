@@ -29,25 +29,33 @@
     <main>
         <h2>Mis Rutas Guardadas</h2>
         <section class="rutas-recientes-section">
-            <div id="loading-rutas" style="display: none;">
-                <p>Cargando rutas...</p>
-            </div>
             <div id="no-rutas" style="display: none;">
                 <p>No tienes rutas guardadas aún. <a href="{{ url_for('index') }}">¡Crea tu primera ruta!</a></p>
             </div>
-            <table id="tabla-rutas" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>Detalles</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-rutas-body">
-                </tbody>
-            </table>
+
+            <div id="tabla-scroll">
+                <table id="tabla-rutas" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Ruta</th>
+                            <th>Detalles</th>
+                            <th>Seleccionar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-rutas-body">
+                    </tbody>
+                </table>
+            </div>
         </section>
 
-        <button id="generarNuevaRuta"><b>Generar nueva ruta</b></button>
+        <div class="botones-rutas">
+            <button id="rehacerOptim" disabled>Optimizar Ruta</button>
+        </div>
+        <div id="loading-rutas" style="display: none;">
+            <p>Generando ruta optimizada... Esto puede tomar unos minutos.</p>
+        </div>
     </main>
+
 
     <script src="{{ url_for('static', filename='js/js_RutasRecientes.js') }}"></script>
 </body>

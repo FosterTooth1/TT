@@ -5,11 +5,11 @@ import requests
 import numpy as np
 import pandas as pd
 import mysql.connector
+from functools import wraps
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 from ctypes import c_int, c_double, c_char_p, POINTER, Structure
 from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 
 ###########################################################################################################################
 class ResultadoRecocido(Structure):
@@ -611,4 +611,3 @@ def generar_ruta():
 ###########################################################################################################################
 if __name__ == "__main__":
     app.run(debug=True)
-

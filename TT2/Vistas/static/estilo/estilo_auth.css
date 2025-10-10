@@ -59,17 +59,9 @@ header {
     background-color: #c0392b;
 }
 
-.auth-message {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-    margin: 20px 0;
-}
-
 .auth-message p {
     margin: 0 0 15px 0;
+    text-align: center;
     color: #6c757d;
     font-size: 14px;
 }

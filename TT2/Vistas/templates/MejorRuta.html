@@ -14,7 +14,7 @@
             <img src="{{ url_for('static', filename='imagenes/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
             <div class="title-container">
                 <h1>LogistiClima</h1>
-                <p class="subtitle">Mejor Ruta Generada</p>
+                <p class="subtitle">Ruta Optimizada</p>
             </div>
         </div>
         
@@ -51,14 +51,13 @@
                     </table>
                 </div>
                 {% if user_authenticated %}
-                    <button id="guardarRuta">Guardar Ruta</button>
+                    <button id="guardarRuta"><b>Guardar Ruta</b></button>
                 {% else %}
                     <div class="auth-message">
                         <p>💡 <strong>Inicia sesión</strong> para guardar tus rutas</p>
-                        <a href="{{ url_for('iniciar_sesion') }}" class="login-link">Iniciar Sesión</a>
                     </div>
                 {% endif %}
-                <button id="nuevaRuta">Nueva Ruta</button>
+                <button id="nuevaRuta"><b>Nueva Ruta</b></button>
             </div>
         </div>
     </main>
