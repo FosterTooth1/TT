@@ -10,6 +10,7 @@ from datetime import datetime
 from ctypes import c_int, c_double, c_char_p, POINTER, Structure
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+import json
 
 ###########################################################################################################################
 class ResultadoRecocido(Structure):
@@ -195,11 +196,12 @@ def inicializar_datos():
 
 ###########################################################################################################################
 # CONFIG DB
-DB_CONFIG = {"host": "localhost", 
-             "user": "root", 
-             "password": "Sergio2",            # El password y nombre de la BDD se cambia por la que tienen en su instancia
-             "database": "BDD_LogistiClima"    # local de MySQL Workbench
-            }
+DB_CONFIG = {
+    "host": os.environ.get('DB_HOST', 'localhost'),
+    "user": os.environ.get('DB_USER', 'root'),
+    "password": os.environ.get('DB_PASS', 'Sergio2'),
+    "database": os.environ.get('DB_NAME', 'BDD_LogistiClima')
+}
 def get_db_connection():
     return mysql.connector.connect(**DB_CONFIG)
 
@@ -210,7 +212,7 @@ app.secret_key = 'logisticlima_secret_key_2024'  # Clave secreta para sesiones, 
 
 df_naves_industriales = None
 Modelo_RandomForest = None
-api_key = "7f25124e580c4de6a2e00312251205"
+api_key = os.environ.get('WEATHER_API_KEY', "7f25124e580c4de6a2e00312251205")
 
 # Decorador para verificar autenticación
 def login_required(f):
@@ -503,7 +505,7 @@ def guardar_ruta():
             return jsonify({"status": "error", "message": "ID de usuario inválido"}), 400
 
         # Crear string de índices
-        indices_string = ','.join(map(str, indices))
+        indices_string = json.dumps(indices)
         print(f"Índices finales para insertar: {indices_string}")
 
         # Verificar longitud antes de insertar
