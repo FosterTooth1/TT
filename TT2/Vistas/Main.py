@@ -194,16 +194,27 @@ def inicializar_datos():
         df_naves_industriales = cargar_CSV(ruta_csv_naves)
         Modelo_RandomForest = joblib.load(ruta_modelo)
 
-###########################################################################################################################
-# CONFIG DB
-DB_CONFIG = {
-    "host": os.environ.get('DB_HOST', 'localhost'),
-    "user": os.environ.get('DB_USER', 'root'),
-    "password": os.environ.get('DB_PASS', 'Sergio2'),
-    "database": os.environ.get('DB_NAME', 'BDD_LogistiClima')
-}
+# ###########################################################################################################################
+# CONFIG DB - Versión solo para Cloud Run
+
 def get_db_connection():
-    return mysql.connector.connect(**DB_CONFIG)
+    """Crea una conexión a la base de datos usando el socket de Cloud SQL."""
+
+    # Estas variables de entorno son proporcionadas por Cloud Run durante el despliegue
+    db_user = os.environ.get('DB_USER')
+    db_pass = os.environ.get('DB_PASS')
+    db_name = os.environ.get('DB_NAME')
+    db_socket_path = os.environ.get('DB_HOST') # Contiene la ruta /cloudsql/...
+
+    # Configuración para la conexión a través del socket Unix
+    conn_config = {
+        "user": db_user,
+        "password": db_pass,
+        "database": db_name,
+        "unix_socket": db_socket_path
+    }
+
+    return mysql.connector.connect(**conn_config)
 
 ###########################################################################################################################
 # Configuracion de Flask
