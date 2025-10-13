@@ -66,6 +66,15 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
+// Botón seleccionar todo
+document.getElementById("seleccionarTodo").addEventListener("click", () => {
+    const checkboxes = document.querySelectorAll("#tabla-lugares input[type=checkbox]");
+    const allSelected = Array.from(checkboxes).every(checkbox => checkbox.checked);
+    checkboxes.forEach((checkbox) => {
+        checkbox.checked = !allSelected;
+    });
+});
+
 // Botón generar ruta
 document.getElementById("generarRuta").addEventListener("click", async () => {
     let seleccionados = [];
