@@ -8,6 +8,7 @@ import ctypes
 from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char, cast
 import os
 import matplotlib.pyplot as plt
+import tracemalloc
 
 class ResultadoRecocido(Structure):
     _fields_ = [("recorrido", POINTER(c_int)),
@@ -362,6 +363,19 @@ def main(): # Rutas a los archivos de data
         json.dump(salida_json, f, ensure_ascii=False, indent=4)
 
 if __name__ == "__main__":
-    main()
+    
+    # Iniciar el seguimiento de la memoria
+    tracemalloc.start()
+    # Ejecuta tu código
+    resultado = main()
+
+    # Obtiene las estadísticas de memoria
+    snapshot = tracemalloc.take_snapshot()
+
+    # Muestra las 5 líneas que más memoria consumieron
+    top_stats = snapshot.statistics('lineno')
+    print("[ Top 5 líneas por uso de memoria ]")
+    for stat in top_stats[:5]:
+        print(stat)
 
 

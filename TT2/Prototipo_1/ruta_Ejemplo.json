@@ -1,50 +1,158 @@
 [
     {
-        "lat": 19.539376,
-        "lng": -99.285799,
-        "nombre": "Atizapan Park",
+        "lat": 19.655953,
+        "lng": -99.152589,
+        "nombre": "Parque Industrial Tultitlán",
         "condicion": "Nublado"
     },
     {
-        "lat": 19.541366,
-        "lng": -99.203062,
-        "nombre": "Centro Industrial Tlalnepantla",
+        "lat": 19.63961,
+        "lng": -99.145479,
+        "nombre": "Tultipark Iii",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.641735,
+        "lng": -99.14226,
+        "nombre": "Mexiquense Park",
         "condicion": "Nublado"
     },
     {
-        "lat": 19.718776,
-        "lng": -99.2113516,
-        "nombre": "Advance Tepotzotlán I",
-        "condicion": "Nublado"
+        "lat": 19.645908,
+        "lng": -99.136748,
+        "nombre": "World Park Tultitlan Ii",
+        "condicion": "Considerablemente nublado"
     },
     {
-        "lat": 19.706043,
-        "lng": -99.227541,
-        "nombre": "Advance Tepotzotlán Ii",
-        "condicion": "Nublado"
-    },
-    {
-        "lat": 19.819191,
-        "lng": -99.205352,
-        "nombre": "Centro Logistico Puente Grande",
-        "condicion": "Nublado"
+        "lat": 19.640893,
+        "lng": -99.115056,
+        "nombre": "Parque Industrial Coacalco",
+        "condicion": "Considerablemente nublado"
     },
     {
         "lat": 19.622174,
         "lng": -99.077862,
         "nombre": "Coacalco Park",
-        "condicion": "Lluvia"
+        "condicion": "Considerablemente nublado"
     },
     {
-        "lat": 19.296003,
-        "lng": -99.575542,
-        "nombre": "Advance Toluca",
-        "condicion": "Lluvia"
+        "lat": 19.622736,
+        "lng": -99.067706,
+        "nombre": "Zona Industrial Guadalupe Victoria",
+        "condicion": "Considerablemente nublado"
     },
     {
-        "lat": 19.583509,
-        "lng": -99.225772,
-        "nombre": "Atizapark",
+        "lat": 19.527515,
+        "lng": -98.89429558,
+        "nombre": "Parque Industrial Xolache",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.53078,
+        "lng": -98.9000539,
+        "nombre": "Pit Parque Industrial Texcoco",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.30751,
+        "lng": -98.963647,
+        "nombre": "Zona Industrial Valle De Chalco Solidaridad",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.291229,
+        "lng": -98.893898,
+        "nombre": "Logistics And Distribution Bussines Park (Ldbp)",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.251617,
+        "lng": -98.886954,
+        "nombre": "Zona Industrial Chalco",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.296404,
+        "lng": -98.887591,
+        "nombre": "Parque Industrial La Espinita",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.313312,
+        "lng": -98.89314,
+        "nombre": "Parque Industrial Ixtapaluca",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.40858,
+        "lng": -99.018344,
+        "nombre": "Parque Industrial Nezahualcóyotl",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.588666,
+        "lng": -99.034321,
+        "nombre": "Zona Industrial Jajalpa",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.565908,
+        "lng": -99.044728,
+        "nombre": "Fraccionamiento Industrial Morelos",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.56325,
+        "lng": -99.043448,
+        "nombre": "Fraccionamiento Industrial Santa Maria Tulpetlac",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.549761,
+        "lng": -99.05249,
+        "nombre": "Zona Industrial Cerro Gordo",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.533551,
+        "lng": -99.069131,
+        "nombre": "Zona Industrial Santa Clara Coatitla",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.529945,
+        "lng": -99.070431,
+        "nombre": "Fraccionamiento Industrial Esfuerzo Nacional",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.516154,
+        "lng": -99.0830309,
+        "nombre": "Zona Industrial Urbana Y/O Cuauhtémoc Xalostoc",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.513456,
+        "lng": -99.083883,
+        "nombre": "Fraccionamiento Industrial Xalostóc",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.525228,
+        "lng": -99.115089,
+        "nombre": "Fraccionamiento Industrial La Presa",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.520011,
+        "lng": -99.119531,
+        "nombre": "Tlanepark Iii",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.519312,
+        "lng": -99.1664355,
+        "nombre": "Parque Industrial San Pablo Xalpa",
         "condicion": "Nublado"
     },
     {
@@ -54,9 +162,1155 @@
         "condicion": "Nublado"
     },
     {
+        "lat": 19.509431,
+        "lng": -99.178383,
+        "nombre": "Ferropark Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.553207,
+        "lng": -99.178332,
+        "nombre": "Tlanepark",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.570153,
+        "lng": -99.209485,
+        "nombre": "Kimex Park Tlalne",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.583509,
+        "lng": -99.225772,
+        "nombre": "Atizapark",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.56788717556672,
+        "lng": -99.26117917653865,
+        "nombre": "Zona Industrial Prof. Cristobal Higuera Y/ Atizapán Centro",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.567992,
+        "lng": -99.261259,
+        "nombre": "Fraccionamiento Industrial El Pedregal",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.587049,
+        "lng": -99.198159,
+        "nombre": "Tlanepark Iv",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.595918,
+        "lng": -99.182465,
+        "nombre": "Tultitlán Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.622746,
+        "lng": -99.1836,
+        "nombre": "Zona Industrial Corredor Lechería Cuautitlan",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.6197,
+        "lng": -99.181241,
+        "nombre": "Zona Industrial Corredor López Portillo Tultitlan",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.622456,
+        "lng": -99.177488,
+        "nombre": "Zona Industrial Recursos Hidráulicos",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.620452,
+        "lng": -99.167767,
+        "nombre": "Prologis Fresno",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.627926,
+        "lng": -99.140356,
+        "nombre": "Multipark",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.639025,
+        "lng": -99.137016,
+        "nombre": "Parque Industrial San Miguel Tultitlán",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.64289,
+        "lng": -99.14474,
+        "nombre": "Tultipark Iv",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.647519,
+        "lng": -99.145123,
+        "nombre": "Tule Industrial Park Iii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.648428,
+        "lng": -99.149006,
+        "nombre": "Premium Park Tultepeci",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.652187,
+        "lng": -99.157656,
+        "nombre": "Parque Industrial Cartagena",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.65794,
+        "lng": -99.174547,
+        "nombre": "Parque Industrial La Joya",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.684236,
+        "lng": -99.150967,
+        "nombre": "Cpa Logistic Center Cuautitlan",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.681845,
+        "lng": -99.182624,
+        "nombre": "Prologis Laurel",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.686498,
+        "lng": -99.184515,
+        "nombre": "Fraccionamiento Industrial Sección Xhala",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.708046,
+        "lng": -99.191628,
+        "nombre": "Parque Logístico El Peral",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.731672,
+        "lng": -99.204136,
+        "nombre": "Tepozopark",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.736205,
+        "lng": -99.206204,
+        "nombre": "Megapark",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.732274,
+        "lng": -99.216712,
+        "nombre": "Prologis Park Grande",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.737482,
+        "lng": -99.223349,
+        "nombre": "Tepozpark Iii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.739823,
+        "lng": -99.226275,
+        "nombre": "Tepozpark I",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.73624,
+        "lng": -99.225065,
+        "nombre": "Tepozpark Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.721556,
+        "lng": -99.203739,
+        "nombre": "Parque Industrial Trebol",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.714185,
+        "lng": -99.194221,
+        "nombre": "Prologis Park Izcalli Iv",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.709558,
+        "lng": -99.193585,
+        "nombre": "Prologis Izcalli",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.704191,
+        "lng": -99.190854,
+        "nombre": "World Park Cuautitlán",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.704525,
+        "lng": -99.190543,
+        "nombre": "Sb Parque Industrial",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.696096,
+        "lng": -99.185115,
+        "nombre": "Logicenter Cuautitlán I Xhala",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.688962,
+        "lng": -99.180503,
+        "nombre": "Xhala Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.685977,
+        "lng": -99.192453,
+        "nombre": "Fraccionamiento Industrial Sección San Sebastian Xhala",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.682006,
+        "lng": -99.196973,
+        "nombre": "Parque Industrial El Sabino",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.680502,
+        "lng": -99.190768,
+        "nombre": "Prologis Terminal Intermodal Ladero",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.664903,
+        "lng": -99.199868,
+        "nombre": "Parque Industrial Cuamatla",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.706043,
+        "lng": -99.227541,
+        "nombre": "Advance Tepotzotlán Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.704083,
+        "lng": -99.215111,
+        "nombre": "Parque Industrial El Convento Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.707141,
+        "lng": -99.211695,
+        "nombre": "Evolution Park Tepotzotlán",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.705828,
+        "lng": -99.213635,
+        "nombre": "Convento City Parki",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.709968,
+        "lng": -99.206915,
+        "nombre": "Tepotzotlan Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.696756,
+        "lng": -99.204764,
+        "nombre": "Parque Industrial La Luz",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.706014,
+        "lng": -99.201235,
+        "nombre": "Parque Industrial San Lorenzo",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.707499,
+        "lng": -99.20574,
+        "nombre": "Parque Industrial Prologis Park Cedros",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.713317,
+        "lng": -99.198608,
+        "nombre": "Parque Industrial Prologis Carrizal",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.715824,
+        "lng": -99.205511,
+        "nombre": "Cpa Logistic Center Tepotzotlan",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.715366,
+        "lng": -99.203221,
+        "nombre": "Parque Industrial El Convento",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.731922,
+        "lng": -99.198028,
+        "nombre": "Cuautipark Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.7288707,
+        "lng": -99.1972174,
+        "nombre": "Logipark Xochitla",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.734947,
+        "lng": -99.212341,
+        "nombre": "Evolution Park La Teja",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.73176,
+        "lng": -99.21291,
+        "nombre": "Tepozpark Iv",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.718776,
+        "lng": -99.2113516,
+        "nombre": "Advance Tepotzotlán I",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.695456,
+        "lng": -99.204587,
+        "nombre": "Parque Industrial Tres Ríos",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.687262,
+        "lng": -99.2127005,
+        "nombre": "La Laguna Industrial Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.689517,
+        "lng": -99.200281,
+        "nombre": "Parque Microindustrial Cuautitlán Izcalli",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.667377,
+        "lng": -99.191389,
+        "nombre": "Parque Industrial Campus Cuautitlán I",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.624415,
+        "lng": -99.18072,
+        "nombre": "Prologis Park Alamos",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.649561,
+        "lng": -99.183818,
+        "nombre": "Conjunto Industrial Cuautitlan I",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.65034,
+        "lng": -99.183631,
+        "nombre": "Conjunto Industrial Cuautitlan Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.679317,
+        "lng": -99.144287,
+        "nombre": "World Park Tultepec",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.682403,
+        "lng": -99.148337,
+        "nombre": "Parque Industrial El Terremoto",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.729954,
+        "lng": -99.137099,
+        "nombre": "Cpa Logistic Center Estado De Mexico",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.701725,
+        "lng": -99.052761,
+        "nombre": "Parque Industrial Tecámac",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.775,
+        "lng": -98.975,
+        "nombre": "Zona Industrial Tecamac Zona Norte",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.80293,
+        "lng": -98.969699,
+        "nombre": "Parque Industrial La Palma",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.812035,
+        "lng": -99.190603,
+        "nombre": "Parque Industrial Xalpa De Villa Hormes",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.732715,
+        "lng": -99.209645,
+        "nombre": "Tepozpark V",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.819191,
+        "lng": -99.205352,
+        "nombre": "Centro Logistico Puente Grande",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.839678,
+        "lng": -99.206342,
+        "nombre": "Parque Industrial Huehuetoca (Odih)",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.894085,
+        "lng": -99.241278,
+        "nombre": "Cpa Logistic Center Huehuetoca",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.849772,
+        "lng": -99.238007,
+        "nombre": "Parque Industrial Las Américas",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.979619,
+        "lng": -99.528053,
+        "nombre": "Parque Industrial Jilotepec",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.997035,
+        "lng": -99.521058,
+        "nombre": "Parque Industrial Arco 57",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 20.563507,
+        "lng": -100.249748,
+        "nombre": "Parque Industrial La Bomba",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 20.253056,
+        "lng": -99.915,
+        "nombre": "Parque Industrial Polo Inn",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.787093,
+        "lng": -99.895725,
+        "nombre": "Parque Industrial Atlacomulco",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.777772,
+        "lng": -99.873842,
+        "nombre": "Parque Industrial Santa Barbara",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.658335,
+        "lng": -99.795567,
+        "nombre": "Conjunto Industrial Pasteje",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.578065,
+        "lng": -99.762426,
+        "nombre": "Parque Industrial Ixtlahuaca",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.588359,
+        "lng": -99.751917,
+        "nombre": "Parque Industrial Santa Margarita",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.419965,
+        "lng": -99.716462,
+        "nombre": "Parque Industrial San Cayetano",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.327779,
+        "lng": -99.661071,
+        "nombre": "Parque Industrial Toluca",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.303055,
+        "lng": -99.613766,
+        "nombre": "Parque Industrial San Antonio Buenavista",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.301458,
+        "lng": -99.612171,
+        "nombre": "Estrella Park",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.296003,
+        "lng": -99.575542,
+        "nombre": "Advance Toluca",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.305699,
+        "lng": -99.553429,
+        "nombre": "Condoter Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.294754,
+        "lng": -99.55524,
+        "nombre": "Premium Park Lerma",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.289085,
+        "lng": -99.543958,
+        "nombre": "Logistic Center Toluca",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.291061,
+        "lng": -99.530099,
+        "nombre": "Logicenter Lerma Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.28853,
+        "lng": -99.529115,
+        "nombre": "World Park Lerma",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.288357,
+        "lng": -99.537218,
+        "nombre": "Parque Industrial Frisa (Dona Rosa)",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.175837,
+        "lng": -99.576241,
+        "nombre": "Parque Agroindustrial San Antonio La Isla",
+        "condicion": "Bruma"
+    },
+    {
+        "lat": 19.119336,
+        "lng": -99.595146,
+        "nombre": "Parque Industrial Tenango Del Valle",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.173149,
+        "lng": -99.46764,
+        "nombre": "Parque Industrial Santiago Tianguistenco I Y Ii",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.217002,
+        "lng": -99.465956,
+        "nombre": "Parque Industrial Pyme Capulhuac",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.217001,
+        "lng": -99.465803,
+        "nombre": "Parque Industrial Pyμε San Nicolás Tlazala",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.273021,
+        "lng": -99.483262,
+        "nombre": "Zona Industrial Ocoyoacac (Alto Lerma)",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.273272,
+        "lng": -99.482766,
+        "nombre": "Zona Industrial Ocoyoacac",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.273252,
+        "lng": -99.472853,
+        "nombre": "Parque Industrial San Martin",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.287632,
+        "lng": -99.520752,
+        "nombre": "Lerma Park Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.292374,
+        "lng": -99.535416,
+        "nombre": "Toluca Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.296566,
+        "lng": -99.539353,
+        "nombre": "Parque Industrial Cerrillo I",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.290465,
+        "lng": -99.544244,
+        "nombre": "Tolucapark Doña Rosa",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.291388,
+        "lng": -99.545393,
+        "nombre": "Lerma Park I",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.297611,
+        "lng": -99.546366,
+        "nombre": "Prologis Park Toluca",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.3022251,
+        "lng": -99.559506,
+        "nombre": "Parque Corporativo",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.310843,
+        "lng": -99.558341,
+        "nombre": "Parque Industrial Ziporex Ii, Lerma",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.308066,
+        "lng": -99.557133,
+        "nombre": "Polaris",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.30226,
+        "lng": -99.551861,
+        "nombre": "Parque Industrial Ziporex Iii, Toluca",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.289741,
+        "lng": -99.551966,
+        "nombre": "Corredor Industrial Lerma",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.289923,
+        "lng": -99.552074,
+        "nombre": "Parque Industrial Lerma",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.292462,
+        "lng": -99.553633,
+        "nombre": "Lerma Litos",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.298402,
+        "lng": -99.57912,
+        "nombre": "Parque Industrial El Coecillo",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.299512,
+        "lng": -99.583138,
+        "nombre": "Corredor Industrial Toluca",
+        "condicion": "Lluvia intensa"
+    },
+    {
+        "lat": 19.336182,
+        "lng": -99.584144,
+        "nombre": "Parque Industrial Exportec",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.336182,
+        "lng": -99.584144,
+        "nombre": "Parque Industrial Exporteci",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.347131,
+        "lng": -99.588845,
+        "nombre": "Maravillas Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.374827,
+        "lng": -99.581554,
+        "nombre": "Parque Industrial Vesta Park Toluca 1",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.385794,
+        "lng": -99.571092,
+        "nombre": "Parque Industrial Toluca 2000",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.383018,
+        "lng": -99.563264,
+        "nombre": "Parque Industrial Vesta Park Toluca 2",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.375532,
+        "lng": -99.558864,
+        "nombre": "Frontier Toluca",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.376309,
+        "lng": -99.563077,
+        "nombre": "Parque Industrial Inn",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.369675,
+        "lng": -99.565844,
+        "nombre": "Prologis Park Toluca Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.308661,
+        "lng": -99.531326,
+        "nombre": "Parque Industrial Cerrillo Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.308779,
+        "lng": -99.537436,
+        "nombre": "La Bomba",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.316996,
+        "lng": -99.542229,
+        "nombre": "Logicenter Lerma I",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.466395,
+        "lng": -99.240465,
+        "nombre": "Fraccionamiento Industrial Tlatilco",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.460287,
+        "lng": -99.217713,
+        "nombre": "Fraccionamiento Industrial San Andres A Toto",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.464239,
+        "lng": -99.215222,
+        "nombre": "Parque Industrial Naucalpan",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.480348,
+        "lng": -99.22048,
+        "nombre": "Fraccionamiento Industrial La Perla",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.476387,
+        "lng": -99.225222,
+        "nombre": "Fraccionamiento Industrial Alce Blanco",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.479945,
+        "lng": -99.226203,
+        "nombre": "Parque Industrial Siporex I. Naucalpan",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.481571,
+        "lng": -99.230846,
+        "nombre": "Fraccionamiento Industrial Naucalpan",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.533275,
+        "lng": -99.20583,
+        "nombre": "Fraccionamiento Industrial La Loma",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.5522702,
+        "lng": -99.2022709,
+        "nombre": "Fraccionamiento Industrial San Nicolás",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.552636,
+        "lng": -99.197168,
+        "nombre": "Fraccionamiento Industrial Tlaxcolpan",
+        "condicion": "Nublado"
+    },
+    {
         "lat": 19.555128,
         "lng": -99.192462,
         "nombre": "Citypark",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.55236885,
+        "lng": -99.184562,
+        "nombre": "Fraccionamiento Industrial San Buenaventura",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.57493,
+        "lng": -99.202443,
+        "nombre": "Cpa Logistics Center Tlalnepantla",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.573617,
+        "lng": -99.2000149,
+        "nombre": "Fraccionamiento Industrial Barrientos",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.582512,
+        "lng": -99.194876,
+        "nombre": "World Park Tlalnepantla I",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.618461,
+        "lng": -99.185608,
+        "nombre": "Tultiparki",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.620412,
+        "lng": -99.167778,
+        "nombre": "Prologis Park Jlp",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.628459,
+        "lng": -99.152077,
+        "nombre": "Macrocentro Tultitlán Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.632738,
+        "lng": -99.153272,
+        "nombre": "Tultipark 8",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.578526,
+        "lng": -99.209945,
+        "nombre": "Tlalne Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.58927,
+        "lng": -99.211281,
+        "nombre": "Tlanepark Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.594962,
+        "lng": -99.208438,
+        "nombre": "Parque Industrial San Martin Obispo Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.604939,
+        "lng": -99.211979,
+        "nombre": "Prologis Encino Logistic Center",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.605677,
+        "lng": -99.212183,
+        "nombre": "Prologis Agave Logistic Center",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.60655,
+        "lng": -99.206113,
+        "nombre": "Cpa Logistic Center San Martin Obispo",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.607879,
+        "lng": -99.207041,
+        "nombre": "Parque Industrial San Martin Obispo",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.613446,
+        "lng": -99.229208,
+        "nombre": "Prologis Mezquite Logistic Center",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.539376,
+        "lng": -99.285799,
+        "nombre": "Atizapan Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.510115,
+        "lng": -99.21277,
+        "nombre": "Fraccionamiento Industrial Puente De Vigas",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.515761271427785,
+        "lng": -99.20782414288016,
+        "nombre": "Fraccionamiento Industrial San Jeroniμο Tepetlacalco",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.544286,
+        "lng": -99.179883,
+        "nombre": "Fraccionamiento Industrial Tabla Honda",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.565684,
+        "lng": -99.19919842,
+        "nombre": "Fraccionamiento Industrial Niños Heroes",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.56754,
+        "lng": -99.198667,
+        "nombre": "Cpa Distribution Tlalnepantla Center",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.541366,
+        "lng": -99.203062,
+        "nombre": "Centro Industrial Tlalnepantla",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.539574,
+        "lng": -99.207696,
+        "nombre": "Fraccionamiento Industrial San Lorenzo",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.535399,
+        "lng": -99.211123,
+        "nombre": "World Park Tlalnepantla Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.514505,
+        "lng": -99.216248,
+        "nombre": "Zona Industrial Puente De Vigas",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.509278,
+        "lng": -99.21088,
+        "nombre": "Fraccionamiento Industrial Las Armas",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.480026,
+        "lng": -99.223283,
+        "nombre": "Proximity Parks Naucalpan",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.521511,
+        "lng": -99.210944,
+        "nombre": "Gustavo Baz Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.5236074,
+        "lng": -99.193813,
+        "nombre": "Fraccionamiento Industrial Los Reyes",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.5374052,
+        "lng": -99.1938772,
+        "nombre": "World Park Tlalnepantla",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.661297,
+        "lng": -99.185389,
+        "nombre": "Cuautipark I",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.662937,
+        "lng": -99.197266,
+        "nombre": "Fraccionamiento Industrial Cuamatla",
+        "condicion": "Considerablemente nublado"
+    },
+    {
+        "lat": 19.70023,
+        "lng": -99.224906,
+        "nombre": "Puente México Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.70023,
+        "lng": -99.224906,
+        "nombre": "Puente México Iii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.700753,
+        "lng": -99.229399,
+        "nombre": "Puente México I",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.673322,
+        "lng": -99.233486,
+        "nombre": "Parque Industrial Cuatitlan (Ocpl)",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.667438,
+        "lng": -99.19141,
+        "nombre": "Parque Industrial Cuautitlán",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.619085,
+        "lng": -99.173872,
+        "nombre": "Zona Industrial Independencia",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.623603,
+        "lng": -99.153801,
+        "nombre": "Macrocentro Tultitlán",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.621236,
+        "lng": -99.154308,
+        "nombre": "Tultipark 9",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.623378,
+        "lng": -99.158123,
+        "nombre": "Macrocentro Tultitlan Iii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.640634,
+        "lng": -99.149406,
+        "nombre": "Multialmacenes Logisticos Tultitlán",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.634282,
+        "lng": -99.153412,
+        "nombre": "Tultipark 7",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.634067,
+        "lng": -99.152229,
+        "nombre": "Tultipark Ii (La Purísima)",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.648619,
+        "lng": -99.154872,
+        "nombre": "Evolution Park Cartagena",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.655831,
+        "lng": -99.16327,
+        "nombre": "World Park Tultitlan I",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.651152,
+        "lng": -99.150105,
+        "nombre": "Tule Industrial Park",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.649927,
+        "lng": -99.150748,
+        "nombre": "Tule Industrial Park Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.650681,
+        "lng": -99.146786,
+        "nombre": "Premium Park Tultepec Ii",
+        "condicion": "Nublado"
+    },
+    {
+        "lat": 19.654705,
+        "lng": -99.148409,
+        "nombre": "Tultepark",
         "condicion": "Nublado"
     }
 ]
