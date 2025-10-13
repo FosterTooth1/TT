@@ -22,4 +22,4 @@ EXPOSE 8080
 
 # El comando para ejecutar tu aplicación usando Gunicorn
 # Escuchará en todas las interfaces de red (0.0.0.0) en el puerto 8080
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "Main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "Main:app"]
