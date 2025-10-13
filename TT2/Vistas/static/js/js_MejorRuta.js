@@ -73,7 +73,16 @@ document.addEventListener("DOMContentLoaded", function() {
     /* ########################################################################################################################### */ 
     // 5. Función para dibujar la ruta
     function dibujarRuta(coordenadas) {
-        const urlCoordinates = coordenadas.map(c => `${c.lng},${c.lat}`).join(';');
+        // ***** INICIO DEL CAMBIO *****
+        // Hacemos una copia para no modificar el array original
+        const coordsParaRuta = [...coordenadas]; 
+        if (coordsParaRuta.length > 0) {
+            // Añadimos el primer punto al final para cerrar el ciclo
+            coordsParaRuta.push(coordsParaRuta[0]); 
+        }
+        // ***** FIN DEL CAMBIO *****
+
+        const urlCoordinates = coordsParaRuta.map(c => `${c.lng},${c.lat}`).join(';');
         const apiUrl = `https://router.project-osrm.org/route/v1/driving/${urlCoordinates}?overview=full&geometries=geojson`;
         
         fetch(apiUrl)
@@ -83,10 +92,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     throw new Error("No se pudo obtener la ruta desde OSRM.");
                 }
                 
-                // Usar GeoJSON directamente en lugar de polyline codificado
                 const routeGeometry = routeData.routes[0].geometry;
                 
-                // Crear la polyline directamente desde las coordenadas GeoJSON
                 const polyline = L.geoJSON(routeGeometry, {
                     style: {
                         color: 'black',
@@ -115,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 const body = {
                     destinos: data.ruta,
-                    indices: data.indices  // ✅ enviamos los índices originales
+                    indices: data.indices
                 };
 
                 const response = await fetch('/guardar-ruta', {
@@ -158,7 +165,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
                 
                 if (response.ok) {
-                    // Recargar la página para actualizar la interfaz
                     window.location.reload();
                 } else {
                     alert('Error al cerrar sesión');
