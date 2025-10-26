@@ -375,7 +375,7 @@ def obtener_rutas():
                 # Convertir string de índices a lista de enteros
                 indices_string = r['destinos']
                 print(f"Procesando ruta {r['id_ruta']}: indices_string='{indices_string}'")
-                indices = [int(x.strip()) for x in indices_string.split(',') if x.strip().isdigit()]
+                indices = json.loads(indices_string)
                 print(f"Índices convertidos: {indices}")
                 
                 # Obtener nombres de las naves usando los índices
@@ -423,7 +423,7 @@ def regenerar_ruta(ruta_id):
         
         # Obtener los índices guardados
         indices_string = ruta['destinos']
-        indices = [int(x.strip()) for x in indices_string.split(',') if x.strip().isdigit()]
+        indices = json.loads(indices_string)
         
         # Filtrar las naves usando los índices
         df_naves_filtrado = df_naves_industriales.iloc[indices]
