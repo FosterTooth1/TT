@@ -1,4 +1,5 @@
 const tbody = document.getElementById("tabla-lugares");
+let navesData = [];
 
 // Cargar naves desde la API
 async function cargarNaves() {
@@ -7,6 +8,7 @@ async function cargarNaves() {
         const naves = await response.json();
         
         if (response.ok) {
+            navesData = naves; // Guardar datos para uso posterior
             // Generar filas usando los datos de la API
             naves.forEach((nave, i) => {
                 let row = document.createElement("tr");
@@ -16,6 +18,8 @@ async function cargarNaves() {
                 checkbox.type = "checkbox";
                 checkbox.id = "nave" + i;
                 checkbox.value = i; // Usar el índice como valor
+
+                checkbox.addEventListener('change', actualizarDropdownInicio);
 
                 let label = document.createElement("label");
                 label.htmlFor = "nave" + i;
@@ -33,6 +37,42 @@ async function cargarNaves() {
     } catch (error) {
         console.error("Error:", error);
         alert("Error al conectar con el servidor");
+    }
+}
+
+function actualizarDropdownInicio() {
+    const startNaveContainer = document.getElementById('start-nave-container');
+    const selectStartNave = document.getElementById('select-start-nave');
+    
+    // Obtener naves seleccionadas
+    const checkboxes = document.querySelectorAll("input[type=checkbox]:checked");
+    
+    // Limpiar opciones anteriores
+    selectStartNave.innerHTML = ''; 
+    
+    if (checkboxes.length > 0) {
+        // Guardar el valor seleccionado anteriormente, si existe
+        const valorAnterior = selectStartNave.value; 
+        
+        checkboxes.forEach(check => {
+            const indice = parseInt(check.value);
+            // Usar navesData para obtener el nombre
+            const nave = navesData[indice]; 
+            
+            let option = document.createElement('option');
+            option.value = indice; // El valor de la opción es el índice GLOBAL
+            option.textContent = nave.nombre;
+            selectStartNave.appendChild(option);
+        });
+
+        // Intentar re-seleccionar el valor anterior si aún está en la lista
+        if (Array.from(selectStartNave.options).some(opt => opt.value === valorAnterior)) {
+            selectStartNave.value = valorAnterior;
+        }
+
+        startNaveContainer.style.display = 'block'; // Mostrar contenedor
+    } else {
+        startNaveContainer.style.display = 'none'; // Ocultar si no hay naves
     }
 }
 
@@ -73,8 +113,10 @@ document.getElementById("seleccionarTodo").addEventListener("click", () => {
     checkboxes.forEach((checkbox) => {
         checkbox.checked = !allSelected;
     });
+    actualizarDropdownInicio();
 });
 
+// Botón generar ruta
 // Botón generar ruta
 document.getElementById("generarRuta").addEventListener("click", async () => {
     let seleccionados = [];
@@ -89,6 +131,15 @@ document.getElementById("generarRuta").addEventListener("click", async () => {
         return;
     }
 
+    const selectStartNave = document.getElementById('select-start-nave');
+    const indice_inicio = parseInt(selectStartNave.value);
+
+    // Validar que el índice de inicio sea un número válido
+    if (isNaN(indice_inicio)) {
+        alert("Por favor selecciona una nave de inicio válida.");
+        return;
+    }
+
     // Mostrar loading
     document.getElementById("loading").style.display = "block";
     document.getElementById("generarRuta").disabled = true;
@@ -99,7 +150,10 @@ document.getElementById("generarRuta").addEventListener("click", async () => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ indices: seleccionados })
+            body: JSON.stringify({ 
+                indices: seleccionados,
+                indice_inicio: indice_inicio 
+            })
         });
 
         const resultado = await response.json();

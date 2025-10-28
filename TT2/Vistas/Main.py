@@ -193,6 +193,17 @@ def inicializar_datos():
     if df_naves_industriales is None:
         df_naves_industriales = cargar_CSV(ruta_csv_naves)
         Modelo_RandomForest = joblib.load(ruta_modelo)
+        
+def rotar_recorrido(recorrido_local, indice_local_inicio):
+    try:
+        posicion_inicio = recorrido_local.index(indice_local_inicio)
+        recorrido_rotado = recorrido_local[posicion_inicio:] + recorrido_local[:posicion_inicio]
+        return recorrido_rotado
+    except ValueError:
+        return recorrido_local
+    except Exception as e:
+        print(f"Error al rotar recorrido: {e}")
+        return recorrido_local
 
 # ###########################################################################################################################
 # CONFIG DB - Versión solo para Cloud Run
@@ -421,12 +432,18 @@ def regenerar_ruta(ruta_id):
         if not ruta:
             return jsonify({"status": "error", "message": "Ruta no encontrada"}), 404
         
-        # Obtener los índices guardados
+        # Obtener los índices guardados (ya están en el orden deseado)
         indices_string = ruta['destinos']
-        indices = json.loads(indices_string)
+        indices_globales_guardados = json.loads(indices_string)
+
+        if not indices_globales_guardados:
+            return jsonify({"status": "error", "message": "Ruta guardada está vacía"}), 400
+
+        # Obtener el índice global de la nave de inicio
+        indice_local_inicio = 0
         
         # Filtrar las naves usando los índices
-        df_naves_filtrado = df_naves_industriales.iloc[indices]
+        df_naves_filtrado = df_naves_industriales.iloc[indices_globales_guardados]
         
         # Crear matriz de distancias
         df_matriz_distancias = crear_matriz_distancias(df_naves_filtrado)
@@ -458,11 +475,15 @@ def regenerar_ruta(ruta_id):
                   'temperatura_final': 0.001, 'max_neighbours': num_naves * 10, 'm': 3,
                   'nombre_archivo': "Matriz_Distancias_Temporal.csv", 'heuristica': 0}
         resultado = rs.ejecutar(**params)
+        
+        # Rotar recorrido para iniciar desde la nave seleccionada
+        recorrido_local_ordenado = rotar_recorrido(resultado['recorrido'], indice_local_inicio)
 
         # Construir ruta optimizada
         ruta_optimizada = []
-        for idx in resultado['recorrido']:
-            fila = df_naves_filtrado.iloc[idx]
+        for idx_local in recorrido_local_ordenado:
+            # La fila corresponde al índice local del df_filtrado
+            fila = df_naves_filtrado.iloc[idx_local]
             ruta_optimizada.append({"lat": float(fila['latitud']),
                                     "lng": float(fila['longitud']),
                                     "nombre": fila['nombre'],
@@ -569,10 +590,17 @@ def generar_ruta():
     try:
         data = request.get_json()
         indices_seleccionados = data.get('indices', [])
+        indice_inicio_global = data.get('indice_inicio')
         if len(indices_seleccionados) < 5:
             return jsonify({"error": "Selecciona al menos 5 naves industriales"}), 400
         inicializar_datos()
+        if indice_inicio_global is None or indice_inicio_global not in indices_seleccionados:
+            return jsonify({"error": "El índice de inicio no es válido o no está en la lista de seleccionados"}), 400
         df_naves_filtrado = df_naves_industriales.iloc[indices_seleccionados]
+        try:
+            indice_local_inicio = indices_seleccionados.index(indice_inicio_global)
+        except ValueError:
+            return jsonify({"error": "Error interno al mapear el índice de inicio"}), 500
         df_matriz_distancias = crear_matriz_distancias(df_naves_filtrado)
         
         df_naves_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_filtrado, api_key)
@@ -599,20 +627,34 @@ def generar_ruta():
                   'temperatura_final': 0.001, 'max_neighbours': num_naves * 10, 'm': 3,
                   'nombre_archivo': "Matriz_Distancias_Temporal.csv", 'heuristica': 0}
         resultado = rs.ejecutar(**params)
+        
+        recorrido_local_ordenado = rotar_recorrido(resultado['recorrido'], indice_local_inicio)
 
         ruta_optimizada = []
-        for idx in resultado['recorrido']:
-            fila = df_naves_filtrado.iloc[idx]
+        
+        indices_globales_ordenados = []
+        
+        for idx_local in recorrido_local_ordenado:
+            # Mapear el índice local (del df_filtrado) al índice global original
+            idx_global = indices_seleccionados[idx_local]
+            
+            # Obtener la fila del dataframe filtrado
+            fila = df_naves_filtrado.iloc[idx_local]
+            
             ruta_optimizada.append({"lat": float(fila['latitud']),
                                     "lng": float(fila['longitud']),
                                     "nombre": fila['nombre'],
                                     "condicion": fila['Prediccion']})
+            
+            # Guardar el índice global correspondiente
+            indices_globales_ordenados.append(int(idx_global)) # Asegurar que sea int
 
         if os.path.exists("Matriz_Distancias_Temporal.csv"):
             os.remove("Matriz_Distancias_Temporal.csv")
 
         return jsonify({"ruta": ruta_optimizada,
-                        "indices": indices_seleccionados,
+                        # Enviar la lista de índices globales ordenada
+                        "indices": indices_globales_ordenados,
                         "fitness": resultado['fitness'],
                         "tiempo_ejecucion": resultado['tiempo_ejecucion'],
                         "temperatura_inicial": resultado['temperatura_inicial'],
