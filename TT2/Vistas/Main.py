@@ -424,7 +424,50 @@ def admin_required(f):
 @admin_required
 def panel_admin():
     # Renderiza el template que ya existe
-    return render_template('panel_admin.html', user_name=session.get('user_name', 'Admin'))
+    return render_template('panel_admin.html', 
+                           user_name=session.get('user_name', 'Admin'), 
+                           params=parametros_app)
+
+# Actualizar parámetros desde el panel de administración
+@app.route('/actualizar_parametros', methods=['POST'])
+@admin_required
+def actualizar_parametros():
+    """
+    Recibe los datos del formulario del panel de admin,
+    actualiza la variable global parametros_app y
+    la guarda en el archivo parametros.json.
+    """
+    global parametros_app # Necesitamos modificar la variable global
+    try:
+        # 1. Actualizar los parámetros generales
+        # Es crucial convertir los valores al tipo de dato correcto (int o float)
+        parametros_app['lambda_penalizacion'] = float(request.form['lambda_penalizacion'])
+        parametros_app['num_generaciones'] = int(request.form['num_generaciones'])
+        parametros_app['tasa_enfriamiento'] = float(request.form['tasa_enfriamiento'])
+        parametros_app['temperatura_final'] = float(request.form['temperatura_final'])
+        parametros_app['m'] = int(request.form['m'])
+        parametros_app['heuristica'] = int(request.form['heuristica'])
+
+        # 2. Actualizar el diccionario anidado de penalizaciones
+        # Iteramos sobre las claves que ya existen en el diccionario
+        for key in parametros_app['penalizaciones']:
+            # Recreamos el nombre del campo del formulario
+            # (ej: "Considerablemente nublado" -> "penalizacion_Considerablemente_nublado")
+            form_key = f"penalizacion_{key.replace(' ', '_')}"
+            
+            # Obtenemos el valor del formulario, lo convertimos a float y actualizamos
+            if form_key in request.form:
+                parametros_app['penalizaciones'][key] = float(request.form[form_key])
+
+        # 3. Guardar los cambios en el archivo JSON
+        guardar_parametros() 
+        print("Parámetros actualizados y guardados por el admin.")
+
+    except Exception as e:
+        print(f"ERROR al actualizar parámetros: {e}")
+
+    # 4. Redirigir al usuario de vuelta al panel de administración
+    return redirect(url_for('panel_admin'))
 
 @app.route('/obtener_rutas', methods=['GET'])
 @login_required
