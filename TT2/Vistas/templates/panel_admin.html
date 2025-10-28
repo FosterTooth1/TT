@@ -146,10 +146,9 @@
 
     <script>
         document.getElementById('btn-actualizar').addEventListener('click', function() {
-            var boton = this;
+            var boton = document.getElementById('btn-actualizar');
             boton.disabled = true;
             boton.textContent = 'Actualizando...';
-            // El submit del form se maneja automáticamente
         });
     </script>
 </body>
