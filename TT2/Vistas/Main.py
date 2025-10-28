@@ -396,12 +396,34 @@ def obtener_rutas():
                         nombre_nave = df_naves_industriales.iloc[indice]['nombre']
                         nombres_destinos.append(nombre_nave)
                 
-                r['detalles'] = ' → '.join(nombres_destinos) if nombres_destinos else 'Ruta sin destinos'
+                ruta_completa_str = ""
+                ruta_corta_str = ""
+                
+                if nombres_destinos:
+                    # 1. Crear la ruta completa
+                    ruta_completa_str = ' → '.join(nombres_destinos)
+                    
+                    # 2. Crear la ruta corta
+                    if len(nombres_destinos) > 2:
+                        ruta_corta_str = f"{nombres_destinos[0]} → {nombres_destinos[1]} → ... → {nombres_destinos[-1]}"
+                    else:
+                        # Si tiene 2 o menos naves, la corta es igual a la completa
+                        ruta_corta_str = ruta_completa_str
+                else:
+                    ruta_completa_str = 'Ruta sin destinos'
+                    ruta_corta_str = 'Ruta sin destinos'
+
+                r['ruta_completa'] = ruta_completa_str
+                r['ruta_corta'] = ruta_corta_str
+
                 r['indices'] = indices  # Guardar también los índices para uso futuro
-                print(f"Detalles finales: {r['detalles']}")
+                print(f"Ruta corta: {r['ruta_corta']}")
+            
             except Exception as e:
                 print(f"Error procesando ruta {r.get('id_ruta', 'desconocida')}: {e}")
-                r['detalles'] = 'Ruta con formato inválido'
+                # Manejar error en ambas variables
+                r['ruta_completa'] = 'Ruta con formato inválido'
+                r['ruta_corta'] = 'Ruta con formato inválido'
                 r['indices'] = []
 
         return jsonify({"status": "ok", "rutas": rutas}), 200

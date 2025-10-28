@@ -56,6 +56,33 @@ document.addEventListener("DOMContentLoaded", async function() {
             btnRehacer.disabled = false;
         }
     });
+
+    const modal = document.getElementById('modal-detalles');
+    const textoRutaModal = document.getElementById('modal-texto-ruta');
+    const btnCerrar = document.getElementById('btn-cerrar-modal');
+
+    const tbody = document.getElementById('tabla-rutas-body');
+    
+    tbody.addEventListener('click', (event) => {
+        if (event.target.classList.contains('btn-mas-detalles')) {
+            const boton = event.target;
+            const rutaCompleta = boton.dataset.rutaCompleta;
+            textoRutaModal.textContent = rutaCompleta;
+            modal.style.display = 'block';
+        }
+    });
+
+    if(btnCerrar) {
+        btnCerrar.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+
+    window.addEventListener('click', (event) => {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    });
 });
 
 /* ########################################################################################################################### */ 
@@ -86,19 +113,20 @@ async function cargarRutasUsuario() {
 
                 data.rutas.forEach((ruta, index) => {
                     const row = document.createElement('tr');
-                    const detallesCompletos = `${ruta.detalles}`;
 
                     row.innerHTML = `
                         <td class="columna-indice">${index + 1}</td>
-                        <td>${detallesCompletos}</td>
+                        <td>${ruta.ruta_corta}</td>                         <td style="text-align:center;">
+                                                        <button class="btn-mas-detalles" data-ruta-completa="${ruta.ruta_completa}">
+                                Ver más
+                            </button>
+                        </td>
                         <td style="text-align:center;">
                             <input type="radio" name="seleccionarRuta" value="${ruta.id_ruta}">
                         </td>
                     `;
                     tbody.appendChild(row);
                 });
-
-                // Activar el botón solo si hay selección
                 const radios = document.querySelectorAll('input[name="seleccionarRuta"]');
                 radios.forEach(r => {
                     r.addEventListener('change', () => {
