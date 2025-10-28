@@ -410,6 +410,7 @@ def login_usuario():
         return jsonify({"status": "error", "message": "Error interno al iniciar sesión."}), 500
 
 ###########################################################################################################################
+
 # Mostrar las Rutas del usuario en el Sistema
 def admin_required(f):
     @wraps(f)
@@ -418,6 +419,12 @@ def admin_required(f):
             return redirect(url_for('iniciar_sesion')) # Redirige al login si no es admin
         return f(*args, **kwargs)
     return decorated_function
+
+@app.route('/panel_admin')
+@admin_required
+def panel_admin():
+    # Renderiza el template que ya existe
+    return render_template('panel_admin.html', user_name=session.get('user_name', 'Admin'))
 
 @app.route('/obtener_rutas', methods=['GET'])
 @login_required
