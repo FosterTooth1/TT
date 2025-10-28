@@ -11,6 +11,37 @@ from ctypes import c_int, c_double, c_char_p, POINTER, Structure
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 import json
+import functools
+
+PARAMETROS_PATH = os.path.join(os.path.dirname(__file__), 'parametros.json')
+parametros_app = {}
+
+def cargar_parametros():
+    """Carga los parámetros desde parametros.json a la variable global."""
+    global parametros_app
+    try:
+        with open(PARAMETROS_PATH, 'r', encoding='utf-8') as f:
+            parametros_app = json.load(f)
+        print("Parámetros cargados exitosamente.")
+    except Exception as e:
+        print(f"ERROR AL CARGAR parámetros.json: {e}")
+        # En caso de error, define valores por defecto para que la app no falle
+        parametros_app = {
+            "penalizaciones": {"Nublado": 1.0, "Despejado": 1.0},
+            "lambda_penalizacion": 1.0, "num_generaciones": 100,
+            "tasa_enfriamiento": 0.9, "temperatura_final": 0.01,
+            "m": 1, "heuristica": 0
+        }
+
+def guardar_parametros():
+    """Guarda la variable global de parámetros en parametros.json."""
+    global parametros_app
+    try:
+        with open(PARAMETROS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(parametros_app, f, indent=2, ensure_ascii=False)
+        print("Parámetros guardados exitosamente.")
+    except Exception as e:
+        print(f"ERROR AL GUARDAR parámetros.json: {e}")
 
 ###########################################################################################################################
 class ResultadoRecocido(Structure):
@@ -231,7 +262,7 @@ def get_db_connection():
 # Configuracion de Flask
 app = Flask(__name__)
 app.secret_key = 'logisticlima_secret_key_2024'  # Clave secreta para sesiones, ¡¡¡¡¡ EN PRODUCCION SE DEBE DE CAMBIAR!!!!!
-
+cargar_parametros()
 df_naves_industriales = None
 Modelo_RandomForest = None
 api_key = os.environ.get('WEATHER_API_KEY', "7f25124e580c4de6a2e00312251205")
@@ -333,6 +364,18 @@ def login_usuario():
         if not correo or not password:
             return jsonify({"status": "error", "message": "Faltan campos requeridos."}), 400
 
+        if correo == "adminhackerpro777@gato.com" and password == "Tilin.666":
+            session['user_id'] = 'admin'
+            session['user_name'] = 'Administrador'
+            session['user_email'] = correo
+            session['is_admin'] = True
+            return jsonify({
+                "status": "ok", 
+                "message": "Bienvenido, Admin", 
+                "id": "admin", 
+                "redirect_url": url_for('panel_admin')
+            }), 200
+        
         conn = get_db_connection()
         if not conn:
             return jsonify({"status": "error", "message": "Error de conexión con la base de datos."}), 500
@@ -350,12 +393,17 @@ def login_usuario():
         if not check_password_hash(usuario["contraseña_hash"], password):
             return jsonify({"status": "error", "message": "Contraseña incorrecta."}), 400
 
-        # Establecer sesión
         session['user_id'] = usuario["id_usuario"]
         session['user_name'] = usuario['nombre']
         session['user_email'] = usuario['correo']
+        session['is_admin'] = False
 
-        return jsonify({"status": "ok", "message": f"Bienvenido, {usuario['nombre']}!", "id": usuario["id_usuario"]}), 200
+        return jsonify({
+            "status": "ok", 
+            "message": f"Bienvenido, {usuario['nombre']}!", 
+            "id": usuario["id_usuario"],
+            "redirect_url": url_for('index')
+        }), 200
 
     except Exception as e:
         print("Error en /login_usuario:", e)
@@ -363,6 +411,14 @@ def login_usuario():
 
 ###########################################################################################################################
 # Mostrar las Rutas del usuario en el Sistema
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('is_admin'):
+            return redirect(url_for('iniciar_sesion')) # Redirige al login si no es admin
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.route('/obtener_rutas', methods=['GET'])
 @login_required
 def obtener_rutas():
@@ -474,9 +530,9 @@ def regenerar_ruta(ruta_id):
         df_naves_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_filtrado, api_key)
         
         # Aplicar penalizaciones climáticas
-        penalizaciones = {clave: 1.0 for clave in ['Nublado','Considerablemente nublado','Despejado','Niebla','Bruma',
-                                                  'Lluvia intensa','Tormenta electrica intensa','Neblina','Lluvia','Truenos']}
-        lambda_penalizacion = 1.0
+        global parametros_app # Accede a los parámetros cargados
+        penalizaciones = parametros_app['penalizaciones']
+        lambda_penalizacion = parametros_app['lambda_penalizacion']
         for pos, fila in df_naves_filtrado.reset_index(drop=True).iterrows():
             pred = fila['Prediccion']
             if pred in penalizaciones:
@@ -493,9 +549,16 @@ def regenerar_ruta(ruta_id):
         nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
         ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
         rs = AlgoritmoRecocido(ruta_biblioteca)
-        params = {'longitud_ruta': num_naves, 'num_generaciones': 800, 'tasa_enfriamiento': 0.99,
-                  'temperatura_final': 0.001, 'max_neighbours': num_naves * 10, 'm': 3,
-                  'nombre_archivo': "Matriz_Distancias_Temporal.csv", 'heuristica': 0}
+        params = {
+            'longitud_ruta': num_naves, 
+            'num_generaciones': parametros_app['num_generaciones'], 
+            'tasa_enfriamiento': parametros_app['tasa_enfriamiento'],
+            'temperatura_final': parametros_app['temperatura_final'], 
+            'max_neighbours': num_naves * 10,
+            'm': parametros_app['m'],
+            'nombre_archivo': "Matriz_Distancias_Temporal.csv", 
+            'heuristica': parametros_app['heuristica']
+        }
         resultado = rs.ejecutar(**params)
         
         # Rotar recorrido para iniciar desde la nave seleccionada
@@ -627,9 +690,9 @@ def generar_ruta():
         
         df_naves_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_filtrado, api_key)
         
-        penalizaciones = {clave: 1.0 for clave in ['Nublado','Considerablemente nublado','Despejado','Niebla','Bruma',
-                                                  'Lluvia intensa','Tormenta electrica intensa','Neblina','Lluvia','Truenos']}
-        lambda_penalizacion = 1.0
+        global parametros_app # Accede a los parámetros cargados
+        penalizaciones = parametros_app['penalizaciones']
+        lambda_penalizacion = parametros_app['lambda_penalizacion']
         for pos, fila in df_naves_filtrado.reset_index(drop=True).iterrows():
             pred = fila['Prediccion']
             if pred in penalizaciones:
@@ -645,9 +708,16 @@ def generar_ruta():
         nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
         ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
         rs = AlgoritmoRecocido(ruta_biblioteca)
-        params = {'longitud_ruta': num_naves, 'num_generaciones': 800, 'tasa_enfriamiento': 0.99,
-                  'temperatura_final': 0.001, 'max_neighbours': num_naves * 10, 'm': 3,
-                  'nombre_archivo': "Matriz_Distancias_Temporal.csv", 'heuristica': 0}
+        params = {
+            'longitud_ruta': num_naves, 
+            'num_generaciones': parametros_app['num_generaciones'], 
+            'tasa_enfriamiento': parametros_app['tasa_enfriamiento'],
+            'temperatura_final': parametros_app['temperatura_final'], 
+            'max_neighbours': num_naves * 10,
+            'm': parametros_app['m'],
+            'nombre_archivo': "Matriz_Distancias_Temporal.csv", 
+            'heuristica': parametros_app['heuristica']
+        }
         resultado = rs.ejecutar(**params)
         
         recorrido_local_ordenado = rotar_recorrido(resultado['recorrido'], indice_local_inicio)
@@ -684,6 +754,53 @@ def generar_ruta():
 
     except Exception as e:
         return jsonify({"error": f"Error al generar la ruta: {str(e)}"}), 500
+    
+@app.route('/panel_admin')
+@admin_required # Protege la ruta
+def panel_admin():
+    """Muestra la página para editar parámetros."""
+    global parametros_app
+    # Pasa los parámetros actuales al template
+    return render_template('panel_admin.html', params=parametros_app)
+
+
+@app.route('/actualizar_parametros', methods=['POST'])
+@admin_required # Protege la ruta
+def actualizar_parametros():
+    """Recibe el formulario del admin y actualiza el JSON."""
+    global parametros_app
+    
+    try:
+        # 1. Actualizar parámetros simples (convirtiendo a su tipo correcto)
+        parametros_app['lambda_penalizacion'] = float(request.form['lambda_penalizacion'])
+        parametros_app['num_generaciones'] = int(request.form['num_generaciones'])
+        parametros_app['tasa_enfriamiento'] = float(request.form['tasa_enfriamiento'])
+        parametros_app['temperatura_final'] = float(request.form['temperatura_final'])
+        parametros_app['m'] = int(request.form['m'])
+        parametros_app['heuristica'] = int(request.form['heuristica'])
+        
+        # 2. Reconstruir el diccionario de penalizaciones
+        nuevas_penalizaciones = {}
+        for key in parametros_app['penalizaciones'].keys():
+            # El nombre en el form será 'penalizacion_Nublado', 'penalizacion_Lluvia_intensa', etc.
+            form_key = f"penalizacion_{key.replace(' ', '_')}" 
+            
+            if form_key in request.form:
+                nuevas_penalizaciones[key] = float(request.form[form_key])
+        
+        parametros_app['penalizaciones'] = nuevas_penalizaciones
+        
+        # 3. Guardar los cambios en el archivo .json
+        guardar_parametros()
+        
+        # (Opcional: puedes añadir un mensaje flash de éxito aquí)
+        
+    except Exception as e:
+        print(f"Error al actualizar parámetros: {e}")
+        # (Opcional: puedes añadir un mensaje flash de error aquí)
+
+    # Redirigir de vuelta al panel de admin
+    return redirect(url_for('panel_admin'))
 
 ###########################################################################################################################
 if __name__ == "__main__":

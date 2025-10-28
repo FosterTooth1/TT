@@ -1,0 +1,20 @@
+{
+  "penalizaciones": {
+    "Nublado": 1.0,
+    "Considerablemente nublado": 1.0,
+    "Despejado": 1.0,
+    "Niebla": 1.0,
+    "Bruma": 1.0,
+    "Lluvia intensa": 1.0,
+    "Tormenta electrica intensa": 1.0,
+    "Neblina": 1.0,
+    "Lluvia": 1.0,
+    "Truenos": 1.0
+  },
+  "lambda_penalizacion": 1.0,
+  "num_generaciones": 800,
+  "tasa_enfriamiento": 0.99,
+  "temperatura_final": 0.001,
+  "m": 3,
+  "heuristica": 0
+}

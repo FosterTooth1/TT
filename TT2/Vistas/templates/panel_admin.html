@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_auth.css') }}" type="text/css">
+    <style>
+        body { background-color: #f4f7f6; }
+        .admin-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        .admin-container h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        form { display: flex; flex-direction: column; }
+        fieldset { 
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        legend { 
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #0056b3;
+            padding: 0 10px;
+        }
+        .form-grupo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .form-grupo label {
+            font-weight: 500;
+            color: #555;
+            flex-basis: 60%;
+        }
+        .form-grupo input {
+            flex-basis: 35%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        button[type="submit"] {
+            padding: 12px 20px;
+            font-size: 1.1em;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button[type="submit"]:hover { background-color: #218838; }
+        .logout-admin {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #dc3545;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Panel de Parámetros del Algoritmo</h1>
+        
+        <form action="{{ url_for('actualizar_parametros') }}" method="POST">
+            
+            <fieldset>
+                <legend>Parámetros Generales</legend>
+                <div class="form-grupo">
+                    <label for="lambda_penalizacion">Lambda (Multiplicador Penalización):</label>
+                    <input type="number" step="0.01" name="lambda_penalizacion" value="{{ params.lambda_penalizacion }}">
+                </div>
+                <div class="form-grupo">
+                    <label for="num_generaciones">Número de Generaciones:</label>
+                    <input type="number" name="num_generaciones" value="{{ params.num_generaciones }}">
+                </div>
+                <div class="form-grupo">
+                    <label for="tasa_enfriamiento">Tasa de Enfriamiento (0.0 - 1.0):</label>
+                    <input type="number" step="0.001" name="tasa_enfriamiento" value="{{ params.tasa_enfriamiento }}">
+                </div>
+                <div class="form-grupo">
+                    <label for="temperatura_final">Temperatura Final:</label>
+                    <input type="number" step="0.0001" name="temperatura_final" value="{{ params.temperatura_final }}">
+                </div>
+                <div class="form-grupo">
+                    <label for="m">Parámetro 'm':</label>
+                    <input type="number" name="m" value="{{ params.m }}">
+                </div>
+                <div class="form-grupo">
+                    <label for="heuristica">Heurística (0 o 1):</label>
+                    <input type="number" name="heuristica" value="{{ params.heuristica }}">
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Penalizaciones Climáticas</legend>
+                {% for key, value in params.penalizaciones.items() %}
+                <div class="form-grupo">
+                    <label for="penalizacion_{{ key | replace(' ', '_') }}">{{ key }}:</label>
+                    <input type="number" step="0.1" name="penalizacion_{{ key | replace(' ', '_') }}" value="{{ value }}">
+                </div>
+                {% endfor %}
+            </fieldset>
+
+            <button type="submit" id="btn-actualizar">Actualizar Parámetros</button>
+        </form>
+        
+        <a href="{{ url_for('index') }}" class="logout-admin">Volver a la App Principal</a>
+    </div>
+
+    <script>
+        document.getElementById('btn-actualizar').addEventListener('click', function() {
+            var boton = this;
+            boton.disabled = true;
+            boton.textContent = 'Actualizando...';
+            // El submit del form se maneja automáticamente
+        });
+    </script>
+</body>
+</html>

@@ -21,7 +21,7 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
         if (response.ok && result.status === "ok") {
             alert(result.message);
             // La sesión se maneja en el servidor
-            window.location.href = "/";
+            window.location.href = result.redirect_url || "/";
         } else {
             // Mostrar mensaje del backend (correo incorrecto o contraseña inválida)
             alert(result.message || "Error al iniciar sesión.");
