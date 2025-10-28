@@ -6,6 +6,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_RutasRecientes.css') }}" type="text/css">
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_auth.css') }}" type="text/css">
+    <style>
+        /* Contenedor del modal (fondo oscuro) */
+        .modal-oculto {
+            display: none; /* Oculto por defecto */
+            position: fixed; /* Quedarse fijo en la pantalla */
+            z-index: 1000; /* Por encima de todo */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* Habilitar scroll si es necesario */
+            background-color: rgba(0,0,0,0.6); /* Fondo negro semitransparente */
+            padding-top: 60px; /* Espacio desde arriba */
+        }
+
+        /* Contenido del modal (caja blanca) */
+        .modal-contenido {
+            background-color: #ffffff; /* Fondo blanco solicitado */
+            margin: 5% auto; /* Centrado vertical y horizontal */
+            padding: 30px; /* Más espaciado interno */
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px; /* Ancho máximo */
+            border-radius: 10px; /* Esquinas redondeadas */
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); /* Sombra para resaltar */
+            position: relative;
+        }
+
+        /* Título del modal */
+        .modal-contenido h3 {
+            margin-top: 0;
+            color: #0056b3; /* Color azul de la aplicación */
+            border-bottom: 2px solid #f0f0f0; /* Línea separadora sutil */
+            padding-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        /* Párrafo donde se muestra la ruta */
+        #modal-texto-ruta {
+            background-color: #f9f9f9; /* Fondo ligero para el texto */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            line-height: 1.6; /* Interlineado para legibilidad */
+            font-size: 1.1em;
+            color: #333;
+            max-height: 300px; /* Altura máxima con scroll */
+            overflow-y: auto; /* Scroll vertical si la ruta es larga */
+            white-space: pre-wrap; /* Respeta saltos de línea y espacios */
+        }
+
+        /* Botón para cerrar (la 'X') */
+        .cerrar {
+            color: #aaa;
+            position: absolute; /* Posición absoluta respecto al .modal-contenido */
+            top: 15px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .cerrar:hover,
+        .cerrar:focus {
+            color: #333; /* Color más oscuro al pasar el ratón */
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -64,5 +132,17 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/js_RutasRecientes.js') }}"></script>
+
+<script>
+    document.getElementById('rehacerOptim')?.addEventListener('click', function() {
+        this.disabled = true;
+        this.textContent = 'Optimizando...';
+    });
+
+    document.getElementById('cerrarSesion')?.addEventListener('click', function() {
+        this.disabled = true;
+        this.textContent = 'Cerrando sesión...';
+    });
+</script>
 </body>
 </html>

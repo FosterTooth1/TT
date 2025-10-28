@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_auth.css') }}" type="text/css">
     <style>
-        body { background-color: #f4f7f6; }
+        body { 
+            background-color: #f4f7f6; 
+            /* Mantenemos un fondo neutro para el panel */
+        }
         .admin-container {
             max-width: 800px;
             margin: 40px auto;
@@ -15,7 +18,12 @@
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         }
-        .admin-container h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        /* Estilo para el h1 original (ahora en el header) */
+        .admin-container h1 { 
+            text-align: center; 
+            color: #333; 
+            margin-bottom: 30px; 
+        }
         form { display: flex; flex-direction: column; }
         fieldset { 
             border: 1px solid #ddd;
@@ -26,7 +34,7 @@
         legend { 
             font-size: 1.2em;
             font-weight: bold;
-            color: #0056b3;
+            color: #0056b3; /* Color de acento principal (azul) */
             padding: 0 10px;
         }
         .form-grupo {
@@ -50,14 +58,18 @@
         button[type="submit"] {
             padding: 12px 20px;
             font-size: 1.1em;
-            background-color: #28a745;
+            /* Botón actualizado al color de acento principal */
+            background-color: #0056b3; 
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-        button[type="submit"]:hover { background-color: #218838; }
+        button[type="submit"]:hover { 
+            background-color: #004494; /* Azul más oscuro para hover */
+        }
+        /* Estilo para el enlace original (ahora en el header) */
         .logout-admin {
             display: block;
             text-align: center;
@@ -68,54 +80,69 @@
     </style>
 </head>
 <body>
-    <div class="admin-container">
-        <h1>Panel de Parámetros del Algoritmo</h1>
+    <header>
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='imagenes/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
+            <div class="title-container">
+                <h1>LogistiClima</h1>
+                <p class="subtitle">Panel de Administración</p>
+            </div>
+        </div>
         
-        <form action="{{ url_for('actualizar_parametros') }}" method="POST">
+        <div class="login-button-container">
+            <div class="user-info">
+                <a href="{{ url_for('index') }}" class="rutas-button">App Principal</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="admin-container">
+            <form action="{{ url_for('actualizar_parametros') }}" method="POST">
+                
+                <fieldset>
+                    <legend>Parámetros Generales</legend>
+                    <div class="form-grupo">
+                        <label for="lambda_penalizacion">Lambda (Multiplicador Penalización):</label>
+                        <input type="number" step="0.01" name="lambda_penalizacion" value="{{ params.lambda_penalizacion }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="num_generaciones">Número de Generaciones:</label>
+                        <input type="number" name="num_generaciones" value="{{ params.num_generaciones }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="tasa_enfriamiento">Tasa de Enfriamiento (0.0 - 1.0):</label>
+                        <input type="number" step="0.001" name="tasa_enfriamiento" value="{{ params.tasa_enfriamiento }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="temperatura_final">Temperatura Final:</label>
+                        <input type="number" step="0.0001" name="temperatura_final" value="{{ params.temperatura_final }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="m">Parámetro 'm':</label>
+                        <input type="number" name="m" value="{{ params.m }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="heuristica">Heurística (0 o 1):</label>
+                        <input type="number" name="heuristica" value="{{ params.heuristica }}">
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Penalizaciones Climáticas</legend>
+                    {% for key, value in params.penalizaciones.items() %}
+                    <div class="form-grupo">
+                        <label for="penalizacion_{{ key | replace(' ', '_') }}">{{ key }}:</label>
+                        <input type="number" step="0.1" name="penalizacion_{{ key | replace(' ', '_') }}" value="{{ value }}">
+                    </div>
+                    {% endfor %}
+                </fieldset>
+
+                <button type="submit" id="btn-actualizar">Actualizar Parámetros</button>
+            </form>
             
-            <fieldset>
-                <legend>Parámetros Generales</legend>
-                <div class="form-grupo">
-                    <label for="lambda_penalizacion">Lambda (Multiplicador Penalización):</label>
-                    <input type="number" step="0.01" name="lambda_penalizacion" value="{{ params.lambda_penalizacion }}">
-                </div>
-                <div class="form-grupo">
-                    <label for="num_generaciones">Número de Generaciones:</label>
-                    <input type="number" name="num_generaciones" value="{{ params.num_generaciones }}">
-                </div>
-                <div class="form-grupo">
-                    <label for="tasa_enfriamiento">Tasa de Enfriamiento (0.0 - 1.0):</label>
-                    <input type="number" step="0.001" name="tasa_enfriamiento" value="{{ params.tasa_enfriamiento }}">
-                </div>
-                <div class="form-grupo">
-                    <label for="temperatura_final">Temperatura Final:</label>
-                    <input type="number" step="0.0001" name="temperatura_final" value="{{ params.temperatura_final }}">
-                </div>
-                <div class="form-grupo">
-                    <label for="m">Parámetro 'm':</label>
-                    <input type="number" name="m" value="{{ params.m }}">
-                </div>
-                <div class="form-grupo">
-                    <label for="heuristica">Heurística (0 o 1):</label>
-                    <input type="number" name="heuristica" value="{{ params.heuristica }}">
-                </div>
-            </fieldset>
-
-            <fieldset>
-                <legend>Penalizaciones Climáticas</legend>
-                {% for key, value in params.penalizaciones.items() %}
-                <div class="form-grupo">
-                    <label for="penalizacion_{{ key | replace(' ', '_') }}">{{ key }}:</label>
-                    <input type="number" step="0.1" name="penalizacion_{{ key | replace(' ', '_') }}" value="{{ value }}">
-                </div>
-                {% endfor %}
-            </fieldset>
-
-            <button type="submit" id="btn-actualizar">Actualizar Parámetros</button>
-        </form>
-        
-        <a href="{{ url_for('index') }}" class="logout-admin">Volver a la App Principal</a>
-    </div>
+            </div>
+    </main>
 
     <script>
         document.getElementById('btn-actualizar').addEventListener('click', function() {

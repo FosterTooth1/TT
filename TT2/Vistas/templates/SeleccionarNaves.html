@@ -59,5 +59,16 @@
     </main>
 
     <script src="{{ url_for('static', filename='js/js_SeleccionarNaves.js') }}"></script>
+    <script>
+        document.getElementById('generarRuta')?.addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<b>Optimizando...</b>';
+        });
+
+        document.getElementById('cerrarSesion')?.addEventListener('click', function() {
+            this.disabled = true;
+            this.textContent = 'Cerrando sesión...';
+        });
+    </script>
 </body>
 </html>

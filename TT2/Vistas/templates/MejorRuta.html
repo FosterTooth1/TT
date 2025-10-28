@@ -65,5 +65,22 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-encoded@0.5.1/Polyline.Encoded.js"></script>
     <script src="{{ url_for('static', filename='js/js_MejorRuta.js') }}"></script>
+    <script>
+
+        document.getElementById('guardarRuta')?.addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<b>Guardando...</b>';
+        });
+
+        document.getElementById('nuevaRuta')?.addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<b>Cargando...</b>';
+        });
+
+        document.getElementById('cerrarSesion')?.addEventListener('click', function() {
+            this.disabled = true;
+            this.textContent = 'Cerrando sesión...';
+        });
+    </script>
 </body>
 </html>

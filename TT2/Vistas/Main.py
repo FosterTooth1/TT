@@ -754,53 +754,6 @@ def generar_ruta():
 
     except Exception as e:
         return jsonify({"error": f"Error al generar la ruta: {str(e)}"}), 500
-    
-@app.route('/panel_admin')
-@admin_required # Protege la ruta
-def panel_admin():
-    """Muestra la página para editar parámetros."""
-    global parametros_app
-    # Pasa los parámetros actuales al template
-    return render_template('panel_admin.html', params=parametros_app)
-
-
-@app.route('/actualizar_parametros', methods=['POST'])
-@admin_required # Protege la ruta
-def actualizar_parametros():
-    """Recibe el formulario del admin y actualiza el JSON."""
-    global parametros_app
-    
-    try:
-        # 1. Actualizar parámetros simples (convirtiendo a su tipo correcto)
-        parametros_app['lambda_penalizacion'] = float(request.form['lambda_penalizacion'])
-        parametros_app['num_generaciones'] = int(request.form['num_generaciones'])
-        parametros_app['tasa_enfriamiento'] = float(request.form['tasa_enfriamiento'])
-        parametros_app['temperatura_final'] = float(request.form['temperatura_final'])
-        parametros_app['m'] = int(request.form['m'])
-        parametros_app['heuristica'] = int(request.form['heuristica'])
-        
-        # 2. Reconstruir el diccionario de penalizaciones
-        nuevas_penalizaciones = {}
-        for key in parametros_app['penalizaciones'].keys():
-            # El nombre en el form será 'penalizacion_Nublado', 'penalizacion_Lluvia_intensa', etc.
-            form_key = f"penalizacion_{key.replace(' ', '_')}" 
-            
-            if form_key in request.form:
-                nuevas_penalizaciones[key] = float(request.form[form_key])
-        
-        parametros_app['penalizaciones'] = nuevas_penalizaciones
-        
-        # 3. Guardar los cambios en el archivo .json
-        guardar_parametros()
-        
-        # (Opcional: puedes añadir un mensaje flash de éxito aquí)
-        
-    except Exception as e:
-        print(f"Error al actualizar parámetros: {e}")
-        # (Opcional: puedes añadir un mensaje flash de error aquí)
-
-    # Redirigir de vuelta al panel de admin
-    return redirect(url_for('panel_admin'))
 
 ###########################################################################################################################
 if __name__ == "__main__":
