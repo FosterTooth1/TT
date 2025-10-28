@@ -566,19 +566,28 @@ def regenerar_ruta(ruta_id):
 
         # Construir ruta optimizada
         ruta_optimizada = []
+        indices_globales_ordenados = []
         for idx_local in recorrido_local_ordenado:
-            # La fila corresponde al índice local del df_filtrado
+            # Mapear el índice local (del df_filtrado) al índice global original
+            idx_global = indices_globales_guardados[idx_local] 
+            
+            # Obtener la fila del dataframe filtrado
             fila = df_naves_filtrado.iloc[idx_local]
+            
             ruta_optimizada.append({"lat": float(fila['latitud']),
                                     "lng": float(fila['longitud']),
                                     "nombre": fila['nombre'],
                                     "condicion": fila['Prediccion']})
+            
+            # Guardar el índice global correspondiente
+            indices_globales_ordenados.append(int(idx_global)) 
 
         # Limpiar archivo temporal
         if os.path.exists("Matriz_Distancias_Temporal.csv"):
             os.remove("Matriz_Distancias_Temporal.csv")
 
         return jsonify({"ruta": ruta_optimizada,
+            "indices": indices_globales_ordenados,
             "fitness": resultado['fitness'],
             "tiempo_ejecucion": resultado['tiempo_ejecucion'],
             "temperatura_inicial": resultado['temperatura_inicial'],
@@ -745,7 +754,6 @@ def generar_ruta():
             os.remove("Matriz_Distancias_Temporal.csv")
 
         return jsonify({"ruta": ruta_optimizada,
-                        # Enviar la lista de índices globales ordenada
                         "indices": indices_globales_ordenados,
                         "fitness": resultado['fitness'],
                         "tiempo_ejecucion": resultado['tiempo_ejecucion'],
