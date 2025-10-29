@@ -26,7 +26,10 @@ document.getElementById("registroForm").addEventListener("submit", async functio
         return;
     }
 
-    // Enviar los datos al backend Flask
+    const submitButton = this.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.innerHTML = "<b>Registrando...</b>";
+
     try {
         const response = await fetch("/registrar_usuario", {
             method: "POST",
@@ -44,7 +47,6 @@ document.getElementById("registroForm").addEventListener("submit", async functio
 
         if (response.ok && result.status === "ok") {
             alert(result.message);
-            // Redirigir a rutas recientes ya que la sesión se estableció automáticamente
             window.location.href = "/rutas-recientes";
         } else {
             alert(result.message || "Error al crear la cuenta.");
@@ -52,5 +54,8 @@ document.getElementById("registroForm").addEventListener("submit", async functio
     } catch (err) {
         console.error("Error en el registro:", err);
         alert("Error de conexión con el servidor.");
+    }finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = "<b>Registrarse</b>";
     }
 });
