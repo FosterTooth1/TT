@@ -7,6 +7,33 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_MejorRuta.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_auth.css') }}" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #stats-container {
+            padding: 10px 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #stats-container p {
+            margin: 6px 0;
+            font-size: 0.95em;
+            color: #333;
+        }
+        #stats-container span {
+            font-weight: bold;
+            color: #000;
+        }
+        #grafica-container {
+            width: 100%;
+            max-height: 220px; /* Limitar altura */
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box; /* Asegurar que el padding no afecte el ancho */
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -50,6 +77,14 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="stats-container">
+                    <p><strong>Distancia Total (Fitness):</strong> <span id="fitness-valor">Calculando...</span> km</p>
+                    <p><strong>Clima Predominante:</strong> <span id="clima-moda">Calculando...</span></p>
+                </div>
+
+                <div id="grafica-container">
+                    <canvas id="grafica-fitness"></canvas>
+                </div>
                 {% if user_authenticated %}
                     <button id="guardarRuta"><b>Guardar Ruta</b></button>
                 {% else %}
@@ -64,6 +99,7 @@
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-encoded@0.5.1/Polyline.Encoded.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
     <script src="{{ url_for('static', filename='js/js_MejorRuta.js') }}"></script>
     <script>
 

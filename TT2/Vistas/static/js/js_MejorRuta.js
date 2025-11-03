@@ -32,6 +32,84 @@ document.addEventListener("DOMContentLoaded", function() {
         const data = JSON.parse(rutaData);
         console.log("Datos de ruta cargados:", data);
 
+        // // 1. Mostrar Fitness Final
+        const fitnessEl = document.getElementById('fitness-valor');
+        if (fitnessEl && data.fitness) {
+            // .toFixed(2) para redondear a 2 decimales
+            fitnessEl.textContent = data.fitness.toFixed(2);
+        }
+
+        // 2. Calcular y Mostrar Moda del Clima
+        const climaModaEl = document.getElementById('clima-moda');
+        if (climaModaEl && data.ruta) {
+            // Obtenemos todas las condiciones, filtrando valores nulos o vacíos
+            const condiciones = data.ruta.map(punto => punto.condicion).filter(c => c); 
+            
+            if (condiciones.length > 0) {
+                // Contamos la frecuencia de cada condición
+                const conteo = condiciones.reduce((acc, val) => {
+                    acc[val] = (acc[val] || 0) + 1;
+                    return acc;
+                }, {});
+                // Encontramos la clave (condición) con el valor (conteo) más alto
+                const moda = Object.keys(conteo).reduce((a, b) => conteo[a] > conteo[b] ? a : b);
+                climaModaEl.textContent = moda;
+            } else {
+                climaModaEl.textContent = "No disponible";
+            }
+        }
+
+        // 3. Generar Gráfica de Evolución del Fitness
+        const graficaEl = document.getElementById('grafica-fitness');
+        // Verificamos que el elemento exista y que tengamos los datos
+        if (graficaEl && data.fitness_generaciones && data.fitness_generaciones.length > 0) {
+            const ctx = graficaEl.getContext('2d');
+            // Creamos etiquetas para el eje X (1, 2, 3, ... N)
+            const labels = Array.from({ length: data.fitness_generaciones.length }, (_, i) => i + 1);
+            
+            new Chart(ctx, {
+                type: 'line', // Tipo de gráfica
+                data: {
+                    labels: labels, // Eje X (Generaciones)
+                    datasets: [{
+                        label: 'Fitness (Distancia)',
+                        data: data.fitness_generaciones, // Eje Y (Valores de fitness)
+                        borderColor: '#000000', // Color de la línea
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)', // Relleno bajo la línea
+                        fill: true,
+                        tension: 0.1 // Curvatura de la línea
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Permitir que la gráfica no sea cuadrada
+                    plugins: {
+                        legend: {
+                            display: false // Ocultar la leyenda "Fitness (Distancia)"
+                        },
+                        title: {
+                            display: true,
+                            text: 'Evolución del Fitness por Generación' // Título de la gráfica
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Generación' // Etiqueta Eje X
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Fitness (Distancia)' // Etiqueta Eje Y
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         console.log("Índices originales:", data.indices);
         const indicesRuta = data.indices; // Indices de la ruta seleccionada por el usuario
 

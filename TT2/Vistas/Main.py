@@ -641,7 +641,8 @@ def regenerar_ruta(ruta_id):
             "fitness": resultado['fitness'],
             "tiempo_ejecucion": resultado['tiempo_ejecucion'],
             "temperatura_inicial": resultado['temperatura_inicial'],
-            "temperatura_final": resultado['temperatura_final']})
+            "temperatura_final": resultado['temperatura_final'],
+            "fitness_generaciones": resultado['fitness_generaciones']})
 
     except Exception as e:
         print("Error en /regenerar-ruta:", e)
@@ -808,7 +809,9 @@ def generar_ruta():
                         "fitness": resultado['fitness'],
                         "tiempo_ejecucion": resultado['tiempo_ejecucion'],
                         "temperatura_inicial": resultado['temperatura_inicial'],
-                        "temperatura_final": resultado['temperatura_final']})
+                        "temperatura_final": resultado['temperatura_final'],
+                        "fitness_generaciones": resultado['fitness_generaciones']
+                        })
 
     except Exception as e:
         return jsonify({"error": f"Error al generar la ruta: {str(e)}"}), 500
