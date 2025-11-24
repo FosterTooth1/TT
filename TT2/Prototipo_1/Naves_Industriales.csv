@@ -1,4 +1,4 @@
-nombre,latitud,longitud
+nombre,lat,lon
 Advance Tepotzotlán I,19.718776,-99.2113516
 Advance Tepotzotlán Ii,19.706043,-99.227541
 Advance Toluca,19.296003,-99.575542
@@ -46,7 +46,7 @@ Fraccionamiento Industrial Niños Heroes,19.565684,-99.19919842
 Fraccionamiento Industrial Puente De Vigas,19.510115,-99.21277
 Fraccionamiento Industrial San Andres A Toto,19.460287,-99.217713
 Fraccionamiento Industrial San Buenaventura,19.55236885,-99.184562
-Fraccionamiento Industrial San Jeroniμο Tepetlacalco,19.515761271427785,-99.20782414288016
+Fraccionamiento Industrial San Jeroniμο Tepetlacalco,19.51576127,-99.20782414
 Fraccionamiento Industrial San Lorenzo,19.539574,-99.207696
 Fraccionamiento Industrial San Nicolás,19.5522702,-99.2022709
 Fraccionamiento Industrial Santa Maria Tulpetlac,19.56325,-99.043448
@@ -103,7 +103,7 @@ Parque Industrial Inn,19.376309,-99.563077
 Parque Industrial Ixtapaluca,19.313312,-98.89314
 Parque Industrial Ixtlahuaca,19.578065,-99.762426
 Parque Industrial Jilotepec,19.979619,-99.528053
-Parque Industrial La Bomba,20.563507,-100.249748
+Parque Industrial La Bomba,19.308546,-99.53764
 Parque Industrial La Espinita,19.296404,-98.887591
 Parque Industrial La Joya,19.65794,-99.174547
 Parque Industrial La Luz,19.696756,-99.204764
@@ -211,7 +211,7 @@ Zona Industrial Independencia,19.619085,-99.173872
 Zona Industrial Jajalpa,19.588666,-99.034321
 Zona Industrial Ocoyoacac,19.273272,-99.482766
 Zona Industrial Ocoyoacac (Alto Lerma),19.273021,-99.483262
-Zona Industrial Prof. Cristobal Higuera Y/ Atizapán Centro,19.567887175566717,-99.26117917653865
+Zona Industrial Prof. Cristobal Higuera Y/ Atizapán Centro,19.56788718,-99.26117918
 Zona Industrial Puente De Vigas,19.514505,-99.216248
 Zona Industrial Recursos Hidráulicos,19.622456,-99.177488
 Zona Industrial Santa Clara Coatitla,19.533551,-99.069131
