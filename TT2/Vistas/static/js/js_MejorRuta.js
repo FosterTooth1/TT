@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }).setView([19.35, -99.75], 8);
 
     // 2. Definir y aplicar límites geográficos
+    const northEast = L.latLng(20.35, -98.5);
     const southWest = L.latLng(18.5, -100.5);
-    const northEast = L.latLng(20.2, -98.5);
     const bounds = L.latLngBounds(southWest, northEast);
     map.setMaxBounds(bounds);
     map.on('drag', () => map.panInsideBounds(bounds, { animate: true }));
