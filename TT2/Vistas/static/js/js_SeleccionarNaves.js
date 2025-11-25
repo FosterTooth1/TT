@@ -1,15 +1,18 @@
 const tbody = document.getElementById("tabla-lugares");
 let navesData = [];
+let lottieAnim = null;
 
+// ===============================
 // Cargar naves desde la API
+// ===============================
 async function cargarNaves() {
     try {
         const response = await fetch('/api/naves');
         const naves = await response.json();
         
         if (response.ok) {
-            navesData = naves; // Guardar datos para uso posterior
-            // Generar filas usando los datos de la API
+            navesData = naves;
+
             naves.forEach((nave, i) => {
                 let row = document.createElement("tr");
                 let cell = document.createElement("td");
@@ -17,9 +20,8 @@ async function cargarNaves() {
                 let checkbox = document.createElement("input");
                 checkbox.type = "checkbox";
                 checkbox.id = "nave" + i;
-                checkbox.value = i; // Usar el índice como valor
+                checkbox.value = i;
 
-                // Cuando cambie una selección, actualizar el dropdown de inicio
                 checkbox.addEventListener('change', actualizarDropdownInicio);
 
                 let label = document.createElement("label");
@@ -41,45 +43,45 @@ async function cargarNaves() {
     }
 }
 
+// ===============================
+// Actualizar dropdown de inicio
+// ===============================
 function actualizarDropdownInicio() {
     const startNaveContainer = document.getElementById('start-nave-container');
     const selectStartNave = document.getElementById('select-start-nave');
     
-    // Si no existe el select/contendor, no hacemos nada
     if (!selectStartNave || !startNaveContainer) return;
 
-    // Obtener naves seleccionadas
     const checkboxes = document.querySelectorAll("#tabla-lugares input[type=checkbox]:checked");
-    
-    // Limpiar opciones anteriores
-    const valorAnterior = selectStartNave.value; 
-    selectStartNave.innerHTML = ''; 
-    
+
+    const valorAnterior = selectStartNave.value;
+    selectStartNave.innerHTML = '';
+
     if (checkboxes.length > 0) {
         checkboxes.forEach(check => {
             const indice = parseInt(check.value);
-            // Usar navesData para obtener el nombre (si existe)
             const nave = navesData[indice] || { nombre: `Nave ${indice}` };
-            
+
             let option = document.createElement('option');
-            option.value = indice; // El valor de la opción es el índice GLOBAL
+            option.value = indice;
             option.textContent = nave.nombre;
             selectStartNave.appendChild(option);
         });
 
-        // Intentar re-seleccionar el valor anterior si aún está en la lista
         if (Array.from(selectStartNave.options).some(opt => opt.value === valorAnterior)) {
             selectStartNave.value = valorAnterior;
         }
 
-        startNaveContainer.style.display = 'block'; // Mostrar contenedor
+        startNaveContainer.style.display = 'block';
     } else {
-        startNaveContainer.style.display = 'none'; // Ocultar si no hay naves
+        startNaveContainer.style.display = 'none';
     }
 }
 
-// Manejo de cerrar sesión (reutilizable)
-async function setupCerrarSesion() {
+// ===============================
+// Cerrar sesión
+// ===============================
+function setupCerrarSesion() {
     const cerrarSesionBtn = document.getElementById('cerrarSesion');
     if (!cerrarSesionBtn) return;
 
@@ -92,24 +94,25 @@ async function setupCerrarSesion() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
-            
+
             if (response.ok) {
                 window.location.reload();
             } else {
                 alert('Error al cerrar sesión');
-                cerrarSesionBtn.disabled = false;
-                cerrarSesionBtn.textContent = 'Cerrar Sesión';
             }
         } catch (error) {
             console.error('Error:', error);
             alert('Error al cerrar sesión');
-            cerrarSesionBtn.disabled = false;
-            cerrarSesionBtn.textContent = 'Cerrar Sesión';
         }
+
+        cerrarSesionBtn.disabled = false;
+        cerrarSesionBtn.textContent = 'Cerrar Sesión';
     });
 }
 
-// Seleccionar todo / deseleccionar todo
+// ===============================
+// Seleccionar todo
+// ===============================
 function setupSeleccionarTodo() {
     const boton = document.getElementById("seleccionarTodo");
     if (!boton) return;
@@ -117,22 +120,22 @@ function setupSeleccionarTodo() {
     boton.addEventListener("click", () => {
         const checkboxes = document.querySelectorAll("#tabla-lugares input[type=checkbox]");
         const allSelected = Array.from(checkboxes).every(checkbox => checkbox.checked);
-        checkboxes.forEach((checkbox) => {
-            checkbox.checked = !allSelected;
-        });
+
+        checkboxes.forEach(checkbox => checkbox.checked = !allSelected);
         actualizarDropdownInicio();
     });
 }
 
-let lottieAnim = null;
+// ===============================
+// Inicialización al cargar DOM
+// ===============================
+document.addEventListener("DOMContentLoaded", function () {
 
-// Inicialización principal al cargar la página
-document.addEventListener("DOMContentLoaded", function() {
     cargarNaves();
     setupCerrarSesion();
     setupSeleccionarTodo();
 
-    // Inicializar animación Lottie si el contenedor existe
+    // Inicializar animación Lottie
     const lottieContainer = document.getElementById('lottie-container');
     if (typeof lottie !== 'undefined' && lottieContainer) {
         lottieAnim = lottie.loadAnimation({
@@ -142,99 +145,71 @@ document.addEventListener("DOMContentLoaded", function() {
             autoplay: false,
             path: '/static/animaciones/PantallaEspera.json'
         });
-    } else {
-        // Si lottie no está cargado todavía, no fallamos; solo registramos null
-        lottieAnim = null;
     }
 
-    // Si hay un select-start-nave en el DOM y ya hay checkboxes pre-creados, actualizar dropdown
-    // (esto es útil si recargas datos desde otro punto)
     actualizarDropdownInicio();
-});
 
-// ===============================
-// BOTÓN "GENERAR RUTA" (con overlay + Lottie)
-// ===============================
-document.getElementById("generarRuta").addEventListener("click", async () => {
-    let seleccionados = [];
-    const checkboxes = document.querySelectorAll("#tabla-lugares input[type=checkbox]:checked");
+    // ===============================
+    // Configurar botón GENERAR RUTA
+    // ===============================
+    const btnGenerar = document.getElementById("generarRuta");
 
-    checkboxes.forEach((check) => {
-        seleccionados.push(parseInt(check.value));
-    });
+    if (btnGenerar) {
+        btnGenerar.addEventListener("click", async () => {
+            let seleccionados = [];
+            const checkboxes = document.querySelectorAll("#tabla-lugares input[type=checkbox]:checked");
 
-    if (seleccionados.length < 5) {
-        alert("Por favor selecciona al menos 5 naves industriales.");
-        return;
-    }
+            checkboxes.forEach(check => seleccionados.push(parseInt(check.value)));
 
-    const selectStartNave = document.getElementById('select-start-nave');
-    const indice_inicio = selectStartNave ? parseInt(selectStartNave.value) : null;
+            if (seleccionados.length < 5) {
+                alert("Por favor selecciona al menos 5 naves industriales.");
+                return;
+            }
 
-    // Validar que el índice de inicio sea un número válido si existe el select
-    if (selectStartNave && (isNaN(indice_inicio) || indice_inicio === null)) {
-        alert("Por favor selecciona una nave de inicio válida.");
-        return;
-    }
+            const selectStartNave = document.getElementById('select-start-nave');
+            const indice_inicio = selectStartNave ? parseInt(selectStartNave.value) : null;
 
-    // Preparar overlay y Lottie
-    const overlay = document.getElementById("overlay-espera");
-    try {
-        if (overlay) {
-            overlay.classList.add("mostrar");
-        }
-        if (lottieAnim && typeof lottieAnim.play === 'function') {
-            lottieAnim.play();
-        }
+            if (selectStartNave && (isNaN(indice_inicio) || indice_inicio === null)) {
+                alert("Por favor selecciona una nave de inicio válida.");
+                return;
+            }
 
-        // Deshabilitar botón para evitar dobles envíos
-        const btn = document.getElementById("generarRuta");
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<b>Optimizando...</b>';
-        }
+            const overlay = document.getElementById("overlay-espera");
 
-        // Petición al backend (incluimos indice_inicio por si en el backend lo quieres usar luego)
-        const payload = {
-            indices: seleccionados
-        };
-        if (indice_inicio !== null) payload.indice_inicio = indice_inicio;
+            try {
+                if (overlay) overlay.classList.add("mostrar");
+                if (lottieAnim && typeof lottieAnim.play === 'function') lottieAnim.play();
 
-        const response = await fetch('/api/generar-ruta', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+                btnGenerar.disabled = true;
+                btnGenerar.innerHTML = '<b>Optimizando...</b>';
+
+                const payload = { indices: seleccionados };
+                if (indice_inicio !== null) payload.indice_inicio = indice_inicio;
+
+                const response = await fetch('/api/generar-ruta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const resultado = await response.json();
+
+                if (response.ok) {
+                    sessionStorage.setItem('rutaOptimizada', JSON.stringify(resultado));
+                    window.location.href = '/mejor-ruta';
+                } else {
+                    alert("Error: " + (resultado.error || 'Error al generar la ruta'));
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error al generar la ruta");
+            } finally {
+                if (overlay) overlay.classList.remove("mostrar");
+                if (lottieAnim && typeof lottieAnim.stop === 'function') lottieAnim.stop();
+
+                btnGenerar.disabled = false;
+                btnGenerar.innerHTML = '<b>Optimizar Ruta</b>';
+            }
         });
-
-        const resultado = await response.json();
-
-        if (response.ok) {
-            // Guardar resultado en sessionStorage para la siguiente página
-            sessionStorage.setItem('rutaOptimizada', JSON.stringify(resultado));
-            // Redirigir a la página de mejor ruta
-            window.location.href = '/mejor-ruta';
-            // Nota: la navegación hará unload de la página; el finally se ejecutará antes del unload
-        } else {
-            alert("Error: " + (resultado.error || 'Error al generar la ruta'));
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        alert("Error al generar la ruta");
-    } finally {
-        // Restaurar estado de la UI (si la página ya fue redirigida esto no tiene efecto)
-        if (overlay) {
-            overlay.classList.remove("mostrar");
-        }
-        if (lottieAnim && typeof lottieAnim.stop === 'function') {
-            lottieAnim.stop();
-            // opcional: destruir si quieres liberar memoria
-            // lottieAnim.destroy();
-            // lottieAnim = null;
-        }
-        const btn = document.getElementById("generarRuta");
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = '<b>Optimizar Ruta</b>';
-        }
     }
 });
