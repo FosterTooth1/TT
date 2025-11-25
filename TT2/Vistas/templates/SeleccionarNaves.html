@@ -53,9 +53,6 @@
             <select id="select-start-nave" style="width: 100%; padding: 8px; border-radius: 5px;"></select>
         </div>
         <button id="generarRuta"><b>Optimizar Ruta</b></button>
-        <div id="loading" style="display: none;">
-            <p>Generando ruta optimizada... Esto puede tomar unos minutos.</p>
-        </div>
     </main>
 
     <script src="{{ url_for('static', filename='js/js_SeleccionarNaves.js') }}"></script>
@@ -70,5 +67,11 @@
             this.textContent = 'Cerrando sesión...';
         });
     </script>
+
+    <div id="overlay-espera">
+        <div id="lottie-container"></div> <!-- Overlay fullscreen con animación Lottie -->
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.7.4/lottie.min.js"></script> <!-- Lottie Player -->
+    
 </body>
 </html>

@@ -116,8 +116,6 @@ document.getElementById("seleccionarTodo").addEventListener("click", () => {
     actualizarDropdownInicio();
 });
 
-// Botón generar ruta
-// Botón generar ruta
 document.getElementById("generarRuta").addEventListener("click", async () => {
     let seleccionados = [];
     const checkboxes = document.querySelectorAll("input[type=checkbox]:checked");
@@ -134,22 +132,20 @@ document.getElementById("generarRuta").addEventListener("click", async () => {
     const selectStartNave = document.getElementById('select-start-nave');
     const indice_inicio = parseInt(selectStartNave.value);
 
-    // Validar que el índice de inicio sea un número válido
     if (isNaN(indice_inicio)) {
         alert("Por favor selecciona una nave de inicio válida.");
         return;
     }
 
-    // Mostrar loading
-    document.getElementById("loading").style.display = "block";
-    document.getElementById("generarRuta").disabled = true;
+    // --- ACTIVAR OVERLAY + LOTTIE ---
+    const overlay = document.getElementById("overlay-espera");
+    overlay.classList.add("mostrar");
+    lottieAnim.play();
 
     try {
         const response = await fetch('/api/generar-ruta', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 indices: seleccionados,
                 indice_inicio: indice_inicio 
@@ -159,9 +155,7 @@ document.getElementById("generarRuta").addEventListener("click", async () => {
         const resultado = await response.json();
 
         if (response.ok) {
-            // Guardar resultado en sessionStorage para la siguiente página
             sessionStorage.setItem('rutaOptimizada', JSON.stringify(resultado));
-            // Redirigir a la página de mejor ruta
             window.location.href = '/mejor-ruta';
         } else {
             alert("Error: " + resultado.error);
@@ -170,8 +164,8 @@ document.getElementById("generarRuta").addEventListener("click", async () => {
         console.error("Error:", error);
         alert("Error al generar la ruta");
     } finally {
-        // Ocultar loading
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("generarRuta").disabled = false;
+        // --- DESACTIVAR SOLO SI HAY ERROR ---
+        overlay.classList.remove("mostrar");
+        lottieAnim.stop();
     }
 });

@@ -137,3 +137,32 @@ button:hover {
     margin-top: 5px; /* antes no tenía, ahora se pega más al botón */
     text-align: center;
 }
+
+/* OVERLAY FULLSCREEN DE ESPERA */
+#overlay-espera {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #EAF6F8; /* Color que pediste */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999; /* por encima de todo */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Cuando está activo */
+#overlay-espera.mostrar {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Contenedor de la animación */
+#lottie-container {
+    width: 300px;
+    height: 300px;
+}
