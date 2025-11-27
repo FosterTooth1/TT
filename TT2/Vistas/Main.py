@@ -7,6 +7,7 @@ import pandas as pd
 import mysql.connector
 from functools import wraps
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from ctypes import c_int, c_double, c_char_p, POINTER, Structure
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
@@ -128,67 +129,104 @@ def cambiarFormatoViento(dir):
             "SW": 225, "WSW": 247.5, "W": 270, "WNW": 292.5, "NW": 315, "NNW": 337.5}
     return mapa.get(dir)
 
-def realizar_predicciones(modelo, df_naves_industriales_filtrado, api_key):
-    condiciones = ['Nublado', 'Considerablemente nublado', 'Despejado', 'Niebla', 'Bruma',
-        'Lluvia intensa', 'Tormenta electrica intensa', 'Neblina', 'Lluvia', 'Truenos']
-    predicciones = []
-    for idx, fila in df_naves_industriales_filtrado.iterrows():
-        lat = fila.get('latitud')
-        lon = fila.get('longitud')
-        if pd.isnull(lat) or pd.isnull(lon):
-            predicciones.append(None)
-            continue
-        try:
-            lat_f = float(lat)
-            lon_f = float(lon)
-        except:
-            predicciones.append(None)
-            continue
-        if not (-90.0 <= lat_f <= 90.0 and -180.0 <= lon_f <= 180.0):
-            predicciones.append(None)
-            continue
-        if lat_f == 0.0 and lon_f == 0.0:
-            predicciones.append(None)
-            continue
+def predecir_nave(fila, modelo, api_key, condiciones):
+    lat = fila.get('latitud')
+    lon = fila.get('longitud')
 
+    if pd.isnull(lat) or pd.isnull(lon): # Validación de coordenadas
+        return None
+    try:
+        lat_f = float(lat)
+        lon_f = float(lon)
+    except:
+        return None
+    if not (-90 <= lat_f <= 90 and -180 <= lon_f <= 180):
+        return None
+    if lat_f == 0.0 and lon_f == 0.0:
+        return None
+
+    try:
         location = f"{lat_f}, {lon_f}"
         url = f"https://api.weatherapi.com/v1/current.json?key={api_key}&q={location}&aqi=no"
-        try:
-            response = requests.get(url, timeout=10)
-            data = response.json()
-            hora_API = data['location']['localtime']
-            temperatura = data['current']['temp_c']
-            puntoRocio = data['current']['dewpoint_c']
-            humedad = data['current']['humidity']
-            dirViento_API = data['current']['wind_dir']
-            velocidadViento = data['current']['wind_kph']
-        except:
-            predicciones.append(None)
-            continue
+        response = requests.get(url, timeout=8)
+        data = response.json()
 
-        try:
-            hora_num = cambiarFormatoHora(hora_API)
-        except:
-            predicciones.append(None)
-            continue
+        hora_API = data['location']['localtime']
+        temperatura = data['current']['temp_c']
+        puntoRocio = data['current']['dewpoint_c']
+        humedad = data['current']['humidity']
+        dirViento_API = data['current']['wind_dir']
+        velocidadViento = data['current']['wind_kph']
+    except:
+        return None
 
-        dir_viento_num = cambiarFormatoViento(dirViento_API)
+    try:
+        hora_num = cambiarFormatoHora(hora_API)
+    except:
+        return None
 
-        columnas = ['Time', 'Temperature', 'Dew Point', 'Humidity', 'Wind', 'Wind Speed']
-        fila_predict = pd.DataFrame([[hora_num, temperatura, puntoRocio, humedad, dir_viento_num, velocidadViento]], columns=columnas)
+    dir_viento_num = cambiarFormatoViento(dirViento_API)
 
-        try:
-            pred_array = modelo.predict(fila_predict)
-            pred_idx = pred_array[0] if len(pred_array) > 0 else None
-        except:
-            pred_idx = None
+    columnas = ['Time', 'Temperature', 'Dew Point', 'Humidity', 'Wind', 'Wind Speed']
 
-        etiqueta = condiciones[pred_idx] if isinstance(pred_idx, (int, np.integer)) and 0 <= pred_idx < len(condiciones) else str(pred_idx)
-        predicciones.append(etiqueta)
+    fila_predict = pd.DataFrame(
+        [[hora_num, temperatura, puntoRocio, humedad, dir_viento_num, velocidadViento]],
+        columns=columnas
+    )
 
-    df = df_naves_industriales_filtrado.copy()
-    df.loc[:, 'Prediccion'] = predicciones
-    return df
+    try:
+        pred = modelo.predict(fila_predict)
+        pred_idx = pred[0]
+    except:
+        return None
+
+    if isinstance(pred_idx, (int, np.integer)) and 0 <= pred_idx < len(condiciones):
+        return condiciones[pred_idx]
+
+    return str(pred_idx)
+
+def realizar_predicciones(modelo, df_naves_industriales_filtrado, api_key):
+
+    condiciones = [
+        'Nublado',
+        'Considerablemente nublado',
+        'Despejado',
+        'Niebla',
+        'Bruma',
+        'Lluvia intensa',
+        'Tormenta electrica intensa',
+        'Neblina',
+        'Lluvia',
+        'Truenos'
+    ]
+
+    predicciones = [None] * len(df_naves_industriales_filtrado)
+    with ThreadPoolExecutor(max_workers=20) as executor:
+
+        futures = {
+            executor.submit(
+                predecir_nave,
+                fila,
+                modelo,
+                api_key,
+                condiciones
+            ): idx
+            for idx, (_, fila) in enumerate(df_naves_industriales_filtrado.iterrows())
+        }
+
+        # Recibir resultados conforme terminan
+        for future in as_completed(futures):
+            idx = futures[future]
+            try:
+                predicciones[idx] = future.result()
+            except:
+                predicciones[idx] = None
+
+    # Crear DF final con predicciones
+    df_resultado = df_naves_industriales_filtrado.copy()
+    df_resultado['Prediccion'] = predicciones
+
+    return df_resultado
 
 def crear_matriz_distancias(df_naves_industriales):
     lats = df_naves_industriales['latitud'].astype(float).values
