@@ -117,14 +117,33 @@ document.addEventListener("DOMContentLoaded", function() {
         const tabla = document.getElementById('tabla-mejor-ruta');
         const coordinatesForRoute = []; // Coordenadas para la API
 
+        const iconoInicio = new L.Icon({
+            iconUrl: '/static/imagenes/marker-icon-2x-green.png',
+            shadowUrl: '/static/imagenes/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
         // Llenar marcadores y tabla
         data.ruta.forEach((punto, i) => {
             const latLng = [punto.lat, punto.lng];
             
-            // Añadir marcador al mapa
-            const marker = L.marker(latLng)
-                .addTo(map)
-                .bindPopup(`<b>${i + 1}. ${punto.nombre}</b><br>${punto.condicion}`);
+            let marker;
+
+            // Si es el índice 0 (Inicio), usar el icono verde
+            if (i === 0) {
+                marker = L.marker(latLng, { icon: iconoInicio })
+                    .addTo(map)
+                    .bindPopup(`<b>🚩 INICIO: ${punto.nombre}</b><br>${punto.condicion}`);
+            } else {
+                // Para el resto, usar el marcador azul por defecto
+                marker = L.marker(latLng)
+                    .addTo(map)
+                    .bindPopup(`<b>${i + 1}. ${punto.nombre}</b><br>${punto.condicion}`);
+            }
+
             markersGroup.push(marker);
 
             // Añadir coordenadas para la ruta
@@ -132,10 +151,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // Llenar la tabla
             const row = tabla.insertRow();
-            row.insertCell(0).textContent = i + 1;
-            row.insertCell(1).textContent = punto.nombre;
-            row.insertCell(2).textContent = punto.condicion;
-            row.cells[0].style.textAlign = "center";
+            // (El resto del código de la tabla sigue igual...)
+             row.insertCell(0).textContent = i + 1;
+             row.insertCell(1).textContent = punto.nombre;
+             row.insertCell(2).textContent = punto.condicion;
+             row.cells[0].style.textAlign = "center";
         });
 
         if (markersGroup.length > 0) {
