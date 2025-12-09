@@ -123,19 +123,22 @@ td {
 }
 
 button {
-    min-width: 140px;
-    max-width: 220px;
-    padding: 12px 20px;
+    min-width: 100px; /* CAMBIO: Reducido de 140px a 100px para que no sean tan anchos */
+    max-width: 180px; /* CAMBIO: Reducido de 220px */
+    padding: 8px 16px; /* CAMBIO: Reducido el relleno vertical para que no sean tan altos */
     background-color: var(--accent-100);
     border: none;
     color: white;
-    font-size: 16px;
-    border-radius: 50px; /* CAMBIO: De 20px a 50px para hacerlo completamente redondo (tipo píldora) */
+    font-size: 14px; /* CAMBIO: Letra un poco más pequeña (opcional) */
+    border-radius: 50px;
     cursor: pointer;
     transition: background-color 0.3s;
     white-space: nowrap;
     text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Opcional: añade profundidad */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    /* Asegura que el botón no se estire al 100% de la celda */
+    display: inline-block; 
+    width: auto; 
 }
 
 button:hover {
@@ -190,5 +193,22 @@ button:hover {
     /* Ajuste adicional para la tabla en móviles si es necesario */
     td {
         font-size: 16px; /* Un tamaño seguro para móvil */
+    }
+}
+
+@media (min-width: 769px) {
+    /* Hacemos que la columna de la Ruta (la segunda) ocupe todo el espacio posible */
+    #tabla-rutas th:nth-child(2),
+    #tabla-rutas td:nth-child(2) {
+        width: 60%; /* Ocupará la mayoría del espacio */
+    }
+
+    /* Ajustamos las columnas de los botones para que ocupen solo lo necesario */
+    #tabla-rutas th:nth-child(3), #tabla-rutas td:nth-child(3),
+    #tabla-rutas th:nth-child(4), #tabla-rutas td:nth-child(4) {
+        width: 1%; /* Truco CSS: hace que la celda se encoja al tamaño de su contenido (el botón) */
+        white-space: nowrap;
+        padding-left: 10px;
+        padding-right: 10px;
     }
 }

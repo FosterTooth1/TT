@@ -152,18 +152,19 @@ async function cargarRutasUsuario() {
 
                     row.innerHTML = `
                         <td class="columna-indice">${index + 1}</td>
-                        <td>${ruta.ruta_corta}</td>                         <td style="text-align:center;">
-                                                        <button class="btn-mas-detalles" data-ruta-completa="${ruta.ruta_completa}">
+                        <td>${ruta.ruta_corta}</td>
+                        <td style="text-align:center;">
+                            <button class="btn-mas-detalles" data-ruta-completa="${ruta.ruta_completa}">
                                 Ver más
                             </button>
                         </td>
                         <td style="text-align:center;">
-                            <input type="radio" name="seleccionarRuta" value="${ruta.id_ruta}">
+                            <button class="btn-eliminar" data-id="${ruta.id_ruta}" title="Eliminar ruta">
+                                Eliminar
+                            </button>
                         </td>
                         <td style="text-align:center;">
-                            <button class="btn-eliminar" data-id="${ruta.id_ruta}" title="Eliminar ruta">
-                                🗑️
-                            </button>
+                            <input type="radio" name="seleccionarRuta" value="${ruta.id_ruta}">
                         </td>
                     `;
                     tbody.appendChild(row);
