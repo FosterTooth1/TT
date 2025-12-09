@@ -1,11 +1,11 @@
 :root {
-    --primary-100: #08564d; /* Letras LogistiClima*/
-    --primary-200: #417fc6; /* Texto Ruta, Detalles */
-    --accent-100: #169db3;  /* Boton por defecto */
-    --accent-200: #0a5f78;  /* Mantener boton */
-    --text-100: #222020;    /* Letras */
-    --bg-100: #eaf6f8;      /* Fondo*/
-    --bg-200: #ffffff;      /* Contenedor texto */
+    --primary-100: #08564d;
+    --primary-200: #417fc6;
+    --accent-100: #169db3;
+    --accent-200: #0a5f78;
+    --text-100: #222020;
+    --bg-100: #eaf6f8;
+    --bg-200: #ffffff;
 }
 
 body {
@@ -95,16 +95,17 @@ table {
 
 th {
     text-align: left;
-    font-size: 14px;
+    font-size: 14px; /* Puedes subir esto a 16px si los títulos también se ven pequeños */
     color: var(--primary-200);
     border-bottom: 2px solid var(--primary-200);
     padding: 6px 0;
 }
 
 td {
-    padding: 6px 0;
-    font-size: 14px;
+    padding: 8px 0; /* CAMBIO: Un poco más de espacio vertical */
+    font-size: 17px; /* CAMBIO: Aumentado de 14px a 17px para mayor legibilidad */
     border-bottom: 1px solid #ddd;
+    color: var(--text-100); /* Aseguramos buen contraste */
 }
 
 #tabla-rutas th:first-child,
@@ -116,26 +117,26 @@ td {
 }
 
 #tabla-scroll {
-    max-height: 400px;   /* altura máxima de la tabla visible */
+    max-height: 400px;
     overflow-y: auto;   
     border-radius: 10px;
 }
 
 button {
-    min-width: 140px; /* ancho mínimo */
-    max-width: 220px; /* ancho máximo */
+    min-width: 140px;
+    max-width: 220px;
     padding: 12px 20px;
     background-color: var(--accent-100);
     border: none;
     color: white;
     font-size: 16px;
-    border-radius: 20px;
+    border-radius: 50px; /* CAMBIO: De 20px a 50px para hacerlo completamente redondo (tipo píldora) */
     cursor: pointer;
     transition: background-color 0.3s;
-    white-space: nowrap; /* evita que el texto se rompa en varias líneas */
+    white-space: nowrap;
     text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Opcional: añade profundidad */
 }
-
 
 button:hover {
     background-color: var(--accent-200);
@@ -148,7 +149,6 @@ button:hover {
     flex-wrap: wrap;
     display: flex;
 }
-
 
 #rehacerOptim:disabled {
     opacity: 0.5;
@@ -169,4 +169,26 @@ button:hover {
     text-align: center;
     font-size: 14px;
     color: var(--text-100);
+}
+
+/* CAMBIO: Media Query para dispositivos móviles (Android/iOS) */
+@media (max-width: 768px) {
+    button {
+        min-width: auto; /* Permite que el botón se encoja más si es necesario */
+        width: 100%; /* Opcional: si quieres que ocupen todo el ancho disponible */
+        max-width: 100%; /* Asegura que no se desborden */
+        padding: 10px 15px; /* Reducimos el relleno interno */
+        font-size: 14px; /* Reducimos un poco la letra del botón en móvil */
+    }
+
+    .botones-rutas {
+        flex-direction: column; /* Apila los botones verticalmente en móvil */
+        gap: 10px;
+        width: 100%;
+    }
+    
+    /* Ajuste adicional para la tabla en móviles si es necesario */
+    td {
+        font-size: 16px; /* Un tamaño seguro para móvil */
+    }
 }
