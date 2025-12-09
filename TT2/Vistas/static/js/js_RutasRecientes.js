@@ -1,5 +1,21 @@
+let lottieAnim = null;
+
 document.addEventListener("DOMContentLoaded", async function() {
-   // Botón cerrar sesión
+    // Inicializar animación Lottie
+    const lottieContainer = document.getElementById('lottie-container');
+    const overlay = document.getElementById('overlay-espera');
+
+    if (typeof lottie !== 'undefined' && lottieContainer) {
+        lottieAnim = lottie.loadAnimation({
+            container: lottieContainer,
+            renderer: 'svg',
+            loop: true,
+            autoplay: false,
+            path: '/static/animaciones/PantallaEspera.json'
+        });
+    }
+
+    // Botón cerrar sesión
     const cerrarSesionBtn = document.getElementById('cerrarSesion');
     if (cerrarSesionBtn) {
         cerrarSesionBtn.addEventListener('click', async () => {
@@ -20,9 +36,11 @@ document.addEventListener("DOMContentLoaded", async function() {
     // Cargar rutas del usuario
     await cargarRutasUsuario();
 
-    // Evento para "Re-hacer optimización"
+    // ===============================
+    // RE-HACER OPTIMIZACIÓN
+    // ===============================
     const btnRehacer = document.getElementById("rehacerOptim");
-    const loadingDiv = document.getElementById('loading-rutas'); 
+    const loadingDiv = document.getElementById('loading-rutas');
 
     btnRehacer.addEventListener("click", async () => {
         const selected = document.querySelector('input[name="seleccionarRuta"]:checked');
@@ -32,16 +50,18 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
 
         const rutaId = selected.value;
+
         try {
-            // Mostrar loading y deshabilitar botón
-            loadingDiv.style.display = "block";
+            // Mostrar overlay + animación
+            if (overlay) overlay.classList.add("mostrar");
+            if (lottieAnim) lottieAnim.play();
+
             btnRehacer.disabled = true;
 
             const response = await fetch(`/regenerar-ruta/${rutaId}`);
             const resultado = await response.json();
 
             if (response.ok) {
-                // Guardar resultado en sessionStorage y redirigir
                 sessionStorage.setItem('rutaOptimizada', JSON.stringify(resultado));
                 window.location.href = '/mejor-ruta';
             } else {
@@ -51,12 +71,17 @@ document.addEventListener("DOMContentLoaded", async function() {
             console.error('Error:', error);
             alert('Error al rehacer optimización.');
         } finally {
-            // Ocultar loading y reactivar botón solo si hay error
-            loadingDiv.style.display = "none";
+            // Ocultar overlay
+            if (overlay) overlay.classList.remove("mostrar");
+            if (lottieAnim) lottieAnim.stop();
+
             btnRehacer.disabled = false;
         }
     });
 
+    // ===============================
+    // Modal de detalles
+    // ===============================
     const modal = document.getElementById('modal-detalles');
     const textoRutaModal = document.getElementById('modal-texto-ruta');
     const btnCerrar = document.getElementById('btn-cerrar-modal');
@@ -64,30 +89,25 @@ document.addEventListener("DOMContentLoaded", async function() {
     const tbody = document.getElementById('tabla-rutas-body');
     
     tbody.addEventListener('click', async (event) => {
-    
-    // Lógica para "Ver más"
-    if (event.target.classList.contains('btn-mas-detalles')) {
-        const boton = event.target;
-        const rutaCompleta = boton.dataset.rutaCompleta;
-        const textoRutaModal = document.getElementById('modal-texto-ruta');
-        const modal = document.getElementById('modal-detalles');
-        
-        textoRutaModal.textContent = rutaCompleta;
-        modal.style.display = 'block';
-    }
 
-    // Lógica para "Eliminar"
-    if (event.target.classList.contains('btn-eliminar') || event.target.parentElement.classList.contains('btn-eliminar')) {
-        // Manejar click tanto en el botón como en el icono
-        const boton = event.target.classList.contains('btn-eliminar') ? event.target : event.target.parentElement;
-        const idRuta = boton.dataset.id;
+        // Ver más detalles
+        if (event.target.classList.contains('btn-mas-detalles')) {
+            const boton = event.target;
+            const rutaCompleta = boton.dataset.rutaCompleta;
 
-        // Mostrar confirmación
-        const confirmar = confirm("¿Estás seguro de que deseas eliminar esta ruta permanentemente?");
+            textoRutaModal.textContent = rutaCompleta;
+            modal.style.display = 'block';
+        }
 
-        if (confirmar) {
+        // Eliminar ruta
+        if (event.target.classList.contains('btn-eliminar') || event.target.parentElement.classList.contains('btn-eliminar')) {
+            const boton = event.target.classList.contains('btn-eliminar') ? event.target : event.target.parentElement;
+            const idRuta = boton.dataset.id;
+
+            const confirmar = confirm("¿Estás seguro de que deseas eliminar esta ruta permanentemente?");
+            if (!confirmar) return;
+
             try {
-                // Hacer petición al servidor
                 const response = await fetch(`/eliminar-ruta/${idRuta}`, {
                     method: 'DELETE'
                 });
@@ -95,7 +115,6 @@ document.addEventListener("DOMContentLoaded", async function() {
 
                 if (response.ok) {
                     alert("Ruta eliminada correctamente.");
-                    // Recargar la tabla para reflejar cambios
                     await cargarRutasUsuario();
                 } else {
                     alert("Error: " + data.message);
@@ -105,8 +124,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 alert("Hubo un error al intentar eliminar la ruta.");
             }
         }
-    }
-});
+    });
 
     if(btnCerrar) {
         btnCerrar.addEventListener('click', () => {
@@ -132,7 +150,7 @@ async function cargarRutasUsuario() {
     loadingDiv.style.display = 'block';
     noRutasDiv.style.display = 'none';
     tablaRutas.style.display = 'none';
-    btnRehacer.disabled = true; // Deshabilitar botón inicialmente
+    btnRehacer.disabled = true;
 
     try {
         const response = await fetch('/obtener_rutas');
@@ -169,6 +187,7 @@ async function cargarRutasUsuario() {
                     `;
                     tbody.appendChild(row);
                 });
+
                 const radios = document.querySelectorAll('input[name="seleccionarRuta"]');
                 radios.forEach(r => {
                     r.addEventListener('change', () => {

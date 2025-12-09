@@ -124,25 +124,30 @@
     </main>
     
     <div id="modal-detalles" class="modal-oculto">
-    <div class="modal-contenido">
-        <span id="btn-cerrar-modal" class="cerrar">&times;</span>
-        <h3>Ruta Completa</h3>
-        <p id="modal-texto-ruta"></p>
+        <div class="modal-contenido">
+            <span id="btn-cerrar-modal" class="cerrar">&times;</span>
+            <h3>Ruta Completa</h3>
+            <p id="modal-texto-ruta"></p>
+        </div>
     </div>
-</div>
 
-<script src="{{ url_for('static', filename='js/js_RutasRecientes.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/js_RutasRecientes.js') }}"></script>
+    <script>
+        document.getElementById('rehacerOptim')?.addEventListener('click', function() {
+            this.disabled = true;
+            this.textContent = 'Optimizando...';
+        });
 
-<script>
-    document.getElementById('rehacerOptim')?.addEventListener('click', function() {
-        this.disabled = true;
-        this.textContent = 'Optimizando...';
-    });
+        document.getElementById('cerrarSesion')?.addEventListener('click', function() {
+            this.disabled = true;
+            this.textContent = 'Cerrando sesión...';
+        });
+    </script>
 
-    document.getElementById('cerrarSesion')?.addEventListener('click', function() {
-        this.disabled = true;
-        this.textContent = 'Cerrando sesión...';
-    });
-</script>
+    <div id="overlay-espera">
+        <div id="lottie-container"></div> <!-- Overlay fullscreen con animación Lottie -->
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.7.4/lottie.min.js"></script> <!-- Lottie Player -->
+
 </body>
 </html>
