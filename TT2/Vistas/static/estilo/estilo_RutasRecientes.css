@@ -98,11 +98,11 @@ th {
     font-size: 14px; /* Puedes subir esto a 16px si los títulos también se ven pequeños */
     color: var(--primary-200);
     border-bottom: 2px solid var(--primary-200);
-    padding: 6px 0;
+    padding: 6px 12px;
 }
 
 td {
-    padding: 8px 0; /* CAMBIO: Un poco más de espacio vertical */
+    padding: 8px 12px; /* CAMBIO: Un poco más de espacio vertical */
     font-size: 17px; /* CAMBIO: Aumentado de 14px a 17px para mayor legibilidad */
     border-bottom: 1px solid #ddd;
     color: var(--text-100); /* Aseguramos buen contraste */
