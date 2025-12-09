@@ -13,6 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 import json
 import functools
+from ia_agent import procesar_chat
 
 PARAMETROS_PATH = os.path.join(os.path.dirname(__file__), 'parametros.json')
 parametros_app = {}
@@ -895,6 +896,27 @@ def eliminar_ruta_endpoint(ruta_id):
     except Exception as e:
         print(f"Error al eliminar ruta: {e}")
         return jsonify({"status": "error", "message": "Error interno del servidor"}), 500
+
+###########################################################################################################################
+# Endpoint para el chat con IA
+@app.route('/api/chat', methods=['POST'])
+@login_required
+def chat_endpoint():
+    try:
+        data = request.get_json()
+        mensaje = data.get('mensaje')
+        contexto_frontend = data.get('contexto') # JSON con lo que ve el usuario
+        user_id = session['user_id']
+        
+        historial = [] 
+        
+        respuesta_ia = procesar_chat(mensaje, contexto_frontend, historial, user_id)
+        
+        return jsonify({"status": "ok", "respuesta": respuesta_ia})
+        
+    except Exception as e:
+        print(f"Error en chat IA: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 ###########################################################################################################################
 if __name__ == "__main__":

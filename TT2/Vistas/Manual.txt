@@ -1,0 +1,15 @@
+TITULO: MANUAL DE USUARIO LOGISTICLIMA
+
+1. GUARDAR RUTAS
+Para guardar una ruta, primero debes generar una optimización en la pantalla "Mejor Ruta". Una vez generada la tabla y el mapa, aparecerá un botón habilitado llamado "Guardar Ruta". Al hacer clic, la ruta se almacenará en tu historial.
+
+2. VISUALIZAR RUTAS
+En la sección "Mis Rutas" (Rutas Recientes), puedes ver una tabla con todas tus optimizaciones pasadas. Haz clic en "Ver Detalles" para ver el recorrido completo.
+
+3. ELIMINAR RUTAS
+En la tabla de "Mis Rutas", cada fila tiene un botón rojo con un icono de basura. Al presionarlo, la ruta se elimina permanentemente.
+
+4. INTERPRETACIÓN DE COLORES
+- Verde: Condiciones climáticas favorables (Despejado).
+- Amarillo: Precaución (Nublado, Neblina).
+- Rojo: Condiciones peligrosas (Tormenta, Lluvia intensa). El algoritmo intenta evitar estas zonas aumentando el costo de paso.
