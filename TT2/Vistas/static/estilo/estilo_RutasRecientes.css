@@ -129,7 +129,7 @@ button {
     background-color: var(--accent-100);
     border: none;
     color: white;
-    font-size: 14px; /* CAMBIO: Letra un poco más pequeña (opcional) */
+    font-size: 16px; /* CAMBIO: Letra un poco más pequeña (opcional) */
     border-radius: 50px;
     cursor: pointer;
     transition: background-color 0.3s;
