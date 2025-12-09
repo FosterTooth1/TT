@@ -865,6 +865,36 @@ def generar_ruta():
 
     except Exception as e:
         return jsonify({"error": f"Error al generar la ruta: {str(e)}"}), 500
+    
+###########################################################################################################################
+# Eliminar Ruta de la Base de Datos
+@app.route('/eliminar-ruta/<int:ruta_id>', methods=['DELETE'])
+@login_required
+def eliminar_ruta_endpoint(ruta_id):
+    try:
+        user_id = session['user_id']
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"status": "error", "message": "Error de conexión con la BD"}), 500
+            
+        cur = conn.cursor()
+        
+        # Ejecutar DELETE verificando que el id_ruta pertenezca al id_usuario
+        cur.execute("DELETE FROM Ruta WHERE id_ruta = %s AND id_usuario = %s", (ruta_id, user_id))
+        conn.commit()
+        
+        filas_afectadas = cur.rowcount
+        cur.close()
+        conn.close()
+        
+        if filas_afectadas > 0:
+            return jsonify({"status": "ok", "message": "Ruta eliminada correctamente"}), 200
+        else:
+            return jsonify({"status": "error", "message": "Ruta no encontrada o no tienes permiso"}), 404
+            
+    except Exception as e:
+        print(f"Error al eliminar ruta: {e}")
+        return jsonify({"status": "error", "message": "Error interno del servidor"}), 500
 
 ###########################################################################################################################
 if __name__ == "__main__":
