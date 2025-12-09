@@ -16,6 +16,7 @@ import functools
 
 PARAMETROS_PATH = os.path.join(os.path.dirname(__file__), 'parametros.json')
 parametros_app = {}
+df_matriz_carretera = None
 
 def cargar_parametros():
     """Carga los parámetros desde parametros.json a la variable global."""
@@ -228,40 +229,51 @@ def realizar_predicciones(modelo, df_naves_industriales_filtrado, api_key):
 
     return df_resultado
 
-def crear_matriz_distancias(df_naves_industriales):
-    lats = df_naves_industriales['latitud'].astype(float).values
-    lons = df_naves_industriales['longitud'].astype(float).values
-
-    lat_rad = np.radians(lats)
-    lon_rad = np.radians(lons)
-
-    lat1 = lat_rad[:, np.newaxis]
-    lat2 = lat_rad[np.newaxis, :]
-    lon1 = lon_rad[:, np.newaxis]
-    lon2 = lon_rad[np.newaxis, :]
-
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-
-    a = np.sin(dlat/2.0)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2.0)**2
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(np.maximum(0.0, 1.0 - a)))
-
-    R = 6371.0
-    dist_matrix = R * c
-
-    df_dist = pd.DataFrame(dist_matrix)
-    return df_dist
+def crear_matriz_distancias(df_naves_filtrado):
+    global df_matriz_carretera
+    if df_matriz_carretera is None:
+        print("ADVERTENCIA: Matriz carretera no cargada, inicializando...")
+        inicializar_datos()
+    
+    indices_originales = df_naves_filtrado.index
+    
+    try:
+        matriz_recortada = df_matriz_carretera.iloc[indices_originales, indices_originales]
+        matriz_recortada = matriz_recortada.reset_index(drop=True)
+        matriz_recortada.columns = range(matriz_recortada.shape[1])
+        
+        return matriz_recortada
+        
+    except Exception as e:
+        print(f"Error al crear matriz de distancias carretera: {e}")
+        raise e
 
 def inicializar_datos():
-    global df_naves_industriales, df_matriz_distancias_original, Modelo_RandomForest
+    global df_naves_industriales
+    global Modelo_RandomForest
+    global df_matriz_carretera
     
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
     ruta_csv_naves = os.path.join(directorio_actual, "Naves_Industriales.csv")
     ruta_modelo = os.path.join(directorio_actual, "prediccion_clima.pkl")
+    ruta_matriz = os.path.join(directorio_actual, "Matriz_Distancias_Carretera.csv")
     
     if df_naves_industriales is None:
-        df_naves_industriales = cargar_CSV(ruta_csv_naves)
-        Modelo_RandomForest = joblib.load(ruta_modelo)
+        try:
+            print("Cargando Naves Industriales...")
+            df_naves_industriales = cargar_CSV(ruta_csv_naves)
+            print("Cargando Modelo Random Forest...")
+            Modelo_RandomForest = joblib.load(ruta_modelo)
+        except Exception as e:
+            print(f"Error cargando Naves o Modelo: {e}")
+
+    if df_matriz_carretera is None:
+        try:
+            print(f"Intentando cargar matriz desde: {ruta_matriz}")
+            df_matriz_carretera = pd.read_csv(ruta_matriz, header=None)
+            print(f"Matriz de carretera cargada: {df_matriz_carretera.shape}")
+        except Exception as e:
+            print(f"Error cargando matriz carretera: {e}")
         
 def rotar_recorrido(recorrido_local, indice_local_inicio):
     try:

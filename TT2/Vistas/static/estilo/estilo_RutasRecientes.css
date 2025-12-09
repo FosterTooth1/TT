@@ -71,11 +71,13 @@ main h2 {
 }
 
 .rutas-recientes-section {
+    width: 95%;        
+    max-width: 600px;   
+    padding: 1em;        
+    box-sizing: border-box;
     background-color: var(--bg-200);
-    padding: 0.5em;
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    width: 600px;
     margin-top: 0;
 }
 
@@ -141,10 +143,10 @@ button:hover {
 
 .botones-rutas {
     margin-top: 20px;
-    display: flex;
     justify-content: center;
     gap: 15px;
     flex-wrap: wrap;
+    display: flex;
 }
 
 

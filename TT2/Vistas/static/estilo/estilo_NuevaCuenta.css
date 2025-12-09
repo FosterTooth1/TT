@@ -19,7 +19,7 @@ body {
 header {
     text-align: center;
     padding: 20px;
-    margin-top: 110px;
+    margin-top: 60px;
 }
 
 .logo-container {
@@ -61,12 +61,14 @@ main {
 }
 
 .form-section {
+    width: 90%;         
+    max-width: 320px;  
+    box-sizing: border-box; 
     margin-top: 15px; 
     background-color: var(--bg-200);
     padding: 2em;
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    width: 320px;
 }
 
 .input-container {

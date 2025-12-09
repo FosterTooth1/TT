@@ -173,3 +173,30 @@ button:hover {
     background-color: var(--accent-200);
 }
 
+@media (max-width: 768px) {
+    /* Cambiar la dirección a columna para que el mapa quede arriba y la tabla abajo */
+    .contenido-principal {
+        flex-direction: column; 
+        align-items: center;
+    }
+
+    /* Ajustar el mapa para que no sea tan alto en celular y ocupe todo el ancho */
+    .mapa-container {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    #mapa {
+        height: 400px;
+    }
+
+    /* Ajustar la tabla para que ocupe el ancho disponible */
+    .tabla-container {
+        width: 100%;
+        max-width: none;
+    }
+
+    #tabla-scroll {
+        max-height: 300px; /* Reducir altura de la tabla en móvil */
+    }
+}

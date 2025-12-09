@@ -68,10 +68,11 @@ main {
     padding: 1.5em;
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    width: 400px;
+    width: 90%;
     max-height: 400px;
     overflow-y: auto; 
     margin-bottom: 10px; /* antes 0 */
+    box-sizing: border-box;
 }
 
 table {
@@ -165,4 +166,15 @@ button:hover {
 #lottie-container {
     width: 300px;
     height: 300px;
+}
+
+@media (max-width: 600px) {
+    button {
+        width: 100%;       /* Botones de ancho completo en celular */
+        margin-bottom: 10px;
+    }
+    
+    .logo-container {
+        flex-direction: column; /* Logo arriba, texto abajo */
+    }
 }
