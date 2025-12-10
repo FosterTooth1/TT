@@ -1,171 +1,159 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. Inicializar el mapa
-    const map = L.map('mapa', {
-        minZoom: 8,
-        maxZoom: 14
-    }).setView([19.35, -99.75], 8);
+    // 1. Inicialización de Mapas
+    // Mapa 1: Penalizado
+    const mapPenalizado = L.map('mapa-penalizado', { minZoom: 5 }).setView([19.35, -99.75], 8);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+    }).addTo(mapPenalizado);
+
+    // Mapa 2: Limpio
+    const mapLimpio = L.map('mapa-limpio', { minZoom: 5 }).setView([19.35, -99.75], 8);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+    }).addTo(mapLimpio);
 
     // 2. Definir y aplicar límites geográficos
     const northEast = L.latLng(20.35, -98.5);
     const southWest = L.latLng(18.5, -100.5);
     const bounds = L.latLngBounds(southWest, northEast);
-    map.setMaxBounds(bounds);
-    map.on('drag', () => map.panInsideBounds(bounds, { animate: true }));
+    mapPenalizado.setMaxBounds(bounds);
+    mapLimpio.setMaxBounds(bounds);
 
-    // 3. Añadir capa base del mapa (el fondo)
+    // Añadir capa base del mapa (el fondo)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; CARTO',
     }).addTo(map);
+    
+    // 3. Definir iconos personalizados
+    // Icono Verde
+    const iconoVerde = new L.Icon({
+        iconUrl: '/static/imagenes/marker-icon-2x-green.png',
+        shadowUrl: '/static/imagenes/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+    
+    // Icono Azul
+    const iconoAzul = new L.Icon.Default(); 
 
-    /* ########################################################################################################################### */ 
-    // 4. Obtener datos del sessionStorage
+    // Icono Rojo
+    const iconoRojo = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+
+    // 4. Procesar Datos
     const rutaData = sessionStorage.getItem('rutaOptimizada');
     
     if (!rutaData) {
-        console.error("No se encontraron datos de ruta");
-        alert("No se encontraron datos de ruta. Regresando a la selección de naves.");
+        alert("No se encontraron datos de ruta. Regresando...");
         window.location.href = '/';
         return;
     }
 
     try {
         const data = JSON.parse(rutaData);
-        console.log("Datos de ruta cargados:", data);
+        console.log("Datos recibidos:", data);
 
-        // // 1. Mostrar Fitness Final
-        const fitnessEl = document.getElementById('fitness-valor');
-        if (fitnessEl && data.fitness) {
-            // .toFixed(2) para redondear a 2 decimales
-            fitnessEl.textContent = data.fitness.toFixed(2);
+        // Actualizar Tabla de Estadísticas
+        // Fitness Penalizado
+        if (document.getElementById('fitness-valor')) {
+            document.getElementById('fitness-valor').textContent = data.fitness_penalizado ? data.fitness_penalizado.toFixed(2) : "N/A";
+        }
+        // Distancia Real
+        if (document.getElementById('distancia-real-valor')) {
+            document.getElementById('distancia-real-valor').textContent = data.distancia_real ? data.distancia_real.toFixed(2) : "N/A";
         }
 
-        // 2. Calcular y Mostrar Moda del Clima
+        // Moda del Clima (Usando ruta penalizada)
         const climaModaEl = document.getElementById('clima-moda');
-        if (climaModaEl && data.ruta) {
-            // Obtenemos todas las condiciones, filtrando valores nulos o vacíos
-            const condiciones = data.ruta.map(punto => punto.condicion).filter(c => c); 
-            
+        if (climaModaEl && data.ruta_penalizada) {
+            const condiciones = data.ruta_penalizada.map(p => p.condicion).filter(c => c);
             if (condiciones.length > 0) {
-                // Contamos la frecuencia de cada condición
-                const conteo = condiciones.reduce((acc, val) => {
-                    acc[val] = (acc[val] || 0) + 1;
-                    return acc;
-                }, {});
-                // Encontramos la clave (condición) con el valor (conteo) más alto
+                const conteo = condiciones.reduce((acc, val) => { acc[val] = (acc[val] || 0) + 1; return acc; }, {});
                 const moda = Object.keys(conteo).reduce((a, b) => conteo[a] > conteo[b] ? a : b);
                 climaModaEl.textContent = moda;
             } else {
-                climaModaEl.textContent = "No disponible";
+                climaModaEl.textContent = "N/A";
             }
         }
 
-        // 3. Generar Gráfica de Evolución del Fitness
-        const graficaEl = document.getElementById('grafica-fitness');
-        // Verificamos que el elemento exista y que tengamos los datos
-        if (graficaEl && data.fitness_generaciones && data.fitness_generaciones.length > 0) {
-            const ctx = graficaEl.getContext('2d');
-            // Creamos etiquetas para el eje X (1, 2, 3, ... N)
-            const labels = Array.from({ length: data.fitness_generaciones.length }, (_, i) => i + 1);
+        // Renderizar Mapa 1: Penalizado
+        const markersPenalizados = [];
+        const tabla = document.getElementById('tabla-mejor-ruta');
+        
+        data.ruta_penalizada.forEach((punto, i) => {
+            const latLng = [punto.lat, punto.lng];
+            const esInicio = (i === 0);
             
-            new Chart(ctx, {
-                type: 'line', // Tipo de gráfica
-                data: {
-                    labels: labels, // Eje X (Generaciones)
-                    datasets: [{
-                        label: 'Fitness (Distancia)',
-                        data: data.fitness_generaciones, // Eje Y (Valores de fitness)
-                        borderColor: '#000000', // Color de la línea
-                        backgroundColor: 'rgba(0, 0, 0, 0.1)', // Relleno bajo la línea
-                        fill: true,
-                        tension: 0.1 // Curvatura de la línea
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false, // Permitir que la gráfica no sea cuadrada
-                    plugins: {
-                        legend: {
-                            display: false // Ocultar la leyenda "Fitness (Distancia)"
-                        },
-                        title: {
-                            display: true,
-                            text: 'Evolución del Fitness por Generación' // Título de la gráfica
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Generación' // Etiqueta Eje X
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Fitness (Distancia)' // Etiqueta Eje Y
-                            }
-                        }
+            // Marcador
+            const marker = L.marker(latLng, { icon: esInicio ? iconoVerde : iconoAzul })
+                .addTo(mapPenalizado)
+                .bindPopup(`<b>${i + 1}. ${punto.nombre}</b><br>${punto.condicion}`);
+            
+            markersPenalizados.push(marker);
+
+            // Tabla
+            const row = tabla.insertRow();
+            row.insertCell(0).textContent = i + 1;
+            row.insertCell(1).textContent = punto.nombre;
+            row.insertCell(2).textContent = punto.condicion;
+        });
+
+        if (markersPenalizados.length > 0) {
+            const grupo = L.featureGroup(markersPenalizados);
+            mapPenalizado.fitBounds(grupo.getBounds().pad(0.1));
+            dibujarRuta(data.ruta_penalizada, mapPenalizado, '#08564d'); // Color verde oscuro corporativo
+        }
+
+        // Renderizar Mapa 2: Limpio
+        // Aquí se compara el orden con la ruta penalizada
+        const markersLimpios = [];
+        
+        if (data.ruta_limpia) {
+            data.ruta_limpia.forEach((punto, i) => {
+                const latLng = [punto.lat, punto.lng];
+                
+                // Lógica de color:
+                // Si es el inicio (i=0), Verde.
+                // Si el nombre en esta posición (i) es diferente al nombre en la misma posición de ruta_penalizada, es Rojo.
+                // Si es igual, Azul.
+                
+                let iconToUse = iconoAzul;
+                let esDiferente = false;
+
+                if (i === 0) {
+                    iconToUse = iconoVerde;
+                } else {
+                    const nombreEnPenalizada = data.ruta_penalizada[i] ? data.ruta_penalizada[i].nombre : null;
+                    if (nombreEnPenalizada !== punto.nombre) {
+                        iconToUse = iconoRojo;
+                        esDiferente = true;
                     }
                 }
+
+                const msgComparativa = esDiferente ? "<br><span style='color:red'>⚠️ Posición diferente</span>" : "";
+
+                const marker = L.marker(latLng, { icon: iconToUse })
+                    .addTo(mapLimpio)
+                    .bindPopup(`<b>${i + 1}. ${punto.nombre}</b>${msgComparativa}`);
+                
+                markersLimpios.push(marker);
             });
-        }
 
-        console.log("Índices originales:", data.indices);
-        const indicesRuta = data.indices; // Indices de la ruta seleccionada por el usuario
-
-        const markersGroup = [];
-        const tabla = document.getElementById('tabla-mejor-ruta');
-        const coordinatesForRoute = []; // Coordenadas para la API
-
-        const iconoInicio = new L.Icon({
-            iconUrl: '/static/imagenes/marker-icon-2x-green.png',
-            shadowUrl: '/static/imagenes/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
-
-        // Llenar marcadores y tabla
-        data.ruta.forEach((punto, i) => {
-            const latLng = [punto.lat, punto.lng];
-            
-            let marker;
-
-            // Si es el índice 0 (Inicio), usar el icono verde
-            if (i === 0) {
-                marker = L.marker(latLng, { icon: iconoInicio })
-                    .addTo(map)
-                    .bindPopup(`<b>🚩 INICIO: ${punto.nombre}</b><br>${punto.condicion}`);
-            } else {
-                // Para el resto, usar el marcador azul por defecto
-                marker = L.marker(latLng)
-                    .addTo(map)
-                    .bindPopup(`<b>${i + 1}. ${punto.nombre}</b><br>${punto.condicion}`);
+            if (markersLimpios.length > 0) {
+                const grupo = L.featureGroup(markersLimpios);
+                mapLimpio.fitBounds(grupo.getBounds().pad(0.1));
+                dibujarRuta(data.ruta_limpia, mapLimpio, '#417fc6');
             }
-
-            markersGroup.push(marker);
-
-            // Añadir coordenadas para la ruta
-            coordinatesForRoute.push(L.latLng(punto.lat, punto.lng));
-
-            // Llenar la tabla
-            const row = tabla.insertRow();
-            // (El resto del código de la tabla sigue igual...)
-             row.insertCell(0).textContent = i + 1;
-             row.insertCell(1).textContent = punto.nombre;
-             row.insertCell(2).textContent = punto.condicion;
-             row.cells[0].style.textAlign = "center";
-        });
-
-        if (markersGroup.length > 0) {
-            map.fitBounds(L.featureGroup(markersGroup).getBounds().pad(0.2)); // Ajustar el zoom del mapa
         }
-        dibujarRuta(data.ruta); // Dibujar la ruta en el mapa
+
+        // Gráfica de Fitness por Generación 
+        renderizarGrafica(data.fitness_generaciones);
 
     } catch (error) {
-        console.error("Error al procesar datos de ruta:", error);
-        alert("Error al procesar los datos de la ruta");
+        console.error("Error JS:", error);
     }
 
     /* ########################################################################################################################### */ 

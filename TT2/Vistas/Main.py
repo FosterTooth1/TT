@@ -286,6 +286,67 @@ def rotar_recorrido(recorrido_local, indice_local_inicio):
         print(f"Error al rotar recorrido: {e}")
         return recorrido_local
 
+def calcular_distancia_real_km(recorrido_local, df_matriz_raw):
+    distancia = 0.0
+    try:
+        for i in range(len(recorrido_local)):
+            origen = recorrido_local[i]
+            destino = recorrido_local[(i + 1) % len(recorrido_local)]
+            distancia += df_matriz_raw.iloc[origen, destino]
+    except Exception as e:
+        print(f"Error calculando distancia real: {e}")
+        return 0.0
+    return distancia
+
+# Esta función ejecuta la optimización y retorna la ruta procesada
+def ejecutar_optimizacion(df_naves, df_matriz, params_algoritmo, indice_local_inicio, indices_globales_map):
+    df_matriz.to_csv("Matriz_Distancias_Temporal.csv", header=False, index=False)
+    
+    num_naves = len(df_naves)
+    directorio_actual = os.path.dirname(os.path.abspath(__file__))
+    nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
+    ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
+    
+    rs = AlgoritmoRecocido(ruta_biblioteca)
+    
+    resultado = rs.ejecutar(
+        longitud_ruta=num_naves,
+        num_generaciones=params_algoritmo['num_generaciones'],
+        tasa_enfriamiento=params_algoritmo['tasa_enfriamiento'],
+        temperatura_final=params_algoritmo['temperatura_final'],
+        max_neighbours=num_naves * 10,
+        m=params_algoritmo['m'],
+        nombre_archivo="Matriz_Distancias_Temporal.csv",
+        heuristica=params_algoritmo['heuristica']
+    )
+    
+    # Rotar recorrido
+    recorrido_local_ordenado = rotar_recorrido(resultado['recorrido'], indice_local_inicio)
+    
+    # Construir objeto ruta
+    ruta_procesada = []
+    indices_ordenados = []
+    
+    for idx_local in recorrido_local_ordenado:
+        idx_global = indices_globales_map[idx_local]
+        fila = df_naves.iloc[idx_local]
+        
+        ruta_procesada.append({
+            "lat": float(fila['latitud']),
+            "lng": float(fila['longitud']),
+            "nombre": fila['nombre'],
+            "condicion": fila.get('Prediccion', 'N/A')
+        })
+        indices_ordenados.append(int(idx_global))
+        
+    return {
+        "ruta": ruta_procesada,
+        "indices": indices_ordenados,
+        "fitness": resultado['fitness'],
+        "fitness_generaciones": resultado['fitness_generaciones'],
+        "recorrido_local": recorrido_local_ordenado
+    }
+
 # ###########################################################################################################################
 # CONFIG DB - Versión solo para Cloud Run
 
@@ -595,108 +656,74 @@ def obtener_rutas():
 def regenerar_ruta(ruta_id):
     try:
         user_id = session['user_id']
-        
         conn = get_db_connection()
-        if not conn:
-            return jsonify({"status": "error", "message": "Error de conexión con la base de datos."}), 500
-        
+        if not conn: return jsonify({"error": "DB Error"}), 500
         cur = conn.cursor(dictionary=True)
         cur.execute("SELECT destinos FROM Ruta WHERE id_ruta = %s AND id_usuario = %s", (ruta_id, user_id))
-        ruta = cur.fetchone()
-        
+        ruta_db = cur.fetchone()
         cur.close()
         conn.close()
         
-        if not ruta:
-            return jsonify({"status": "error", "message": "Ruta no encontrada"}), 404
+        if not ruta_db: return jsonify({"error": "Ruta no encontrada"}), 404
         
-        # Obtener los índices guardados (ya están en el orden deseado)
-        indices_string = ruta['destinos']
-        indices_globales_guardados = json.loads(indices_string)
-
-        if not indices_globales_guardados:
-            return jsonify({"status": "error", "message": "Ruta guardada está vacía"}), 400
-
-        # Obtener el índice global de la nave de inicio
-        indice_local_inicio = 0
+        indices_globales = json.loads(ruta_db['destinos'])
+        if not indices_globales: return jsonify({"error": "Ruta vacía"}), 400
         
-        # Filtrar las naves usando los índices
-        df_naves_filtrado = df_naves_industriales.iloc[indices_globales_guardados]
+        inicializar_datos()
+        df_naves_filtrado = df_naves_industriales.iloc[indices_globales]
+        df_matriz_raw = crear_matriz_distancias(df_naves_filtrado) # Matriz km reales
         
-        # Crear matriz de distancias
-        df_matriz_distancias = crear_matriz_distancias(df_naves_filtrado)
-        
-        # Realizar predicciones climáticas
+        # Predicciones
         df_naves_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_filtrado, api_key)
         
-        # Aplicar penalizaciones climáticas
-        global parametros_app # Accede a los parámetros cargados
+        # Ruta penalizada
+        df_matriz_penalizada = df_matriz_raw.copy()
         penalizaciones = parametros_app['penalizaciones']
-        lambda_penalizacion = parametros_app['lambda_penalizacion']
+        lambda_penal = parametros_app['lambda_penalizacion']
+        
         for pos, fila in df_naves_filtrado.reset_index(drop=True).iterrows():
             pred = fila['Prediccion']
             if pred in penalizaciones:
-                penal = penalizaciones[pred] * lambda_penalizacion
-                df_matriz_distancias.iloc[pos, :] *= penal
-                df_matriz_distancias.iloc[:, pos] *= penal
-                df_matriz_distancias.iloc[pos, pos] = 0.0
+                penal = penalizaciones[pred] * lambda_penal
+                df_matriz_penalizada.iloc[pos, :] *= penal
+                df_matriz_penalizada.iloc[:, pos] *= penal
+                df_matriz_penalizada.iloc[pos, pos] = 0.0
 
-        df_matriz_distancias.to_csv("Matriz_Distancias_Temporal.csv", header=False, index=False)
-
-        # Ejecutar optimización
-        num_naves = len(df_naves_filtrado)
-        directorio_actual = os.path.dirname(os.path.abspath(__file__))
-        nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
-        ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
-        rs = AlgoritmoRecocido(ruta_biblioteca)
-        params = {
-            'longitud_ruta': num_naves, 
-            'num_generaciones': parametros_app['num_generaciones'], 
-            'tasa_enfriamiento': parametros_app['tasa_enfriamiento'],
-            'temperatura_final': parametros_app['temperatura_final'], 
-            'max_neighbours': num_naves * 10,
-            'm': parametros_app['m'],
-            'nombre_archivo': "Matriz_Distancias_Temporal.csv", 
-            'heuristica': parametros_app['heuristica']
-        }
-        resultado = rs.ejecutar(**params)
+        indice_local_inicio = 0
         
-        # Rotar recorrido para iniciar desde la nave seleccionada
-        recorrido_local_ordenado = rotar_recorrido(resultado['recorrido'], indice_local_inicio)
+        # Ejecutar Algoritmo penalizado
+        res_penalizada = ejecutar_optimizacion(
+            df_naves_filtrado, df_matriz_penalizada, parametros_app, 
+            indice_local_inicio, indices_globales
+        )
+        
+        # Calcular Distancia Real de la ruta penalizada
+        dist_real_km = calcular_distancia_real_km(res_penalizada['recorrido_local'], df_matriz_raw)
 
-        # Construir ruta optimizada
-        ruta_optimizada = []
-        indices_globales_ordenados = []
-        for idx_local in recorrido_local_ordenado:
-            # Mapear el índice local (del df_filtrado) al índice global original
-            idx_global = indices_globales_guardados[idx_local] 
-            
-            # Obtener la fila del dataframe filtrado
-            fila = df_naves_filtrado.iloc[idx_local]
-            
-            ruta_optimizada.append({"lat": float(fila['latitud']),
-                                    "lng": float(fila['longitud']),
-                                    "nombre": fila['nombre'],
-                                    "condicion": fila['Prediccion']})
-            
-            # Guardar el índice global correspondiente
-            indices_globales_ordenados.append(int(idx_global)) 
+        # Ejecutar Algoritmo sin penalizaciones
+        # Se ejecuta el algoritmo sobre la matriz RAW
+        res_limpia = ejecutar_optimizacion(
+            df_naves_filtrado, df_matriz_raw, parametros_app, 
+            indice_local_inicio, indices_globales
+        )
 
         # Limpiar archivo temporal
         if os.path.exists("Matriz_Distancias_Temporal.csv"):
             os.remove("Matriz_Distancias_Temporal.csv")
 
-        return jsonify({"ruta": ruta_optimizada,
-            "indices": indices_globales_ordenados,
-            "fitness": resultado['fitness'],
-            "tiempo_ejecucion": resultado['tiempo_ejecucion'],
-            "temperatura_inicial": resultado['temperatura_inicial'],
-            "temperatura_final": resultado['temperatura_final'],
-            "fitness_generaciones": resultado['fitness_generaciones']})
+        return jsonify({
+            "ruta_penalizada": res_penalizada['ruta'],
+            "ruta_limpia": res_limpia['ruta'],
+            "indices_penalizada": res_penalizada['indices'],
+            "indices_limpia": res_limpia['indices'],
+            "fitness_penalizado": res_penalizada['fitness'], 
+            "distancia_real": dist_real_km,                   
+            "fitness_generaciones": res_penalizada['fitness_generaciones']
+        })
 
     except Exception as e:
         print("Error en /regenerar-ruta:", e)
-        return jsonify({"status": "error", "message": "Error al regenerar la ruta."}), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 ###########################################################################################################################
 # Cerrar Sesión
@@ -784,87 +811,71 @@ def obtener_naves():
 def generar_ruta():
     try:
         data = request.get_json()
-        indices_seleccionados = data.get('indices', [])
+        indices_globales = data.get('indices', [])
         indice_inicio_global = data.get('indice_inicio')
-        if len(indices_seleccionados) < 5:
-            return jsonify({"error": "Selecciona al menos 5 naves industriales"}), 400
-        inicializar_datos()
-        if indice_inicio_global is None or indice_inicio_global not in indices_seleccionados:
-            return jsonify({"error": "El índice de inicio no es válido o no está en la lista de seleccionados"}), 400
-        df_naves_filtrado = df_naves_industriales.iloc[indices_seleccionados]
-        try:
-            indice_local_inicio = indices_seleccionados.index(indice_inicio_global)
-        except ValueError:
-            return jsonify({"error": "Error interno al mapear el índice de inicio"}), 500
-        df_matriz_distancias = crear_matriz_distancias(df_naves_filtrado)
         
+        if len(indices_globales) < 5:
+            return jsonify({"error": "Selecciona al menos 5 naves"}), 400
+            
+        inicializar_datos()
+        
+        df_naves_filtrado = df_naves_industriales.iloc[indices_globales]
+        try:
+            indice_local_inicio = indices_globales.index(indice_inicio_global)
+        except ValueError:
+            return jsonify({"error": "Índice de inicio inválido"}), 400
+
+        # Matriz base (Distancias Reales)
+        df_matriz_raw = crear_matriz_distancias(df_naves_filtrado)
+        
+        # Predicciones
         df_naves_filtrado = realizar_predicciones(Modelo_RandomForest, df_naves_filtrado, api_key)
         
-        global parametros_app # Accede a los parámetros cargados
+        # Optimización con penalizaciones
+        df_matriz_penalizada = df_matriz_raw.copy()
         penalizaciones = parametros_app['penalizaciones']
-        lambda_penalizacion = parametros_app['lambda_penalizacion']
+        lambda_penal = parametros_app['lambda_penalizacion']
+        
         for pos, fila in df_naves_filtrado.reset_index(drop=True).iterrows():
             pred = fila['Prediccion']
             if pred in penalizaciones:
-                penal = penalizaciones[pred] * lambda_penalizacion
-                df_matriz_distancias.iloc[pos, :] *= penal
-                df_matriz_distancias.iloc[:, pos] *= penal
-                df_matriz_distancias.iloc[pos, pos] = 0.0
+                penal = penalizaciones[pred] * lambda_penal
+                df_matriz_penalizada.iloc[pos, :] *= penal
+                df_matriz_penalizada.iloc[:, pos] *= penal
+                df_matriz_penalizada.iloc[pos, pos] = 0.0
 
-        df_matriz_distancias.to_csv("Matriz_Distancias_Temporal.csv", header=False, index=False)
+        res_penalizada = ejecutar_optimizacion(
+            df_naves_filtrado, df_matriz_penalizada, parametros_app, 
+            indice_local_inicio, indices_globales
+        )
+        
+        # Calcular Distancia Real de la ruta penalizada
+        dist_real_km = calcular_distancia_real_km(res_penalizada['recorrido_local'], df_matriz_raw)
 
-        num_naves = len(df_naves_filtrado)
-        directorio_actual = os.path.dirname(os.path.abspath(__file__))
-        nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
-        ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
-        rs = AlgoritmoRecocido(ruta_biblioteca)
-        params = {
-            'longitud_ruta': num_naves, 
-            'num_generaciones': parametros_app['num_generaciones'], 
-            'tasa_enfriamiento': parametros_app['tasa_enfriamiento'],
-            'temperatura_final': parametros_app['temperatura_final'], 
-            'max_neighbours': num_naves * 10,
-            'm': parametros_app['m'],
-            'nombre_archivo': "Matriz_Distancias_Temporal.csv", 
-            'heuristica': parametros_app['heuristica']
-        }
-        resultado = rs.ejecutar(**params)
-        
-        recorrido_local_ordenado = rotar_recorrido(resultado['recorrido'], indice_local_inicio)
-
-        ruta_optimizada = []
-        
-        indices_globales_ordenados = []
-        
-        for idx_local in recorrido_local_ordenado:
-            # Mapear el índice local (del df_filtrado) al índice global original
-            idx_global = indices_seleccionados[idx_local]
-            
-            # Obtener la fila del dataframe filtrado
-            fila = df_naves_filtrado.iloc[idx_local]
-            
-            ruta_optimizada.append({"lat": float(fila['latitud']),
-                                    "lng": float(fila['longitud']),
-                                    "nombre": fila['nombre'],
-                                    "condicion": fila['Prediccion']})
-            
-            # Guardar el índice global correspondiente
-            indices_globales_ordenados.append(int(idx_global)) # Asegurar que sea int
+        # Optimización sin penalizaciones
+        # Se ejecuta el algoritmo sobre la matriz RAW
+        res_limpia = ejecutar_optimizacion(
+            df_naves_filtrado, df_matriz_raw, parametros_app, 
+            indice_local_inicio, indices_globales
+        )
 
         if os.path.exists("Matriz_Distancias_Temporal.csv"):
             os.remove("Matriz_Distancias_Temporal.csv")
 
-        return jsonify({"ruta": ruta_optimizada,
-                        "indices": indices_globales_ordenados,
-                        "fitness": resultado['fitness'],
-                        "tiempo_ejecucion": resultado['tiempo_ejecucion'],
-                        "temperatura_inicial": resultado['temperatura_inicial'],
-                        "temperatura_final": resultado['temperatura_final'],
-                        "fitness_generaciones": resultado['fitness_generaciones']
-                        })
+        # Se retornan ambas rutas para la comparativa
+        return jsonify({
+            "ruta_penalizada": res_penalizada['ruta'],
+            "ruta_limpia": res_limpia['ruta'],
+            "indices_penalizada": res_penalizada['indices'], # Estos son los que se guardarán
+            "indices_limpia": res_limpia['indices'],
+            "fitness_penalizado": res_penalizada['fitness'],
+            "distancia_real": dist_real_km,
+            "fitness_generaciones": res_penalizada['fitness_generaciones']
+        })
 
     except Exception as e:
-        return jsonify({"error": f"Error al generar la ruta: {str(e)}"}), 500
+        print(f"Error generando ruta: {e}")
+        return jsonify({"error": str(e)}), 500
     
 ###########################################################################################################################
 # Eliminar Ruta de la Base de Datos

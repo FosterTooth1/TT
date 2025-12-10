@@ -69,6 +69,25 @@ main {
     align-items: flex-start;
 }
 
+.mapas-columna {
+    flex: 1; /* Toma el espacio disponible */
+    display: flex;
+    flex-direction: column;
+}
+
+.mapa-wrapper {
+    background: #e0e0e0;
+}
+
+/* Columna derecha: Tabla */
+.tabla-container {
+    width: 380px; /* Ancho fijo para el panel lateral */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: fit-content;
+}
+
 /* Mapa */
 .mapa-container {
     flex: 1;
@@ -80,20 +99,14 @@ main {
     border-radius: 15px;
 }
 
-/* Tabla y botón */
-.tabla-container {
-    width: 400px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
 
 /* Contenedor con scroll */
 #tabla-scroll {
-    max-height: 510px;   /* altura máxima de la tabla visible */
-    overflow-y: auto;   
+    max-height: 400px;
+    overflow-y: auto;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background-color: var(--bg-200);
 }
 
 /* Estilos de la tabla */
@@ -173,30 +186,14 @@ button:hover {
     background-color: var(--accent-200);
 }
 
-@media (max-width: 768px) {
-    /* Cambiar la dirección a columna para que el mapa quede arriba y la tabla abajo */
+@media (max-width: 900px) {
     .contenido-principal {
-        flex-direction: column; 
-        align-items: center;
+        flex-direction: column;
     }
-
-    /* Ajustar el mapa para que no sea tan alto en celular y ocupe todo el ancho */
-    .mapa-container {
-        width: 100%;
-        margin-bottom: 20px;
-    }
-
-    #mapa {
-        height: 400px;
-    }
-
-    /* Ajustar la tabla para que ocupe el ancho disponible */
     .tabla-container {
         width: 100%;
-        max-width: none;
     }
-
-    #tabla-scroll {
-        max-height: 300px; /* Reducir altura de la tabla en móvil */
+    .mapa-wrapper {
+        height: 300px;
     }
 }
