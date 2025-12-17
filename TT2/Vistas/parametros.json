@@ -12,7 +12,7 @@
     "Tormenta electrica intensa": 15.0
   },
   "lambda_penalizacion": 1.0,
-  "num_generaciones": 50000,
+  "num_generaciones": 5000,
   "tasa_enfriamiento": 0.99,
   "temperatura_final": 0.000001,
   "m": 0,
