@@ -1,72 +1,87 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. Inicialización de Mapas
-    // Mapa 1: Penalizado
+    
+    // --- 1. Inicialización de Mapas ---
     const mapPenalizado = L.map('mapa-penalizado', { minZoom: 5 }).setView([19.35, -99.75], 8);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap &copy; CARTO',
     }).addTo(mapPenalizado);
 
-    // Mapa 2: Limpio
     const mapLimpio = L.map('mapa-limpio', { minZoom: 5 }).setView([19.35, -99.75], 8);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap &copy; CARTO',
     }).addTo(mapLimpio);
 
-    // 2. Definir y aplicar límites geográficos
-    const northEast = L.latLng(20.35, -98.5);
-    const southWest = L.latLng(18.5, -100.5);
-    const bounds = L.latLngBounds(southWest, northEast);
+    // Límites (México aprox)
+    const bounds = L.latLngBounds(L.latLng(14.0, -118.0), L.latLng(32.0, -86.0));
     mapPenalizado.setMaxBounds(bounds);
     mapLimpio.setMaxBounds(bounds);
 
-    // Añadir capa base del mapa (el fondo)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; CARTO',
-    }).addTo(map);
-    
-    // 3. Definir iconos personalizados
-    // Icono Verde
+    // Variables para guardar los grupos de marcadores y usarlos al cambiar de pestaña
+    let groupPenalizado = null;
+    let groupLimpio = null;
+
+    // --- 2. Lógica de Pestañas (Tabs) con CORRECCIÓN DE ZOOM ---
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const mapContents = document.querySelectorAll('.mapa-wrapper');
+
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Desactivar todos
+            tabButtons.forEach(b => b.classList.remove('active'));
+            mapContents.forEach(c => c.classList.remove('active'));
+
+            // Activar actual
+            btn.classList.add('active');
+            const targetId = btn.getAttribute('data-target');
+            const targetContent = document.getElementById(targetId);
+            targetContent.classList.add('active');
+
+            // --- FIX CRÍTICO: Recalcular tamaño y zoom al mostrar ---
+            if (targetId === 'mapa-penalizado') {
+                mapPenalizado.invalidateSize();
+                if (groupPenalizado) {
+                    mapPenalizado.fitBounds(groupPenalizado.getBounds().pad(0.1));
+                }
+            } else if (targetId === 'mapa-limpio') {
+                mapLimpio.invalidateSize();
+                if (groupLimpio) {
+                    mapLimpio.fitBounds(groupLimpio.getBounds().pad(0.1));
+                }
+            }
+        });
+    });
+
+    // --- Iconos ---
     const iconoVerde = new L.Icon({
         iconUrl: '/static/imagenes/marker-icon-2x-green.png',
         shadowUrl: '/static/imagenes/marker-shadow.png',
         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
     });
-    
-    // Icono Azul
     const iconoAzul = new L.Icon.Default(); 
-
-    // Icono Rojo
     const iconoRojo = new L.Icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
     });
 
-
-    // 4. Procesar Datos
-    const rutaData = sessionStorage.getItem('rutaOptimizada');
-    
-    if (!rutaData) {
-        alert("No se encontraron datos de ruta. Regresando...");
+    // --- 3. Procesar Datos y Renderizar ---
+    const rutaDataStr = sessionStorage.getItem('rutaOptimizada');
+    if (!rutaDataStr) {
+        alert("No hay datos de ruta.");
         window.location.href = '/';
         return;
     }
 
     try {
-        const data = JSON.parse(rutaData);
-        console.log("Datos recibidos:", data);
+        const data = JSON.parse(rutaDataStr);
 
-        // Actualizar Tabla de Estadísticas
-        // Fitness Penalizado
-        if (document.getElementById('fitness-valor')) {
+        // Actualizar Estadísticas
+        if (document.getElementById('fitness-valor')) 
             document.getElementById('fitness-valor').textContent = data.fitness_penalizado ? data.fitness_penalizado.toFixed(2) : "N/A";
-        }
-        // Distancia Real
-        if (document.getElementById('distancia-real-valor')) {
+        
+        if (document.getElementById('distancia-real-valor')) 
             document.getElementById('distancia-real-valor').textContent = data.distancia_real ? data.distancia_real.toFixed(2) : "N/A";
-        }
 
-        // Moda del Clima (Usando ruta penalizada)
         const climaModaEl = document.getElementById('clima-moda');
         if (climaModaEl && data.ruta_penalizada) {
             const condiciones = data.ruta_penalizada.map(p => p.condicion).filter(c => c);
@@ -74,27 +89,21 @@ document.addEventListener("DOMContentLoaded", function() {
                 const conteo = condiciones.reduce((acc, val) => { acc[val] = (acc[val] || 0) + 1; return acc; }, {});
                 const moda = Object.keys(conteo).reduce((a, b) => conteo[a] > conteo[b] ? a : b);
                 climaModaEl.textContent = moda;
-            } else {
-                climaModaEl.textContent = "N/A";
-            }
+            } else { climaModaEl.textContent = "N/A"; }
         }
 
-        // Renderizar Mapa 1: Penalizado
+        // Renderizar Mapa 1 (Penalizado)
         const markersPenalizados = [];
         const tabla = document.getElementById('tabla-mejor-ruta');
-        
+        tabla.innerHTML = ""; 
+
         data.ruta_penalizada.forEach((punto, i) => {
             const latLng = [punto.lat, punto.lng];
-            const esInicio = (i === 0);
-            
-            // Marcador
-            const marker = L.marker(latLng, { icon: esInicio ? iconoVerde : iconoAzul })
+            const marker = L.marker(latLng, { icon: (i === 0) ? iconoVerde : iconoAzul })
                 .addTo(mapPenalizado)
                 .bindPopup(`<b>${i + 1}. ${punto.nombre}</b><br>${punto.condicion}`);
-            
             markersPenalizados.push(marker);
 
-            // Tabla
             const row = tabla.insertRow();
             row.insertCell(0).textContent = i + 1;
             row.insertCell(1).textContent = punto.nombre;
@@ -102,163 +111,96 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
         if (markersPenalizados.length > 0) {
-            const grupo = L.featureGroup(markersPenalizados);
-            mapPenalizado.fitBounds(grupo.getBounds().pad(0.1));
-            dibujarRuta(data.ruta_penalizada, mapPenalizado, '#08564d'); // Color verde oscuro corporativo
+            groupPenalizado = L.featureGroup(markersPenalizados); // Guardamos en variable global
+            mapPenalizado.fitBounds(groupPenalizado.getBounds().pad(0.1));
+            dibujarRuta(data.ruta_penalizada, mapPenalizado, '#08564d');
         }
 
-        // Renderizar Mapa 2: Limpio
-        // Aquí se compara el orden con la ruta penalizada
+        // Renderizar Mapa 2 (Limpio)
         const markersLimpios = [];
-        
         if (data.ruta_limpia) {
             data.ruta_limpia.forEach((punto, i) => {
                 const latLng = [punto.lat, punto.lng];
-                
-                // Lógica de color:
-                // Si es el inicio (i=0), Verde.
-                // Si el nombre en esta posición (i) es diferente al nombre en la misma posición de ruta_penalizada, es Rojo.
-                // Si es igual, Azul.
-                
                 let iconToUse = iconoAzul;
-                let esDiferente = false;
-
+                let msgComparativa = "";
+                
                 if (i === 0) {
                     iconToUse = iconoVerde;
                 } else {
                     const nombreEnPenalizada = data.ruta_penalizada[i] ? data.ruta_penalizada[i].nombre : null;
                     if (nombreEnPenalizada !== punto.nombre) {
                         iconToUse = iconoRojo;
-                        esDiferente = true;
+                        msgComparativa = "<br><span style='color:red'>⚠️ Posición diferente</span>";
                     }
                 }
-
-                const msgComparativa = esDiferente ? "<br><span style='color:red'>⚠️ Posición diferente</span>" : "";
 
                 const marker = L.marker(latLng, { icon: iconToUse })
                     .addTo(mapLimpio)
                     .bindPopup(`<b>${i + 1}. ${punto.nombre}</b>${msgComparativa}`);
-                
                 markersLimpios.push(marker);
             });
 
             if (markersLimpios.length > 0) {
-                const grupo = L.featureGroup(markersLimpios);
-                mapLimpio.fitBounds(grupo.getBounds().pad(0.1));
+                groupLimpio = L.featureGroup(markersLimpios); // Guardamos en variable global
+                // No hacemos fitBounds aquí para el mapa limpio porque está oculto y fallaría.
+                // Se hará automáticamente al hacer clic en la pestaña gracias al fix de arriba.
                 dibujarRuta(data.ruta_limpia, mapLimpio, '#417fc6');
             }
         }
 
-        // Gráfica de Fitness por Generación 
         renderizarGrafica(data.fitness_generaciones);
 
     } catch (error) {
         console.error("Error JS:", error);
     }
 
-    /* ########################################################################################################################### */ 
-    // 5. Función para dibujar la ruta
-    function dibujarRuta(coordenadas) {
-        // ***** INICIO DEL CAMBIO *****
-        // Hacemos una copia para no modificar el array original
-        const coordsParaRuta = [...coordenadas]; 
-        if (coordsParaRuta.length > 0) {
-            // Añadimos el primer punto al final para cerrar el ciclo
-            coordsParaRuta.push(coordsParaRuta[0]); 
-        }
-        // ***** FIN DEL CAMBIO *****
-
+    // --- Funciones Auxiliares (dibujarRuta, renderizarGrafica, listeners botones) ---
+    function dibujarRuta(coordenadas, mapaObj, colorLinea) {
+        const coordsParaRuta = [...coordenadas];
+        if (coordsParaRuta.length > 0) coordsParaRuta.push(coordsParaRuta[0]);
         const urlCoordinates = coordsParaRuta.map(c => `${c.lng},${c.lat}`).join(';');
-        const apiUrl = `https://router.project-osrm.org/route/v1/driving/${urlCoordinates}?overview=full&geometries=geojson`;
-        
-        fetch(apiUrl)
+        fetch(`https://router.project-osrm.org/route/v1/driving/${urlCoordinates}?overview=full&geometries=geojson`)
             .then(res => res.json())
             .then(routeData => {
-                if (routeData.code !== 'Ok') {
-                    throw new Error("No se pudo obtener la ruta desde OSRM.");
+                if (routeData.code === 'Ok') {
+                    L.geoJSON(routeData.routes[0].geometry, {
+                        style: { color: colorLinea, weight: 4, opacity: 0.8 }
+                    }).addTo(mapaObj);
                 }
-                
-                const routeGeometry = routeData.routes[0].geometry;
-                
-                const polyline = L.geoJSON(routeGeometry, {
-                    style: {
-                        color: 'black',
-                        weight: 5,
-                        opacity: 0.7
-                    }
-                }).addTo(map);
-
-            })
-            .catch(err => console.error("Error al dibujar la ruta:", err));
+            }).catch(e => console.error(e));
     }
-    
-    /* ########################################################################################################################### */
-    // 6. Funcionalidad de los botones
-    const guardarRutaBtn = document.getElementById("guardarRuta");
-    if (guardarRutaBtn) {
-        guardarRutaBtn.addEventListener("click", async () => {
-            try {
-                const rutaData = sessionStorage.getItem('rutaOptimizada');
-                if (!rutaData) {
-                    alert("No hay datos de ruta para guardar.");
-                    return;
-                }
 
-                const data = JSON.parse(rutaData);
-
-                const body = {
-                    destinos: data.ruta,
-                    indices: data.indices
-                };
-
-                const response = await fetch('/guardar-ruta', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-
-                const resultado = await response.json();
-
-                if (response.ok) {
-                    alert("Ruta guardada correctamente");
-                } else {
-                    alert("Error al guardar ruta: " + resultado.message);
-                }
-            } catch (error) {
-                console.error("Error al guardar ruta:", error);
-                alert("Error al guardar la ruta");
-            }
-        });
+    function renderizarGrafica(fitnessData) {
+        const graficaEl = document.getElementById('grafica-fitness');
+        if (graficaEl && fitnessData) {
+            new Chart(graficaEl.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: fitnessData.map((_, i) => i + 1),
+                    datasets: [{
+                        label: 'Costo', data: fitnessData,
+                        borderColor: '#08564d', backgroundColor: 'rgba(8, 86, 77, 0.1)',
+                        fill: true, tension: 0.1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
     }
-    
-    /* ########################################################################################################################### */
-    // Botón para generar nueva ruta
-    document.getElementById("nuevaRuta").addEventListener("click", () => {
-        window.location.href = '/';
+
+    document.getElementById("guardarRuta")?.addEventListener("click", async () => {
+        const d = JSON.parse(sessionStorage.getItem('rutaOptimizada'));
+        const body = { destinos: d.ruta_penalizada, indices: d.indices_penalizada };
+        try {
+            const res = await fetch('/guardar-ruta', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+            });
+            alert(res.ok ? "Ruta guardada" : "Error al guardar");
+        } catch (e) { alert("Error de conexión"); }
     });
 
-    /* ########################################################################################################################### */
-    // Manejar cerrar sesión
-    const cerrarSesionBtn = document.getElementById('cerrarSesion');
-    if (cerrarSesionBtn) {
-        cerrarSesionBtn.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/cerrar-sesion', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert('Error al cerrar sesión');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al cerrar sesión');
-            }
-        });
-    }
+    document.getElementById("nuevaRuta")?.addEventListener("click", () => window.location.href = '/');
+    document.getElementById('cerrarSesion')?.addEventListener('click', async () => {
+         await fetch('/cerrar-sesion', { method: 'POST' }); window.location.reload();
+    });
 });

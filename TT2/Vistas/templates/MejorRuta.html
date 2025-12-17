@@ -2,56 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>LogistiClima - Mejor Ruta</title>
+    <title>LogistiClima - Comparativa</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_MejorRuta.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='estilo/estilo_auth.css') }}" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-
+        /* Ajuste de contenedores para pestañas */
         .mapa-wrapper {
             position: relative;
-            height: 400px; /* Altura para cada mapa */
+            height: 500px; /* Un poco más alto para mejor visualización */
             width: 100%;
-            margin-bottom: 25px;
-            border-radius: 15px;
+            border-radius: 0 0 15px 15px; /* Bordes redondeados solo abajo */
             overflow: hidden;
             border: 2px solid #ccc;
+            border-top: none; /* El borde superior lo da la pestaña */
+            display: none; /* Oculto por defecto, JS activa el correcto */
         }
-
-        .mapa-titulo {
-            background-color: #08564d;
-            color: white;
-            padding: 5px 10px;
-            font-size: 16px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        #stats-container {
-            padding: 10px 15px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        #stats-container p {
-            margin: 6px 0;
-            font-size: 0.95em;
-            color: #333;
-        }
-        #stats-container span {
-            font-weight: bold;
-            color: #000;
-        }
-        #grafica-container {
-            width: 100%;
-            max-height: 220px; /* Limitar altura */
-            margin-top: 15px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box; /* Asegurar que el padding no afecte el ancho */
+        .mapa-wrapper.active {
+            display: block;
         }
     </style>
 </head>
@@ -61,7 +30,7 @@
             <img src="{{ url_for('static', filename='imagenes/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
             <div class="title-container">
                 <h1>LogistiClima</h1>
-                <p class="subtitle">Comparativa de Optimización</p>
+                <p class="subtitle">Ruta Optimizada</p>
             </div>
         </div>
         
@@ -82,10 +51,17 @@
         <div class="contenido-principal">
             
             <div class="mapas-columna">
-                <div class="mapa-titulo">Ruta con Penalización Climática</div>
-                <div id="mapa-penalizado" class="mapa-wrapper"></div>
+                <div class="tabs-container">
+                    <button class="tab-button active" data-target="mapa-penalizado" style="--tab-color: #08564d;">
+                        Ruta con Penalización Climática
+                    </button>
+                    <button class="tab-button" data-target="mapa-limpio" style="--tab-color: #417fc6;">
+                        Ruta sin Penalización Climática
+                    </button>
+                </div>
 
-                <div class="mapa-titulo" style="background-color: #417fc6;">Ruta más Corta (Sin considerar clima)</div>
+                <div id="mapa-penalizado" class="mapa-wrapper active"></div>
+
                 <div id="mapa-limpio" class="mapa-wrapper"></div>
             </div>
 
@@ -130,22 +106,5 @@
     <script src="https://unpkg.com/leaflet-encoded@0.5.1/Polyline.Encoded.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
     <script src="{{ url_for('static', filename='js/js_MejorRuta.js') }}"></script>
-    <script>
-
-        document.getElementById('guardarRuta')?.addEventListener('click', function() {
-            this.disabled = true;
-            this.innerHTML = '<b>Guardar Ruta</b>';
-        });
-
-        document.getElementById('nuevaRuta')?.addEventListener('click', function() {
-            this.disabled = true;
-            this.innerHTML = '<b>Cargando...</b>';
-        });
-
-        document.getElementById('cerrarSesion')?.addEventListener('click', function() {
-            this.disabled = true;
-            this.textContent = 'Cerrando sesión...';
-        });
-    </script>
 </body>
 </html>

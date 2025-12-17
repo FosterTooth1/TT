@@ -27,7 +27,6 @@ def cargar_parametros():
         print("Parámetros cargados exitosamente.")
     except Exception as e:
         print(f"ERROR AL CARGAR parámetros.json: {e}")
-        # En caso de error, define valores por defecto para que la app no falle
         parametros_app = {
             "penalizaciones": {"Nublado": 1.0, "Despejado": 1.0},
             "lambda_penalizacion": 1.0, "num_generaciones": 100,
@@ -36,12 +35,10 @@ def cargar_parametros():
         }
 
 def guardar_parametros():
-    """Guarda la variable global de parámetros en parametros.json."""
     global parametros_app
     try:
         with open(PARAMETROS_PATH, 'w', encoding='utf-8') as f:
             json.dump(parametros_app, f, indent=2, ensure_ascii=False)
-        print("Parámetros guardados exitosamente.")
     except Exception as e:
         print(f"ERROR AL GUARDAR parámetros.json: {e}")
 
@@ -58,60 +55,32 @@ class ResultadoRecocido(Structure):
 class AlgoritmoRecocido:
     def __init__(self, ruta_biblioteca):
         self.biblioteca = ctypes.CDLL(ruta_biblioteca)
-        
-        # Configuración de tipos igual que en Genético/PSO
         self.biblioteca.ejecutar_algoritmo_recocido.restype = POINTER(ResultadoRecocido)
         self.biblioteca.ejecutar_algoritmo_recocido.argtypes = [
-            c_int,      # longitud_ruta
-            c_int,      # num_generaciones
-            c_double,   # tasa_enfriamiento
-            c_double,   # temperatura_final
-            c_int,      # max_neighbours
-            c_int,      # m
-            c_char_p,   # nombre_archivo
-            c_int       # heuristica
+            c_int, c_int, c_double, c_double, c_int, c_int, c_char_p, c_int
         ]
-        self.biblioteca.liberar_resultado.argtypes = [POINTER(ResultadoRecocido)]  # Mismo nombre de función
+        self.biblioteca.liberar_resultado.argtypes = [POINTER(ResultadoRecocido)]
 
     def ejecutar(self, longitud_ruta, num_generaciones, tasa_enfriamiento,
                temperatura_final, max_neighbours, m, nombre_archivo, heuristica):
         try:
             nombre_archivo_bytes = nombre_archivo.encode('utf-8')
-            
             resultado_ptr = self.biblioteca.ejecutar_algoritmo_recocido(
-                c_int(longitud_ruta),
-                c_int(num_generaciones),
-                c_double(tasa_enfriamiento),
-                c_double(temperatura_final),
-                c_int(max_neighbours),
-                c_int(m),
-                nombre_archivo_bytes,
-                c_int(heuristica)
+                c_int(longitud_ruta), c_int(num_generaciones), c_double(tasa_enfriamiento),
+                c_double(temperatura_final), c_int(max_neighbours), c_int(m),
+                nombre_archivo_bytes, c_int(heuristica)
             )
-            
-            if not resultado_ptr:
-                raise RuntimeError("Error en ejecución del Recocido")
-            
+            if not resultado_ptr: raise RuntimeError("Error en ejecución del Recocido")
             resultado = resultado_ptr.contents
-            
-            # Copia de datos
             recorrido = [resultado.recorrido[i] for i in range(resultado.longitud_recorrido)]
-            
             fitness_hist = [resultado.fitness_generaciones[i] for i in range(num_generaciones)]
-            
             salida = {
-                'recorrido': recorrido,
-                'fitness': resultado.fitness,
-                'tiempo_ejecucion': resultado.tiempo_ejecucion,
-                'fitness_generaciones': fitness_hist,
-                'temperatura_inicial': resultado.temperatura_inicial,
-                'temperatura_final': resultado.temperatura_final
+                'recorrido': recorrido, 'fitness': resultado.fitness,
+                'tiempo_ejecucion': resultado.tiempo_ejecucion, 'fitness_generaciones': fitness_hist,
+                'temperatura_inicial': resultado.temperatura_inicial, 'temperatura_final': resultado.temperatura_final
             }
-            
             self.biblioteca.liberar_resultado(resultado_ptr)
-            
             return salida
-            
         except Exception as e:
             raise RuntimeError(f"Error en Recocido Simulado: {str(e)}")
 
