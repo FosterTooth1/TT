@@ -1,15 +1,15 @@
 {
   "penalizaciones": {
-    "Nublado": 1.1,
-    "Considerablemente nublado": 1.2,
     "Despejado": 1.0,
-    "Niebla": 1.8,
-    "Bruma": 1.3,
-    "Lluvia intensa": 1.7,
-    "Tormenta electrica intensa": 1.9,
-    "Neblina": 1.6,
-    "Lluvia": 1.5,
-    "Truenos": 1.4
+    "Nublado": 1.2,
+    "Considerablemente nublado": 1.5,
+    "Bruma": 1.8,
+    "Neblina": 2.0,
+    "Lluvia": 3.0,
+    "Lluvia intensa": 5.0,
+    "Truenos": 6.0,
+    "Niebla": 8.0,
+    "Tormenta electrica intensa": 15.0
   },
   "lambda_penalizacion": 1.0,
   "num_generaciones": 50000,
