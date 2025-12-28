@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>LogistiClima - Comparativa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo_MejorRuta.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo_auth.css') }}" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        .mapa-wrapper {
+            position: relative;
+            height: 500px; 
+            width: 100%;
+            border-radius: 0 0 15px 15px;
+            overflow: hidden;
+            border: 2px solid #ccc;
+            border-top: none; 
+            display: none; 
+        }
+        .mapa-wrapper.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
+            <div class="title-container">
+                <h1>LogistiClima</h1>
+                <p class="subtitle">Ruta Optimizada</p>
+            </div>
+        </div>
+        
+        <div class="login-button-container">
+            {% if user_authenticated %}
+                <div class="user-info">
+                    <span class="welcome-text">¡Hola, {{ user_name }}!</span>
+                    <a href="{{ url_for('rutas_recientes') }}" class="rutas-button">Mis Rutas</a>
+                    <button id="cerrarSesion" class="logout-button">Cerrar Sesión</button>
+                </div>
+            {% else %}
+                <a href="{{ url_for('iniciar_sesion') }}" class="login-button">Iniciar Sesión</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+        <div class="contenido-principal">
+            
+            <div class="mapas-columna">
+                <div class="tabs-container">
+                    <button class="tab-button active" data-target="mapa-penalizado" style="--tab-color: #08564d;">
+                        Ruta con Penalización Climática
+                    </button>
+                    <button class="tab-button" data-target="mapa-limpio" style="--tab-color: #417fc6;">
+                        Ruta sin Penalización Climática
+                    </button>
+                </div>
+
+                <div id="mapa-penalizado" class="mapa-wrapper active"></div>
+
+                <div id="mapa-limpio" class="mapa-wrapper"></div>
+            </div>
+
+            <div class="tabla-container">
+                <div id="tabla-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nombre</th>
+                                <th>Condición</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-mejor-ruta">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="stats-container">
+                    <p><strong>Distancia Penalizada (Fitness):</strong> <span id="fitness-valor">...</span></p>
+                    <p><strong>Distancia Real (Km):</strong> <span id="distancia-real-valor" style="color: #d9534f;">...</span> km</p>
+                    <p><strong>Clima Predominante:</strong> <span id="clima-moda">...</span></p>
+                </div>
+
+                <div id="grafica-container">
+                    <canvas id="grafica-fitness"></canvas>
+                </div>
+                
+                {% if user_authenticated %}
+                    <button id="guardarRuta"><b>Guardar Ruta Sugerida</b></button>
+                {% else %}
+                    <div class="auth-message">
+                        <p>💡 <strong>Inicia sesión</strong> para guardar rutas</p>
+                    </div>
+                {% endif %}
+                <button id="nuevaRuta"><b>Nueva Ruta</b></button>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-encoded@0.5.1/Polyline.Encoded.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="{{ url_for('static', filename='js/js_MejorRuta.js') }}"></script>
+</body>
+</html>

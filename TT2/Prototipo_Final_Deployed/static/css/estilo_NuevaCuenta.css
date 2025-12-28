@@ -1,0 +1,116 @@
+:root { 
+    --primary-100: #08564d; 
+    --accent-100: #169db3;  
+    --accent-200: #0a5f78;  
+    --text-100: #000000;   
+    --bg-100: #eaf6f8;   
+    --bg-200: #ffffff;      
+}
+
+body {
+    margin: 0;
+    font-family: Helvetica, sans-serif;
+    background-color: var(--bg-100);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    margin-top: 60px;
+}
+
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo, .logo-placeholder {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    background-color: var(--accent-100);
+    border-radius: 50%;
+    color: white;
+}
+
+.title-container h1 {
+    color: var(--primary-100);
+    margin: 2px 0;  
+}
+
+.subtitle {
+    font-size: 14px;
+    color: var(--text-100);
+    margin: 2px 0; 
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.form-section {
+    width: 90%;         
+    max-width: 320px;  
+    box-sizing: border-box; 
+    margin-top: 15px; 
+    background-color: var(--bg-200);
+    padding: 2em;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    padding: 0.5em;
+}
+
+.input-container .icon {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+input {
+    border: none;
+    background: transparent;
+    outline: none;
+    flex: 1;
+    font-size: 14px;
+}
+
+.error-messages {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent-100);
+    border: none;
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: var(--accent-200);
+}

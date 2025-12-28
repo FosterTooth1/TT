@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>LogistiClima - Nueva Cuenta</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo_NuevaCuenta.css') }}" type="text/css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
+            <div class="title-container">
+                <h1>LogistiClima</h1>
+                <p class="subtitle">Nueva Cuenta</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="form-section">
+            <form id="registroForm">
+                <div class="input-container">
+                    <span class="icon">👤</span>
+                    <input type="text" id="nombre" placeholder="Nombre" required>
+                </div>
+
+                <div class="input-container">
+                    <span class="icon">📧</span>
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+
+                <div class="input-container">
+                    <span class="icon">🔒</span>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+
+                <div id="password-errors" class="error-messages"></div>
+
+                <button type="submit"><b>Registrarse</b></button>
+            </form>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/js_NuevaCuenta.js') }}"></script>
+</body>
+</html>

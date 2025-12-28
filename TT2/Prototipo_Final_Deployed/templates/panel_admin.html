@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración - LogistiClima</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo_auth.css') }}" type="text/css">
+    <style>
+        :root{
+            --accent: #169db3;
+            --accent-dark: #0a5f78;
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --muted: #6b7280;
+            --radius: 10px;
+        }
+        *{box-sizing:border-box}
+        body { 
+            background-color: var(--bg);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            margin: 0;
+            color: #1f2937;
+        }
+        header{
+            background: linear-gradient(90deg, rgba(22,157,179,0.95), rgba(13,122,139,0.95));
+            color: white;
+            padding: 18px 20px;
+            box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+        .header-inner{
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .logo-container{
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .logo{
+            width: 68px;
+            height: 68px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(2,6,23,0.18);
+            border: 2px solid rgba(255,255,255,0.08);
+        }
+        .title-container{
+            display:flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1;
+        }
+        .title-container h1{
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            color: #fff;
+        }
+        .title-container p.subtitle{
+            margin: 2px 0 0 0;
+            font-size: 0.9rem;
+            opacity: 0.95;
+            color: rgba(255,255,255,0.95);
+            font-weight: 600;
+        }
+        @media (max-width:740px){
+            .header-inner{flex-direction:column;align-items:center}
+            .title-container{align-items:center;text-align:center}
+        }
+
+        .login-button-container{
+            display:flex;
+            align-items:center;
+            gap: 12px;
+        }
+        .rutas-button{
+            background: #fff;
+            color: var(--accent);
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            box-shadow: 0 6px 14px rgba(2,6,23,0.08);
+        }
+
+        main{padding: 30px 20px;}
+        .admin-container {
+            max-width: 900px;
+            margin: 10px auto 60px auto;
+            padding: 28px;
+            background-color: var(--card);
+            border-radius: var(--radius);
+            box-shadow: 0 8px 28px rgba(15,23,42,0.06);
+            border: 1px solid rgba(7,22,60,0.03);
+        }
+
+        .panel-title{
+            display:flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .panel-title h2{
+            margin: 0;
+            font-size: 1.45rem;
+            color: #0f1724;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+        }
+        .panel-title p{
+            margin: 6px 0 0 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        form { display: flex; flex-direction: column; }
+        fieldset { 
+            border: 1px solid #e6eef9;
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 18px;
+            background: linear-gradient(180deg,#ffffff,#fbfdff);
+        }
+        legend { 
+            font-size: 1.05em;
+            font-weight: 700;
+            color: var(--accent);
+            padding: 0 10px;
+        }
+        .form-grupo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .form-grupo label {
+            font-weight: 600;
+            color: #374151;
+            flex-basis: 60%;
+        }
+        .form-grupo input, .form-grupo select {
+            flex-basis: 35%;
+            padding: 9px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.98em;
+            background: #fbfdff;
+        }
+        button[type="submit"] {
+            padding: 12px 20px;
+            font-size: 1.05em;
+            background-color: var(--accent); 
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.25s ease, transform 0.08s ease;
+            align-self: center;
+            min-width: 220px;
+            font-weight: 700;
+            box-shadow: 0 10px 24px rgba(2,6,23,0.08);
+        }
+        button[type="submit"]:hover { 
+            background-color: var(--accent-dark); 
+            transform: translateY(-1px);
+        }
+        .logout-admin {
+            display: block;
+            text-align: center;
+            margin-top: 14px;
+            color: #dc3545;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        @media (max-width:900px){
+            .form-grupo{flex-direction:column;align-items:flex-start}
+            .form-grupo label{flex-basis:auto;margin-bottom:6px}
+            .form-grupo input{flex-basis:100%;width:100%}
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo LogistiClima" class="logo">
+                <div class="title-container">
+                    <h1>LogistiClima</h1>
+                    <p class="subtitle">Panel de Administración</p>
+                </div>
+            </div>
+
+            <div class="login-button-container">
+                <div class="user-info">
+                    <a href="{{ url_for('index') }}" class="rutas-button">App Principal</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="admin-container">
+            <div class="panel-title">
+                <h2>Configuración del Algoritmo</h2>
+                <p>Modifica los parámetros que influirán en la ejecución y la penalización climática</p>
+            </div>
+
+            <form id="form-admin" action="{{ url_for('actualizar_parametros') }}" method="POST">
+                
+                <fieldset>
+                    <legend>Parámetros Generales</legend>
+                    <div class="form-grupo">
+                        <label for="lambda_penalizacion">Lambda (Multiplicador Penalización):</label>
+                        <input type="number" step="0.01" name="lambda_penalizacion" value="{{ params.lambda_penalizacion }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="num_generaciones">Número de Generaciones:</label>
+                        <input type="number" name="num_generaciones" value="{{ params.num_generaciones }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="tasa_enfriamiento">Tasa de Enfriamiento (0.0 - 1.0):</label>
+                        <input type="number" step="0.001" name="tasa_enfriamiento" value="{{ params.tasa_enfriamiento }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="temperatura_final">Temperatura Final:</label>
+                        <input type="number" step="0.0001" name="temperatura_final" value="{{ params.temperatura_final }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="m">Parámetro 'm':</label>
+                        <input type="number" name="m" value="{{ params.m }}">
+                    </div>
+                    <div class="form-grupo">
+                        <label for="heuristica">Heurística (0 o 1):</label>
+                        <input type="number" name="heuristica" value="{{ params.heuristica }}">
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Penalizaciones Climáticas</legend>
+                    {% for key, value in params.penalizaciones.items() %}
+                    <div class="form-grupo">
+                        <label for="penalizacion_{{ key | replace(' ', '_') }}">{{ key }}:</label>
+                        <input type="number" step="0.1" name="penalizacion_{{ key | replace(' ', '_') }}" value="{{ value }}">
+                    </div>
+                    {% endfor %}
+                </fieldset>
+
+                <button type="submit" id="btn-actualizar">Actualizar Parámetros</button>
+            </form>
+
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('form-admin').addEventListener('submit', function() {
+            var boton = document.getElementById('btn-actualizar');
+            boton.disabled = true;
+            boton.textContent = 'Actualizando...';
+        });
+    </script>
+</body>
+</html>
