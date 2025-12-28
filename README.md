@@ -87,6 +87,16 @@ Aplicación web lista para producción:
 
 ---
 
+## Capturas del Sistema
+
+### Visualización de Ruta Optimizada
+
+![Ruta Optimizada](documentacion/images/MejorRuta.png)
+
+*Vista del sistema mostrando: mapa con la ruta generada, tabla de naves a visitar, distancia total en kilómetros, clima predominante en la ruta, valor de fitness del algoritmo y gráfica de convergencia.*
+
+---
+
 ## Tecnologías Utilizadas
 
 | Categoría | Tecnologías |

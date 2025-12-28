@@ -141,6 +141,34 @@ docker run -p 8080:8080 logisticlima
 - `GET /panel_admin` - Panel de configuración
 - `POST /actualizar_parametros` - Actualizar parámetros del algoritmo
 
+## Capturas de Pantalla
+
+### Inicio de Sesión
+![Inicio de Sesión](../../documentacion/images/IniciarSesion.png)
+*Pantalla de inicio de sesión para usuarios registrados.*
+
+### Registro de Usuario
+![Nueva Cuenta](../../documentacion/images/NuevaCuenta.png)
+*Formulario de registro para nuevos usuarios.*
+
+### Selección de Naves Industriales
+![Seleccionar Naves](../../documentacion/images/SeleccionarNaves.png)
+*Interfaz para seleccionar las naves industriales a visitar y la nave industrial de inicio.*
+
+### Visualización de Ruta Optimizada
+![Mejor Ruta](../../documentacion/images/MejorRuta.png)
+*Vista principal mostrando: mapa con la ruta generada, tabla de naves a visitar, distancia total en km, fitness del algoritmo y gráfica de convergencia.*
+
+### Historial de Rutas
+![Rutas Recientes](../../documentacion/images/RutasRecientes.png)
+*Historial de rutas guardadas por el usuario las cuales puede reoptimizar, eliminar o ver detalladamente.*
+
+### Panel de Administración
+![Panel Admin](../../documentacion/images/panel_admin.png)
+*Panel para configurar los parámetros del algoritmo de optimización y las penalizaciones climáticas.*
+
+---
+
 ## Tecnologías Utilizadas
 
 - **Backend**: Python 3.9, Flask, Gunicorn, Pandas, NumPy
