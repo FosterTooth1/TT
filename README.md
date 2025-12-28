@@ -27,7 +27,7 @@ TT/
 ### Contenido:
 | Carpeta | Descripción |
 |---------|-------------|
-| `data/` | Datos procesados (matrices de distancias) |
+| `data/` | Datos procesados (matrices de distancias y datos de entrenamiento para los modelos de ML) |
 | `lib/` | Librerías compiladas (.dll/.so) |
 | `notebooks/` | Experimentación con APIs meteorológicas y modelos de ML |
 | `src/c/` | Implementaciones en C de algoritmos: Genético, PSO, Recocido Simulado, Búsqueda Tabú |
