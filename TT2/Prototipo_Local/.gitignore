@@ -5,7 +5,7 @@
 venv/
 env/
 node_modules/
-__pycache__/random_forest_model.pkl
+__pycache__/
 
 # Archivo .env
 .env

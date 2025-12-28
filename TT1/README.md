@@ -16,6 +16,7 @@ TT1/
 ├── requirements.txt
 ├── data/
 │   └── processed/
+│       ├── Dataset_Final_CE.csv      # Dataset de entrenamiento para modelos de ML
 │       └── Matriz_Distancias.csv
 ├── lib/                               # Librerías compiladas (.dll/.so)
 ├── notebooks/
@@ -23,11 +24,11 @@ TT1/
 │   ├── .gitignore
 │   ├── TT_solicitud_clima_actual.ipynb   # Evaluación y elección de API meteorológica
 │   └── modelos_predictivos/              # Comparativa de modelos de predicción
-│       ├── TT_prueba_Arbol.ipynb
-│       ├── TT_prueba_LSTM.ipynb
-│       ├── TT_prueba_Random_Forest.ipynb
-│       ├── TT_prueba_RNN.ipynb
-│       └── TT_prueba_SVM.ipynb
+│       ├── TT_prueba_Arbol.ipynb         # Genera: arbol_decision_model.pkl
+│       ├── TT_prueba_LSTM.ipynb          # Genera: lstm_model.keras, lstm_encoders.pkl
+│       ├── TT_prueba_Random_Forest.ipynb # Genera: random_forest_model.pkl
+│       ├── TT_prueba_RNN.ipynb           # Genera: rnn_model.keras, rnn_encoders.pkl
+│       └── TT_prueba_SVM.ipynb           # Genera: svm_model.pkl
 ├── src/
     ├── c/
     │   ├── genetico/ (Bibliotecas.h, Funciones.c, Main.c, genetico.exe, a.out)
@@ -77,8 +78,28 @@ cd src/python/comparacion
 python Visualizar_resultados.py
 ```
 
+### Ejecutar Notebooks de Modelos Predictivos
+Los notebooks en `notebooks/modelos_predictivos/` están configurados para ejecutarse localmente:
+
+1. **Fuente de datos**: Utilizan el dataset `data/processed/Dataset_Final_CE.csv`
+2. **Modelos generados**: Cada notebook genera archivos `.pkl` (o `.keras` para redes neuronales) con el modelo entrenado y los encoders necesarios
+3. **Ejecución**: Abrir el notebook en VS Code o Jupyter y ejecutar todas las celdas
+
+**Archivos generados por cada modelo:**
+| Notebook | Modelo | Encoders/Scaler |
+|----------|--------|-----------------|
+| TT_prueba_Arbol.ipynb | `arbol_decision_model.pkl` | `arbol_decision_encoders.pkl` |
+| TT_prueba_Random_Forest.ipynb | `random_forest_model.pkl` | `random_forest_encoders.pkl` |
+| TT_prueba_SVM.ipynb | `svm_model.pkl` | `svm_encoders.pkl` |
+| TT_prueba_LSTM.ipynb | `lstm_model.keras` | `lstm_encoders.pkl`, `lstm_scaler.pkl` |
+| TT_prueba_RNN.ipynb | `rnn_model.keras` | `rnn_encoders.pkl`, `rnn_scaler.pkl` |
+
 ## Dependencias Python
 - ctypes
 - matplotlib
 - pandas
 - chardet
+- scikit-learn
+- tensorflow
+- seaborn
+- joblib
