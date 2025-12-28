@@ -1,5 +1,6 @@
-#include "Biblioteca.h"
+#include "Bibliotecas.h"
 
+// Estructura para almacenar el resultado del algoritmo de recocido simulado
 typedef struct
 {
     int *recorrido;
@@ -15,6 +16,7 @@ typedef struct
 #else
 #define EXPORT
 #endif
+
 
 EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
                                                       int num_generaciones,
@@ -68,7 +70,7 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
         "Zacatecas", "CDMX"
     };
 
-    // 3) Preparar soluciones
+    // Preparar soluciones
     Solucion *sol = crear_solucion(1, longitud_ruta);
     crear_permutacion(sol, longitud_ruta);
     sol->fitness = calcular_fitness(sol->ruta, distancias, longitud_ruta);
@@ -89,7 +91,7 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
 
     int *vecino = malloc(longitud_ruta * sizeof(int));
 
-    // 4) Calcular temperatura inicial (desviación típica de 100 muestras)
+    // Calcular temperatura inicial
     double suma = 0, suma2 = 0;
     for (int i = 0; i < 100; i++)
     {
@@ -108,12 +110,12 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
 
     const int max_successes = (int)(0.5 * max_neighbours);
 
-    // 5) Array para histórico de fitness
+    // Array para histórico de fitness
     double *fitness_generaciones = (double *)malloc(num_generaciones * sizeof(double));
 
     int k;
 
-    // 6) Bucle de recocido
+    // Bucle de recocido
     for (k = 1; k <= num_generaciones && T > temperatura_final; k++)
     {
         // Enfriamiento logarítmico de Béltsman
@@ -140,7 +142,7 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
             heuristica_abruptos(actual->ruta, longitud_ruta, m, distancias);
 
         actual->fitness = calcular_fitness(actual->ruta, distancias, longitud_ruta);
-        fitness_generaciones[k - 1] = mejor->fitness; // recuerda que ahora k arranca en 1
+        fitness_generaciones[k - 1] = mejor->fitness;
     }
 
     // Si no se ha llegado a la última generación, rellenar el resto del histórico
@@ -151,7 +153,7 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
     time_t fin = time(NULL);
     double t_total = difftime(fin, inicio);
 
-    // 7) Empaquetar resultado
+    // Empaquetar resultado
     ResultadoRecocido* R = (ResultadoRecocido*)malloc(sizeof(ResultadoRecocido));
     R->recorrido = (int*)malloc(longitud_ruta * sizeof(int));
     R->nombres_ciudades = malloc(longitud_ruta * sizeof(char[50]));
@@ -166,7 +168,7 @@ EXPORT ResultadoRecocido *ejecutar_algoritmo_recocido(int longitud_ruta,
         R->nombres_ciudades[i][49] = '\0';
     }
 
-    // 8) Limpieza
+    // Limpieza
     liberar_solucion(sol);
     liberar_solucion(actual);
     liberar_solucion(mejor);

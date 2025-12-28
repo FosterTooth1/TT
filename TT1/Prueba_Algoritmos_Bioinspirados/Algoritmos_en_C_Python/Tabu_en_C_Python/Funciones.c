@@ -1,4 +1,4 @@
-#include "Biblioteca.h"
+#include "Bibliotecas.h"
 
 
 Solucion *crear_solucion(int tamano, int longitud_permutacion)
@@ -170,6 +170,9 @@ void eliminar_de_posicion(int *array, int longitud, int posicion)
     }
 }
 
+// Función para calcular el fitness (costo total) de una ruta dada la matriz de distancias
+// Recibe un puntero a la ruta, la matriz de distancias y el número de ciudades
+// Devuelve el fitness calculado como un valor double
 double calcular_fitness(int *ruta, double **distancias, int num_ciudades)
 {
     double total = 0.0;
@@ -182,6 +185,9 @@ double calcular_fitness(int *ruta, double **distancias, int num_ciudades)
     return total;
 }
 
+// Genera un vecino de la solución actual mediante una inversión 2-opt
+// Recibe un puntero a la solución actual, un puntero para almacenar el vecino generado, el número de ciudades, y punteros para las posiciones i y j
+// No devuelve nada (todo se hace por referencia)
 void generar_vecino(int *actual, int *vecino, int num_ciudades, int *i, int *j) {
     memcpy(vecino, actual, num_ciudades * sizeof(int));
     *i = rand() % (num_ciudades - 1);
@@ -197,6 +203,9 @@ void generar_vecino(int *actual, int *vecino, int num_ciudades, int *i, int *j) 
     }
 }
 
+// Libera la memoria asignada a una solución
+// Recibe un puntero a la solución a liberar
+// No devuelve nada
 void liberar_solucion(Solucion *solucion)
 {
     free(solucion->ruta);

@@ -3,7 +3,7 @@ from ctypes import c_int, c_double, c_char_p, c_char, POINTER, Structure, cast
 import os
 import matplotlib.pyplot as plt
 
-# Definimos la estructura equivalente a ResultadoGenetico
+# Definimos la estructura de resultados que devuelve el C
 class ResultadoPSO(Structure):
     _fields_ = [
         ("recorrido", POINTER(c_int)),          # Puntero al mejor recorrido
@@ -89,7 +89,7 @@ class AlgoritmoPSO:
         except Exception as e:
             raise RuntimeError(f"Error en PSO: {str(e)}")
 
-# Función main idéntica a la genética (solo cambian parámetros)
+# Función principal para ejecutar el PSO y mostrar resultados
 def main():
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
     nombre_biblioteca = "libpso.so" if os.name != 'nt' else "pso.dll"
@@ -103,7 +103,7 @@ def main():
         'num_generaciones': 150,
         'prob_pbest': 0.35,
         'prob_gbest': 0.7,
-        'nombre_archivo': "Distancias_no_head.csv",
+        'nombre_archivo': "Matriz_Distancias.csv",
         'prob_inercia': 0.3,
         'm': 3,
         'heuristica': 0

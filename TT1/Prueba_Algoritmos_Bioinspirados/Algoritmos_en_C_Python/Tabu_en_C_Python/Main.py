@@ -3,21 +3,21 @@ from ctypes import c_int, c_double, c_float, c_char_p, POINTER, Structure, c_cha
 import os
 import matplotlib.pyplot as plt
 
+# Definición de la estructura ResultadoTabu
 class ResultadoTabu(Structure):
     _fields_ = [
         ("recorrido", POINTER(c_int)),
         ("fitness", c_double),
         ("tiempo_ejecucion", c_double),
-        ("nombres_ciudades", POINTER(c_char * 50 * 32)),  # Mismo formato que otros
+        ("nombres_ciudades", POINTER(c_char * 50 * 32)), 
         ("longitud_recorrido", c_int),
         ("fitness_generaciones", POINTER(c_double)),
     ]
 
+# Clase para manejar el Algoritmo de Búsqueda Tabú
 class AlgoritmoTabu:
     def __init__(self, ruta_biblioteca):
         self.biblioteca = ctypes.CDLL(ruta_biblioteca)
-        
-        # Configuración estándar como en otros algoritmos
         self.biblioteca.ejecutar_algoritmo_tabu.restype = POINTER(ResultadoTabu)
         self.biblioteca.ejecutar_algoritmo_tabu.argtypes = [
             c_int,      # longitud_ruta
@@ -55,7 +55,7 @@ class AlgoritmoTabu:
             
             resultado = resultado_ptr.contents
             
-            # Extracción de datos unificada
+            # Extracción de datos 
             recorrido = [resultado.recorrido[i] for i in range(resultado.longitud_recorrido)]
             
             nombres_ciudades = []
@@ -82,6 +82,7 @@ class AlgoritmoTabu:
         except Exception as e:
             raise RuntimeError(f"Error en Tabu Search: {str(e)}")
 
+# Función principal para ejecutar el algoritmo y mostrar resultados
 def main():
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
     nombre_biblioteca = "tabu.dll" if os.name == 'nt' else "libtabu.so"
@@ -97,7 +98,7 @@ def main():
         'umbral_est_global': 0.1,
         'umbral_est_local': 0.05,
         'm': 3,
-        'nombre_archivo': "Distancias_no_head.csv",
+        'nombre_archivo': "Matriz_Distancias.csv",
         'heuristica': 0
     }
     

@@ -1,4 +1,4 @@
-#include "Biblioteca.h"
+#include "Bibliotecas.h"
 
 
 Solucion *crear_solucion(int tamano, int longitud_permutacion)
@@ -170,6 +170,9 @@ void eliminar_de_posicion(int *array, int longitud, int posicion)
     }
 }
 
+// Función para calcular el fitness (costo total) de una ruta dada la matriz de distancias
+// Recibe un puntero a la ruta, la matriz de distancias y el número de ciudades
+// Devuelve el fitness como un valor double
 double calcular_fitness(int *ruta, double **distancias, int num_ciudades)
 {
     double total = 0.0;
@@ -182,6 +185,9 @@ double calcular_fitness(int *ruta, double **distancias, int num_ciudades)
     return total;
 }
 
+// Función para generar un vecino de la ruta actual mediante una operación 2-opt
+// Recibe un puntero a la ruta actual, un puntero para almacenar la ruta vecino y el número de ciudades
+// No devuelve nada (todo se hace por referencia)
 void generar_vecino(int *ruta_actual, int *ruta_vecino, int num_ciudades)
 {
     memcpy(ruta_vecino, ruta_actual, num_ciudades * sizeof(int));
@@ -201,6 +207,9 @@ void generar_vecino(int *ruta_actual, int *ruta_vecino, int num_ciudades)
     }
 }
 
+// Función para calcular la probabilidad de aceptación de un vecino
+// Recibe el fitness actual, el fitness del vecino y la temperatura
+// Devuelve la probabilidad como un valor double entre 0 y 1
 double probabilidad_aceptacion(double fitness_actual, double fitness_vecino, double temperatura)
 {
     if (fitness_vecino < fitness_actual)
@@ -208,6 +217,9 @@ double probabilidad_aceptacion(double fitness_actual, double fitness_vecino, dou
     return exp((fitness_actual - fitness_vecino) / temperatura);
 }
 
+// Función para liberar la memoria asignada a una solución
+// Recibe un puntero a la solución
+// No devuelve nada
 void liberar_solucion(Solucion *solucion)
 {
     free(solucion->ruta);

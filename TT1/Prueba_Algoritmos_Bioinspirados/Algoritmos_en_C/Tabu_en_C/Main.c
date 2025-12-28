@@ -1,4 +1,4 @@
-#include "Biblioteca.h"
+#include "Bibliotecas.h"
 
 int main()
 {
@@ -15,7 +15,7 @@ int main()
     int m = 3;
 
     // Nombre del archivo con las distancias
-    char *nombre_archivo = "Distancias_no_head.csv";
+    char *nombre_archivo = "Matriz_Distancias.csv";
 
     // Reservamos memoria para la matriz que almacena las distancias
     double **distancias = malloc(longitud_ruta * sizeof(double *));
@@ -162,25 +162,25 @@ int main()
             }
             free(mejor_vecino);
 
-                // ——— Control de estancamiento local ———
+                // Control de estancamiento local
             if (actual->fitness < prev_actual_fitness)
             {
-                // ¡La solución actual mejoró, reiniciamos contadores!
+                //La solución actual mejoró, se reinicia contadores
                 //sin_mejora_actual = 0;
             }
             else if (actual->fitness == prev_actual_fitness)
             {
-                // La solución actual se estancó, contamos una iteración más
+                // La solución actual se estancó, se cuenta una iteración más
                 sin_mejora_actual++;
             }
             else if (actual->fitness > prev_actual_fitness)
             {
-                // Sigue atascada, contamos otra iteración más
+                // Sigue atascada, se cuenta otra iteración más
                 sin_mejora_actual++;
             }
 
             if (sin_mejora_global > umbral_est_global * num_generaciones && sin_mejora_actual > umbral_est_local * num_generaciones) {  // 15 iteraciones para 150 totales
-                // Perturbación fuerte: 5 swaps aleatorios + reset lista tabú
+                // Perturbación 5 swaps aleatorios + reset lista tabú
                 for (int p = 0; p < 5; p++) {
                     int i = rand() % longitud_ruta;
                     int j = rand() % longitud_ruta;
@@ -197,7 +197,7 @@ int main()
                 
                 sin_mejora_global = 0;
                 sin_mejora_actual = 0;  // Reiniciar contadores
-                printf("---- REINICIO ADAPTATIVO ----\n");
+                printf("Reinicio\n");
             }
 
             // Eliminar entradas expiradas de la lista tabú

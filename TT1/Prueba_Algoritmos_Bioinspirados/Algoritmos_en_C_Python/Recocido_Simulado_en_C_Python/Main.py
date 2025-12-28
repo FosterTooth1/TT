@@ -3,16 +3,18 @@ from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char, cast
 import os
 import matplotlib.pyplot as plt
 
+# Definición de la estructura ResultadoRecocido
 class ResultadoRecocido(Structure):
     _fields_ = [
         ("recorrido", POINTER(c_int)),
         ("fitness", c_double),
         ("tiempo_ejecucion", c_double),
-        ("nombres_ciudades", POINTER(c_char * 50 * 32)),  # Mismo formato que PSO/Genético
+        ("nombres_ciudades", POINTER(c_char * 50 * 32)), 
         ("longitud_recorrido", c_int),
         ("fitness_generaciones", POINTER(c_double)),
     ]
 
+# Clase para manejar el Algoritmo de Recocido Simulado
 class AlgoritmoRecocido:
     def __init__(self, ruta_biblioteca):
         self.biblioteca = ctypes.CDLL(ruta_biblioteca)
@@ -93,7 +95,7 @@ def main():
         'temperatura_final': 0.000000001,
         'max_neighbours': 320,
         'm': 3,
-        'nombre_archivo': "Distancias_no_head.csv",
+        'nombre_archivo': "Matriz_Distancias.csv",
         'heuristica': 0
     }
     

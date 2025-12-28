@@ -4,21 +4,25 @@ import seaborn as sns
 import os
 import chardet
 
-# Configuración actualizada
+# Configuración global de gráficos
 sns.set_theme(style="whitegrid")
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['savefig.dpi'] = 300
 COLOR_PALETTE = "viridis"
 EVALUACIONES = ['100,000 evaluaciones', '500,000 evaluaciones', '2,000,000 evaluaciones']
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PATH_CALIDAD = os.path.join(BASE_DIR, 'resultados_calidad', 'calidad_solucion.csv')
+PATH_TIEMPO = os.path.join(BASE_DIR, 'resultados_tiempo', 'tiempo_ejecucion.csv')
+PATH_ESTABILIDAD = os.path.join(BASE_DIR, 'resultados_estabilidad', 'estabilidad.csv')
 
+# Detecta la codificación del archivo
 def detectar_encoding(archivo):
-    """Detecta la codificación del archivo"""
     with open(archivo, 'rb') as f:
         result = chardet.detect(f.read())
     return result['encoding']
 
+# Carga y procesa un archivo CSV de resultados
 def cargar_csv(nombre_archivo):
-    """Carga y procesa un archivo CSV de resultados"""
     if not os.path.exists(nombre_archivo):
         raise FileNotFoundError(f"No se encuentra el archivo {nombre_archivo}")
     
@@ -29,16 +33,16 @@ def cargar_csv(nombre_archivo):
                  var_name='Metrica', 
                  value_name='Valor')
 
+# Carga el archivo de estabilidad
 def cargar_estabilidad(nombre_archivo):
-    """Carga el archivo de estabilidad"""
     if not os.path.exists(nombre_archivo):
         raise FileNotFoundError(f"No se encuentra el archivo {nombre_archivo}")
     
     encoding = detectar_encoding(nombre_archivo)
     return pd.read_csv(nombre_archivo, encoding=encoding)
 
+# Genera gráficos separados por número de evaluaciones
 def generar_grafico_por_tamaño(df, titulo_base, ylabel, unidad='', evaluaciones=''):
-    """Genera gráficos separados por número de evaluaciones"""
     df_filtrado = df[df['Tamaño'] == evaluaciones]
     
     if df_filtrado.empty:
@@ -81,8 +85,8 @@ def generar_grafico_por_tamaño(df, titulo_base, ylabel, unidad='', evaluaciones
     plt.tight_layout()
     return fig
 
+# Genera gráfico de estabilidad ordenado de mejor a peor
 def generar_grafico_estabilidad(df, evaluaciones):
-    """Genera gráfico de estabilidad ordenado de mejor a peor"""
     df_filtrado = df[df['Tamaño'] == evaluaciones]
     
     if df_filtrado.empty:
@@ -116,38 +120,48 @@ def generar_grafico_estabilidad(df, evaluaciones):
     plt.tight_layout()
     return plt.gcf()
 
+# Genera todas las gráficas separadas por evaluaciones
 def generar_graficas_metricas():
-    """Genera todas las gráficas separadas por evaluaciones"""
     try:
-        df_calidad = cargar_csv('calidad_solucion.csv')
-        df_tiempo = cargar_csv('tiempo_ejecucion.csv')
-        df_estabilidad = cargar_estabilidad('estabilidad.csv')
+        df_calidad = cargar_csv(PATH_CALIDAD)
+        df_tiempo = cargar_csv(PATH_TIEMPO)
+        df_estabilidad = cargar_estabilidad(PATH_ESTABILIDAD)
     except FileNotFoundError as e:
         print(f"Error: {str(e)} - Ejecuta primero comparar_algoritmos.py")
         return
+
+    # Directorios de salida para las imágenes
+    dir_calidad = os.path.dirname(PATH_CALIDAD)
+    dir_tiempo = os.path.dirname(PATH_TIEMPO)
+    dir_estabilidad = os.path.dirname(PATH_ESTABILIDAD)
+
+    for d in (dir_calidad, dir_tiempo, dir_estabilidad):
+        os.makedirs(d, exist_ok=True)
 
     # Generar gráficas para cada evaluación
     for evaluaciones in EVALUACIONES:
         # Calidad de solución
         fig = generar_grafico_por_tamaño(df_calidad, 'Calidad de Solución', 'Fitness', evaluaciones=evaluaciones)
-        fig.savefig(f'calidad_solucion_{evaluaciones.lower().replace(",", "").replace(" ", "_")}.png')
-        plt.close()
+        if fig:
+            fig.savefig(os.path.join(dir_calidad, f'calidad_solucion_{evaluaciones.lower().replace(",", "").replace(" ", "_")}.png'))
+            plt.close()
         
         # Tiempos de ejecución
         fig = generar_grafico_por_tamaño(df_tiempo, 'Tiempos de Ejecución', 'Segundos', 's', evaluaciones)
-        for ax in fig.axes:
-            ax.set_yscale("log")
-        fig.savefig(f'tiempos_ejecucion_{evaluaciones.lower().replace(",", "").replace(" ", "_")}.png')
-        plt.close()
+        if fig:
+            for ax in fig.axes:
+                ax.set_yscale("log")
+            fig.savefig(os.path.join(dir_tiempo, f'tiempos_ejecucion_{evaluaciones.lower().replace(",", "").replace(" ", "_")}.png'))
+            plt.close()
         
         # Estabilidad
         fig = generar_grafico_estabilidad(df_estabilidad, evaluaciones)
         if fig:
-            fig.savefig(f'estabilidad_{evaluaciones.lower().replace(",", "").replace(" ", "_")}.png')
+            fig.savefig(os.path.join(dir_estabilidad, f'estabilidad_{evaluaciones.lower().replace(",", "").replace(" ", "_")}.png'))
             plt.close()
 
+# Genera el reporte HTML con las nuevas etiquetas
 def generar_reporte_completo():
-    """Genera el reporte HTML con las nuevas etiquetas"""
     generar_graficas_metricas()
     
     # Crear reporte HTML
@@ -174,13 +188,13 @@ def generar_reporte_completo():
             <h2>{evaluaciones}</h2>
             
             <h3>Calidad de Solución</h3>
-            <img src="calidad_solucion_{filename}.png" alt="Calidad {evaluaciones}">
+            <img src="resultados_calidad/calidad_solucion_{filename}.png" alt="Calidad {evaluaciones}">
             
             <h3>Tiempos de Ejecución (escala logarítmica)</h3>
-            <img src="tiempos_ejecucion_{filename}.png" alt="Tiempos {evaluaciones}">
+            <img src="resultados_tiempo/tiempos_ejecucion_{filename}.png" alt="Tiempos {evaluaciones}">
             
             <h3>Estabilidad</h3>
-            <img src="estabilidad_{filename}.png" alt="Estabilidad {evaluaciones}">
+            <img src="resultados_estabilidad/estabilidad_{filename}.png" alt="Estabilidad {evaluaciones}">
         </div>""")
 
         f.write("""

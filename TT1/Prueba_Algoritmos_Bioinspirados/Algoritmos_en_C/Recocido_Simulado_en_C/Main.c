@@ -1,4 +1,4 @@
-#include "Biblioteca.h"
+#include "Bibliotecas.h"
 
 int main()
 {
@@ -18,7 +18,7 @@ int main()
     int m = 3;
 
     // Nombre del archivo con las distancias
-    char *nombre_archivo = "Distancias_no_head.csv";
+    char *nombre_archivo = "Matriz_Distancias.csv";
 
     // Reservamos memoria para la matriz que almacena las distancias
     double **distancias = malloc(longitud_ruta * sizeof(double *));

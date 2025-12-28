@@ -147,8 +147,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 dibujarRuta(data.ruta_limpia, mapLimpio, '#417fc6');
             }
         }
-
-        renderizarGrafica(data.fitness_generaciones);
+        
+        // Renderizar Gráfica de Fitness limitado a dos decimales
+        renderizarGrafica(data.fitness_generaciones.map(f => f.toFixed(2)));
 
     } catch (error) {
         console.error("Error JS:", error);

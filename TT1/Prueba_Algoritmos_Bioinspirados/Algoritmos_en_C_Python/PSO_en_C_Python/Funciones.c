@@ -1,4 +1,4 @@
-#include "Biblioteca.h"
+#include "Bibliotecas.h"
 
 // Asigna memoria para una cumulo
 // Recibe el tamaño de el cumulo y la longitud de la ruta actual

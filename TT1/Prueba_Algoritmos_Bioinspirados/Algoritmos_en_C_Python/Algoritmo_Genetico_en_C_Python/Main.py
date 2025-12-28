@@ -3,7 +3,7 @@ from ctypes import c_int, c_double, c_char_p, c_char, POINTER, Structure
 import os
 import matplotlib.pyplot as plt
 
-# Definimos una estructura que mapea la estructura `ResultadoGenetico` en C
+# Definimos una estructura que mapea la estructura "ResultadoGenetico" en C
 class ResultadoGenetico(Structure):
     _fields_ = [
         ("recorrido", POINTER(c_int)),         # Puntero al arreglo de la mejor ruta
@@ -20,10 +20,10 @@ class AlgoritmoGenetico:
         # Cargamos la biblioteca compartida desde la ruta proporcionada
         self.biblioteca = ctypes.CDLL(ruta_biblioteca)
         
-        # Configuramos el tipo de retorno de la función `ejecutar_algoritmo_genetico`
+        # Configuramos el tipo de retorno de la función "ejecutar_algoritmo_genetico"
         self.biblioteca.ejecutar_algoritmo_genetico.restype = POINTER(ResultadoGenetico)
         
-        # Especificamos los tipos de argumentos que espera `ejecutar_algoritmo_genetico`
+        # Especificamos los tipos de argumentos que espera "ejecutar_algoritmo_genetico"
         self.biblioteca.ejecutar_algoritmo_genetico.argtypes = [
             c_int,      # tamano_poblacion
             c_int,      # longitud_genotipo
@@ -46,7 +46,7 @@ class AlgoritmoGenetico:
             # Convertimos el nombre del archivo a una cadena de bytes
             nombre_archivo_bytes = nombre_archivo.encode('utf-8')
             
-            # Llamamos a la función `ejecutar_algoritmo_genetico` de la biblioteca C
+            # Llamamos a la función "ejecutar_algoritmo_genetico" de la biblioteca C
             resultado = self.biblioteca.ejecutar_algoritmo_genetico(
                 tamano_poblacion,
                 longitud_genotipo,
@@ -116,7 +116,7 @@ def main():
     m = 3
     probabilidad_mutacion = 0.3
     probabilidad_cruce = 0.9
-    nombre_archivo = "Distancias_no_head.csv"
+    nombre_archivo = "Matriz_Distancias.csv"
     heuristica = 0 
     
     # Ejecutar el algoritmo genético con estos parámetros

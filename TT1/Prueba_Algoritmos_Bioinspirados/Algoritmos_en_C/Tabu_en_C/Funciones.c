@@ -1,4 +1,4 @@
-#include "Biblioteca.h"
+#include "Bibliotecas.h"
 
 
 Solucion *crear_solucion(int tamano, int longitud_permutacion)

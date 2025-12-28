@@ -1,4 +1,4 @@
-#include "Biblioteca.h"
+#include "Bibliotecas.h"
 
 // Estructura para devolver resultados a Python
 typedef struct {
