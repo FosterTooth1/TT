@@ -335,13 +335,21 @@ class AlgoritmoTabu:
         except Exception as e:
             raise RuntimeError(f"Error en Tabu Search: {str(e)}")
 
+# Helper para obtener ruta de matriz
+def get_matriz_path():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../..", "data", "processed", "Matriz_Distancias.csv")
+
+# Helper para obtener ruta de librerías
+def get_lib_path(lib_name):
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../..", "lib", lib_name)
+
 # Parâmetros para los diferentes tamaños de ejecución
 # Parametros para 100,000 evaluaciones
 S_PARAMS = [
     {   # Algoritmo Genético
         "name": "Genetico_100,000 evaluaciones",
         "class": AlgoritmoGenetico,
-        "library": os.path.join("bibliotecas_dll", "genetic_algo.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "libgenetic_algo.so"),
+        "library": get_lib_path("genetic_algo.dll") if os.name == 'nt' else get_lib_path("libgenetic_algo.so"),
         "params": {
             "tamano_poblacion": 200,
             "longitud_genotipo": 32,
@@ -350,21 +358,21 @@ S_PARAMS = [
             "m": 3,
             "probabilidad_mutacion": 0.02,
             "probabilidad_cruce": 0.8,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     },
     {   # PSO
         "name": "PSO_100,000 evaluaciones",
         "class": AlgoritmoPSO,
-        "library": os.path.join("bibliotecas_dll", "pso.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "libpso.so"),
+        "library": get_lib_path("pso.dll" if os.name == 'nt' else "libpso.so"),
         "params": {
             "tamano_poblacion": 200,
             "longitud_ruta": 32,
             "num_generaciones": 500,
             "prob_pbest": 0.35,
             "prob_gbest": 0.7,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "prob_inercia": 0.3,
             "m": 3,
             "heuristica": 0
@@ -373,7 +381,7 @@ S_PARAMS = [
     {   # Recocido Simulado
         "name": "Recocido_100,000 evaluaciones",
         "class": AlgoritmoRecocido,
-        "library": os.path.join("bibliotecas_dll", "recocido.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "librecocido.so"),
+        "library": get_lib_path("recocido.dll" if os.name == 'nt' else "librecocido.so"),
         "params": {
             "longitud_ruta": 32,
             "num_generaciones": 10000,
@@ -381,14 +389,14 @@ S_PARAMS = [
             "temperatura_final": 1e-3,
             "max_neighbours": 10,
             "m": 3,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     },
     {   # Búsqueda Tabú
         "name": "Tabu_100,000 evaluaciones",
         "class": AlgoritmoTabu,
-        "library": os.path.join("bibliotecas_dll", "tabu.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "libtabu.so"),
+        "library": get_lib_path("tabu.dll" if os.name == 'nt' else "libtabu.so"),
         "params": {
             "longitud_ruta": 32,
             "tenencia_tabu": 7,
@@ -397,7 +405,7 @@ S_PARAMS = [
             "umbral_est_global": 0.1,
             "umbral_est_local": 0.05,
             "m": 3,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     }
@@ -408,7 +416,7 @@ M_PARAMS = [
     {   # Algoritmo Genético
         "name": "Genetico_500,000 evaluaciones",
         "class": AlgoritmoGenetico,
-        "library": os.path.join("bibliotecas_dll", "genetic_algo.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "libgenetic_algo.so"),
+        "library": os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../..", "lib", "genetic_algo.dll") if os.name == 'nt' else os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../..", "lib", "libgenetic_algo.so"),
         "params": {
             "tamano_poblacion": 500,     
             "longitud_genotipo": 32,
@@ -417,14 +425,14 @@ M_PARAMS = [
             "m": 3,
             "probabilidad_mutacion": 0.02,
             "probabilidad_cruce": 0.8,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     },
     {   # PSO
         "name": "PSO_500,000 evaluaciones",
         "class": AlgoritmoPSO,
-        "library": os.path.join("bibliotecas_dll", "pso.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "libpso.so"),
+        "library": get_lib_path("pso.dll" if os.name == 'nt' else "libpso.so"),
         "params": {
             "tamano_poblacion": 500,      
             "longitud_ruta": 32,
@@ -433,14 +441,14 @@ M_PARAMS = [
             "prob_gbest": 0.7,
             "prob_inercia": 0.3,
             "m": 3,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     },
     {   # Recocido Simulado
         "name": "Recocido_500,000 evaluaciones",
         "class": AlgoritmoRecocido,
-        "library": os.path.join("bibliotecas_dll", "recocido.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "librecocido.so"),
+        "library": get_lib_path("recocido.dll" if os.name == 'nt' else "librecocido.so"),
         "params": {
             "longitud_ruta": 32,
             "num_generaciones": 20000,   
@@ -448,14 +456,14 @@ M_PARAMS = [
             "temperatura_final": 1e-3,
             "max_neighbours": 25,
             "m": 3,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     },
     {   # Búsqueda Tabú
         "name": "Tabu_500,000 evaluaciones",
         "class": AlgoritmoTabu,
-        "library": os.path.join("bibliotecas_dll", "tabu.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "libtabu.so"),
+        "library": get_lib_path("tabu.dll" if os.name == 'nt' else "libtabu.so"),
         "params": {
             "longitud_ruta": 32,
             "tenencia_tabu": 7,
@@ -464,7 +472,7 @@ M_PARAMS = [
             "umbral_est_global": 0.1,
             "umbral_est_local": 0.05,
             "m": 3,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     }
@@ -475,7 +483,7 @@ B_PARAMS = [
     {   # Algoritmo Genético
         "name": "Genetico_2,000,000 evaluaciones",
         "class": AlgoritmoGenetico,
-        "library": os.path.join("bibliotecas_dll", "genetic_algo.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "libgenetic_algo.so"),
+        "library": get_lib_path("genetic_algo.dll" if os.name == 'nt' else "libgenetic_algo.so"),
         "params": {
             "tamano_poblacion": 1000,   
             "longitud_genotipo": 32,
@@ -484,14 +492,14 @@ B_PARAMS = [
             "m": 3,
             "probabilidad_mutacion": 0.02,
             "probabilidad_cruce": 0.8,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     },
     {   # PSO
         "name": "PSO_2,000,000 evaluaciones",
         "class": AlgoritmoPSO,
-        "library": os.path.join("bibliotecas_dll", "pso.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "libpso.so"),
+        "library": get_lib_path("pso.dll" if os.name == 'nt' else "libpso.so"),
         "params": {
             "tamano_poblacion": 1000,      
             "longitud_ruta": 32,
@@ -500,14 +508,14 @@ B_PARAMS = [
             "prob_gbest": 0.7,
             "prob_inercia": 0.3,
             "m": 3,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     },
     {   # Recocido Simulado
         "name": "Recocido_2,000,000 evaluaciones",
         "class": AlgoritmoRecocido,
-        "library": os.path.join("bibliotecas_dll", "recocido.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "librecocido.so"),
+        "library": get_lib_path("recocido.dll" if os.name == 'nt' else "librecocido.so"),
         "params": {
             "longitud_ruta": 32,
             "num_generaciones": 80000,   
@@ -515,14 +523,14 @@ B_PARAMS = [
             "temperatura_final": 1e-3,
             "max_neighbours": 25,
             "m": 3,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     },
     {   # Búsqueda Tabú
         "name": "Tabu_2,000,000 evaluaciones",
         "class": AlgoritmoTabu,
-        "library": os.path.join("bibliotecas_dll", "tabu.dll") if os.name == 'nt' else os.path.join("bibliotecas_dll", "libtabu.so"),
+        "library": get_lib_path("tabu.dll" if os.name == 'nt' else "libtabu.so"),
         "params": {
             "longitud_ruta": 32,
             "tenencia_tabu": 7,
@@ -531,7 +539,7 @@ B_PARAMS = [
             "umbral_est_global": 0.1,
             "umbral_est_local": 0.05,
             "m": 3,
-            "nombre_archivo": "Matriz_Distancias.csv",
+            "nombre_archivo": get_matriz_path(),
             "heuristica": 0
         }
     }

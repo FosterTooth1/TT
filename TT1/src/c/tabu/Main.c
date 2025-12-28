@@ -14,8 +14,8 @@ int main()
     int num_generaciones = 75;
     int m = 3;
 
-    // Nombre del archivo con las distancias
-    char *nombre_archivo = "Matriz_Distancias.csv";
+    // Nombre del archivo con las distancias (ruta centralizada)
+    char *nombre_archivo = "../../../data/processed/Matriz_Distancias.csv";
 
     // Reservamos memoria para la matriz que almacena las distancias
     double **distancias = malloc(longitud_ruta * sizeof(double *));

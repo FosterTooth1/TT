@@ -14,8 +14,8 @@ int main(int argc, char** argv){
     float prob_pbest = 0.35;
     float prob_inercia = 0.3;
     
-    // Nombre del archivo con las distancias
-    char *nombre_archivo = "Matriz_Distancias.csv";
+    // Nombre del archivo con las distancias (ruta centralizada)
+    char *nombre_archivo = "../../../data/processed/Matriz_Distancias.csv";
 
     // Reservamos memoria para la matriz que almacena las distancias
     double **distancias = malloc(longitud_ruta * sizeof(double *));

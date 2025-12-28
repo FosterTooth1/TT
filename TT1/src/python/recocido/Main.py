@@ -1,10 +1,10 @@
 import ctypes
-from ctypes import c_int, c_double, c_float, c_char_p, POINTER, Structure, c_char, cast
+from ctypes import c_int, c_double, c_char_p, POINTER, Structure, c_char, cast
 import os
 import matplotlib.pyplot as plt
 
-# Definición de la estructura ResultadoTabu
-class ResultadoTabu(Structure):
+# Definición de la estructura ResultadoRecocido
+class ResultadoRecocido(Structure):
     _fields_ = [
         ("recorrido", POINTER(c_int)),
         ("fitness", c_double),
@@ -14,48 +14,47 @@ class ResultadoTabu(Structure):
         ("fitness_generaciones", POINTER(c_double)),
     ]
 
-# Clase para manejar el Algoritmo de Búsqueda Tabú
-class AlgoritmoTabu:
+# Clase para manejar el Algoritmo de Recocido Simulado
+class AlgoritmoRecocido:
     def __init__(self, ruta_biblioteca):
         self.biblioteca = ctypes.CDLL(ruta_biblioteca)
-        self.biblioteca.ejecutar_algoritmo_tabu.restype = POINTER(ResultadoTabu)
-        self.biblioteca.ejecutar_algoritmo_tabu.argtypes = [
+        
+        # Configuración de tipos igual que en Genético/PSO
+        self.biblioteca.ejecutar_algoritmo_recocido.restype = POINTER(ResultadoRecocido)
+        self.biblioteca.ejecutar_algoritmo_recocido.argtypes = [
             c_int,      # longitud_ruta
-            c_int,      # tenencia_tabu
             c_int,      # num_generaciones
+            c_double,   # tasa_enfriamiento
+            c_double,   # temperatura_final
             c_int,      # max_neighbours
-            c_float,    # umbral_est_global
-            c_float,    # umbral_est_local
             c_int,      # m
             c_char_p,   # nombre_archivo
             c_int       # heuristica
         ]
-        self.biblioteca.liberar_resultado.argtypes = [POINTER(ResultadoTabu)]  # Nombre unificado
+        self.biblioteca.liberar_resultado.argtypes = [POINTER(ResultadoRecocido)]  # Mismo nombre de función
 
-    def ejecutar(self, longitud_ruta, tenencia_tabu, num_generaciones,
-               max_neighbours, umbral_est_global, umbral_est_local,
-               m, nombre_archivo, heuristica):
+    def ejecutar(self, longitud_ruta, num_generaciones, tasa_enfriamiento,
+               temperatura_final, max_neighbours, m, nombre_archivo, heuristica):
         try:
             nombre_archivo_bytes = nombre_archivo.encode('utf-8')
             
-            resultado_ptr = self.biblioteca.ejecutar_algoritmo_tabu(
+            resultado_ptr = self.biblioteca.ejecutar_algoritmo_recocido(
                 c_int(longitud_ruta),
-                c_int(tenencia_tabu),
                 c_int(num_generaciones),
+                c_double(tasa_enfriamiento),
+                c_double(temperatura_final),
                 c_int(max_neighbours),
-                c_float(umbral_est_global),
-                c_float(umbral_est_local),
                 c_int(m),
                 nombre_archivo_bytes,
                 c_int(heuristica)
             )
             
             if not resultado_ptr:
-                raise RuntimeError("Error en ejecución de Tabu Search")
+                raise RuntimeError("Error en ejecución del Recocido")
             
             resultado = resultado_ptr.contents
             
-            # Extracción de datos 
+            # Copia de datos
             recorrido = [resultado.recorrido[i] for i in range(resultado.longitud_recorrido)]
             
             nombres_ciudades = []
@@ -80,38 +79,36 @@ class AlgoritmoTabu:
             return salida
             
         except Exception as e:
-            raise RuntimeError(f"Error en Tabu Search: {str(e)}")
+            raise RuntimeError(f"Error en Recocido Simulado: {str(e)}")
 
-# Función principal para ejecutar el algoritmo y mostrar resultados
 def main():
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
-    nombre_biblioteca = "tabu.dll" if os.name == 'nt' else "libtabu.so"
-    ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
+    nombre_biblioteca = "recocido.dll" if os.name == 'nt' else "librecocido.so"
+    ruta_biblioteca = os.path.join(directorio_actual, "../../..", "lib", nombre_biblioteca)
     
-    tabu = AlgoritmoTabu(ruta_biblioteca)
+    rs = AlgoritmoRecocido(ruta_biblioteca)
     
     params = {
         'longitud_ruta': 32,
-        'tenencia_tabu': 7,
-        'num_generaciones': 100,
-        'max_neighbours': 500,
-        'umbral_est_global': 0.1,
-        'umbral_est_local': 0.05,
+        'num_generaciones': 25000,
+        'tasa_enfriamiento': 0.92,
+        'temperatura_final': 0.000000001,
+        'max_neighbours': 320,
         'm': 3,
-        'nombre_archivo': "Matriz_Distancias.csv",
+        'nombre_archivo': os.path.join(directorio_actual, "../../..", "data", "processed", "Matriz_Distancias.csv"),
         'heuristica': 0
     }
     
-    resultado = tabu.ejecutar(**params)
+    resultado = rs.ejecutar(**params)
     
-    print("\nMejor ruta Tabú:")
+    print("\nMejor ruta Recocido:")
     for i, (idx, nombre) in enumerate(zip(resultado['recorrido'], resultado['nombres_ciudades'])):
         print(f"{i+1}. {nombre} (índice: {idx})")
     print(f"\nFitness: {resultado['fitness']:.2f}")
     print(f"Tiempo: {resultado['tiempo_ejecucion']:.2f}s")
     
     plt.plot(resultado['fitness_generaciones'])
-    plt.title("Evolución del Fitness - Búsqueda Tabú")
+    plt.title("Evolución del Fitness - Recocido Simulado")
     plt.xlabel("Generación")
     plt.ylabel("Fitness")
     plt.grid()

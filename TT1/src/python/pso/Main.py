@@ -93,7 +93,7 @@ class AlgoritmoPSO:
 def main():
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
     nombre_biblioteca = "libpso.so" if os.name != 'nt' else "pso.dll"
-    ruta_biblioteca = os.path.join(directorio_actual, nombre_biblioteca)
+    ruta_biblioteca = os.path.join(directorio_actual, "../../..", "lib", nombre_biblioteca)
     
     pso = AlgoritmoPSO(ruta_biblioteca)
     
@@ -103,7 +103,7 @@ def main():
         'num_generaciones': 150,
         'prob_pbest': 0.35,
         'prob_gbest': 0.7,
-        'nombre_archivo': "Matriz_Distancias.csv",
+        'nombre_archivo': os.path.join(directorio_actual, "../../..", "data", "processed", "Matriz_Distancias.csv"),
         'prob_inercia': 0.3,
         'm': 3,
         'heuristica': 0

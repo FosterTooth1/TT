@@ -14,8 +14,8 @@ int main(int argc, char** argv){
     double probabilidad_mutacion = 0.15;
     double probabilidad_cruce = 0.85;
 
-    // Nombre del archivo con las distancias
-    char *nombre_archivo = "Distancias_no_head.csv";
+    // Nombre del archivo con las distancias (ruta centralizada)
+    char *nombre_archivo = "../../../data/processed/Matriz_Distancias.csv";
 
     // Reservamos memoria para la matriz que almacena las distancias
     double **distancias = malloc(longitud_genotipo * sizeof(double *));

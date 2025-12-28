@@ -116,7 +116,7 @@ def main():
     m = 3
     probabilidad_mutacion = 0.3
     probabilidad_cruce = 0.9
-    nombre_archivo = "Matriz_Distancias.csv"
+    nombre_archivo = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../..", "data", "processed", "Matriz_Distancias.csv")
     heuristica = 0 
     
     # Ejecutar el algoritmo genético con estos parámetros
