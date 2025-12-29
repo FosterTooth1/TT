@@ -73,6 +73,7 @@ Aplicación web lista para producción:
 | `app/` | Aplicación principal (FastAPI/Flask) |
 | `config/` | Configuración de parámetros del algoritmo |
 | `data/` | Datos de naves industriales y distancias |
+| `database/` | Script SQL para crear la instancia de la base de datos|
 | `lib/` | Librerías compiladas (.dll/.so) |
 | `static/` | Recursos web (CSS, JS, imágenes, animaciones) |
 | `templates/` | Plantillas HTML de la interfaz |
