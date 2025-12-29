@@ -22,9 +22,10 @@ Algoritmo de optimización de rutas logísticas que integra predicciones climát
 
 ### Pasos de instalación
 
-1. **Clonar o descargar el repositorio:**
+1. **Clonar el repositorio principal**:
 ```bash
-cd Prototipo_1
+git clone https://github.com/FosterTooth1/TT.git
+cd TT2\Prototipo_Local
 ```
 
 2. **Crear ambiente virtual:**
