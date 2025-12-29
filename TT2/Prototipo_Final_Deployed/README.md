@@ -45,17 +45,23 @@ mysql -u root -p < database/BDD.sql
 
 ### Pasos de instalación local
 
-1. **Instalar dependencias:**
+1. **Clonar el repositorio principal**:
+```bash
+git clone https://github.com/FosterTooth1/TT.git
+cd TT2\Prototipo_Final_Deployed
+```
+
+2. **Instalar dependencias:**
 ```bash
 pip install -r requirements.txt
 ```
 
-2. **Ejecutar el servidor:**
+3. **Ejecutar el servidor:**
 ```bash
 python app/main.py
 ```
 
-3. **Abrir en el navegador:**
+4. **Abrir en el navegador:**
    - URL: `http://localhost:5000`
 
 ### Despliegue con Docker
