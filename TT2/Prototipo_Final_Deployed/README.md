@@ -29,6 +29,20 @@ DB_HOST=/cloudsql/proyecto:region:instancia
 WEATHER_API_KEY=api_key_weatherapi
 ```
 
+### Configuración de la Base de Datos
+
+El archivo `database/BDD.sql` contiene el script para crear la base de datos y las tablas necesarias. (Modifica las lineas de código con el nombre de la base de datos según sea necesario, por default es "nombre_base_datos")
+
+**Ejecutar el script SQL:**
+```bash
+mysql -u root -p < database/BDD.sql
+```
+
+**Estructura de la base de datos:**
+- **nombre_base_datos** - Nombre de la base de datos
+  - **Usuario** - Almacena usuarios registrados (id, nombre, correo, contraseña_hash)
+  - **Ruta** - Almacena rutas guardadas por usuario (id, id_usuario, destinos en JSON)
+
 ### Pasos de instalación local
 
 1. **Instalar dependencias:**
@@ -84,6 +98,8 @@ docker run -p 8080:8080 logisticlima
 ├── data/
 │   ├── Naves_Industriales.csv      # Base de datos de naves
 │   └── Matriz_Distancias_Carretera.csv  # Matriz de distancias
+├── database/
+│   └── BDD.sql                     # Script SQL para crear la base de datos
 ├── lib/
 │   ├── recocido.dll                # Biblioteca C++ (Windows)
 │   └── librecocido.so              # Biblioteca C++ (Linux)
