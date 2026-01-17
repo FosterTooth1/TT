@@ -1,11 +1,11 @@
-# LogistiClima - Sistema de Optimización de Rutas Logísticas
+# LogistiClima - Sistema de optimización de rutas logísticas
 
 ## Descripción
 Sistema web que integra predicciones climáticas para optimizar rutas de entrega a naves industriales usando el algoritmo de Recocido Simulado.
 
 ## Características
-- **Optimización de rutas** con algoritmo de Recocido Simulado
-- **Predicciones climáticas** en tiempo real usando Machine Learning
+- **Optimización de rutas** con algoritmo de recocido simulado
+- **Predicciones climáticas** en tiempo real usando machine learning
 - **Visualización geográfica** de rutas optimizadas
 - **Interfaz web** para selección de destinos y visualización de resultados
 - **Panel de administración** para configurar parámetros del algoritmo
@@ -19,7 +19,7 @@ Sistema web que integra predicciones climáticas para optimizar rutas de entrega
 - Docker (para despliegue en producción)
 - Base de datos MySQL (Cloud SQL en producción)
 
-### Variables de Entorno Requeridas
+### Variables de entorno requeridas
 ```
 SECRET_KEY=clave_secreta_para_sesiones
 DB_USER=usuario_base_datos
@@ -29,9 +29,9 @@ DB_HOST=/cloudsql/proyecto:region:instancia
 WEATHER_API_KEY=api_key_weatherapi
 ```
 
-### Configuración de la Base de Datos
+### Configuración de la base de datos
 
-El archivo `database/BDD.sql` contiene el script para crear la base de datos y las tablas necesarias. (Modifica las lineas de código con el nombre de la base de datos según sea necesario, por default es "nombre_base_datos")
+El archivo `database/BDD.sql` contiene el script para crear la base de datos y las tablas necesarias. (Es necesario modificar las lineas de código con el nombre de la base de datos según sea necesario, por default es "nombre_base_datos")
 
 **Ejecutar el script SQL:**
 ```bash
@@ -78,11 +78,11 @@ docker run -p 8080:8080 logisticlima
 
 ## Uso
 
-### Flujo Principal
-1. **Seleccionar Naves**: Elige al menos 5 naves industriales de la lista
-2. **Seleccionar Inicio**: Indica desde qué nave comenzar la ruta
-3. **Generar Ruta**: El sistema calcula la ruta optimizada considerando condiciones climáticas
-4. **Visualizar Resultado**: Ve la ruta en el mapa interactivo con comparativa de rutas con penalizaciones y sin penalizaciones
+### Flujo principal
+1. **Seleccionar naves**: Elige al menos 5 naves industriales de la lista
+2. **Seleccionar inicio**: Indica desde qué nave comenzar la ruta
+3. **Generar ruta**: El sistema calcula la ruta optimizada considerando condiciones climáticas
+4. **Visualizar resultado**: Ve la ruta en el mapa interactivo con comparativa de rutas con penalizaciones y sin penalizaciones
 5. **Guardar Ruta**: Los usuarios autenticados pueden guardar sus rutas
 
 ### Funcionalidades
@@ -93,7 +93,7 @@ docker run -p 8080:8080 logisticlima
 - **Información detallada**: Tabla con orden de visita y condiciones climáticas
 - **Gráfica de convergencia**: Muestra la evolución del fitness durante la optimización
 
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 ├── app/
@@ -140,7 +140,7 @@ docker run -p 8080:8080 logisticlima
 └── README.md                       # Este archivo
 ```
 
-## APIs Disponibles
+## APIs disponibles
 
 ### Públicas
 - `GET /api/naves` - Obtener lista de naves industriales
@@ -163,46 +163,46 @@ docker run -p 8080:8080 logisticlima
 - `GET /panel_admin` - Panel de configuración
 - `POST /actualizar_parametros` - Actualizar parámetros del algoritmo
 
-## Capturas de Pantalla
+## Capturas de pantalla
 
-### Inicio de Sesión
+### Inicio de sesión
 ![Inicio de Sesión](../../documentacion/images/IniciarSesion.png)
 *Pantalla de inicio de sesión para usuarios registrados.*
 
-### Registro de Usuario
+### Registro de usuario
 ![Nueva Cuenta](../../documentacion/images/NuevaCuenta.png)
 *Formulario de registro para nuevos usuarios.*
 
-### Selección de Naves Industriales
+### Selección de naves industriales
 ![Seleccionar Naves](../../documentacion/images/SeleccionarNaves.png)
 *Interfaz para seleccionar las naves industriales a visitar y la nave industrial de inicio.*
 
-### Visualización de Ruta Optimizada
+### Visualización de ruta optimizada
 ![Mejor Ruta](../../documentacion/images/MejorRuta.png)
 *Vista principal mostrando: mapa con la ruta generada, tabla de naves a visitar, distancia total en km, fitness del algoritmo y gráfica de convergencia.*
 
-### Historial de Rutas
+### Historial de rutas
 ![Rutas Recientes](../../documentacion/images/RutasRecientes.png)
 *Historial de rutas guardadas por el usuario las cuales puede reoptimizar, eliminar o ver detalladamente.*
 
-### Panel de Administración
+### Panel de administración
 ![Panel Admin](../../documentacion/images/panel_admin.png)
 *Panel para configurar los parámetros del algoritmo de optimización y las penalizaciones climáticas.*
 
 ---
 
-## Tecnologías Utilizadas
+## Tecnologías utilizadas
 
 - **Backend**: Python 3.9, Flask, Gunicorn, Pandas, NumPy
 - **Base de datos**: MySQL (Cloud SQL)
-- **Algoritmo**: Recocido Simulado (implementado en C++)
-- **Machine Learning**: Random Forest para predicciones climáticas
-- **APIs Externas**: WeatherAPI para datos climáticos en tiempo real
+- **Algoritmo**: Recocido simulado (implementado en C)
+- **Machine learning**: Random forest para predicciones climáticas
+- **APIs externas**: WeatherAPI para datos climáticos en tiempo real
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Contenedores**: Docker
 - **Despliegue**: Google Cloud Run
 
-## Notas de Desarrollo
+## Notas de desarrollo
 
 - El sistema requiere conexión a internet para la API de clima
 - Las predicciones climáticas se realizan en paralelo para mejor rendimiento
