@@ -1,12 +1,12 @@
 # LogistiClima - Trabajo Terminal
 
-## Descripción del Proyecto
+## Descripción del proyecto
 
 **LogistiClima** es un sistema de optimización de rutas logísticas que integra predicciones climáticas para mejorar la planificación de entregas a naves industriales. El proyecto utiliza algoritmos bioinspirados combinados con modelos de Machine Learning para predicción meteorológica.
 
 ---
 
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 TT/
@@ -20,7 +20,7 @@ TT/
 
 ---
 
-## TT1 - Desarrollo e Investigación
+## TT1 - Desarrollo e investigación
 
 **Objetivo:** Desarrollo, implementación y comparación de algoritmos bioinspirados y modelos de ML.
 
@@ -33,26 +33,26 @@ TT/
 | `src/c/` | Implementaciones en C de algoritmos: Genético, PSO, Recocido Simulado, Búsqueda Tabú |
 | `src/python/` | Wrappers en Python y scripts de comparación/benchmarking |
 
-### Algoritmos Implementados:
-- **Algoritmo Genético (GA)**
-- **Optimización por Enjambre de Partículas (PSO)**
-- **Recocido Simulado (Simulated Annealing)**
-- **Búsqueda Tabú**
+### Algoritmos implementados:
+- **Algoritmo genético (GA)**
+- **Optimización por enjambre de partículas (PSO)**
+- **Recocido simulado (simulated annealing)**
+- **Búsqueda tabú**
 
-### Modelos de ML Evaluados:
-- **Árbol de Decisión**
-- **Random Forest**
+### Modelos de ML evaluados:
+- **Árbol de decisión**
+- **Random forest**
 - **SVM**
 - **LSTM**
 - **RNN**
 
 ---
 
-## TT2 - Sistema Completo
+## TT2 - Sistema completo
 
 **Objetivo:** Implementación del prototipo funcional y despliegue del sistema.
 
-### Prototipo Local (`Prototipo_Local/`)
+### Prototipo local (`Prototipo_Local/`)
 Núcleo computacional del sistema que incluye:
 
 | Carpeta | Descripción |
@@ -65,7 +65,7 @@ Núcleo computacional del sistema que incluye:
 | `src/` | Código fuente (API, algoritmos en C, scripts Python) |
 | `output/` | Resultados de rutas optimizadas |
 
-### Prototipo Desplegado (`Prototipo_Final_Deployed/`)
+### Prototipo desplegado (`Prototipo_Final_Deployed/`)
 Aplicación web lista para producción:
 
 | Carpeta | Descripción |
@@ -78,7 +78,7 @@ Aplicación web lista para producción:
 | `static/` | Recursos web (CSS, JS, imágenes, animaciones) |
 | `templates/` | Plantillas HTML de la interfaz |
 
-### Funcionalidades del Sistema:
+### Funcionalidades del sistema:
 - Optimización de rutas con Recocido Simulado
 - Predicciones climáticas en tiempo real
 - Visualización geográfica de rutas
@@ -88,9 +88,9 @@ Aplicación web lista para producción:
 
 ---
 
-## Capturas del Sistema
+## Capturas del sistema
 
-### Visualización de Ruta Optimizada
+### Visualización de ruta optimizada
 
 ![Ruta Optimizada](documentacion/images/MejorRuta.png)
 
@@ -98,7 +98,7 @@ Aplicación web lista para producción:
 
 ---
 
-## Tecnologías Utilizadas
+## Tecnologías utilizadas
 
 | Categoría | Tecnologías |
 |-----------|-------------|
