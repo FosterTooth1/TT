@@ -1,11 +1,11 @@
-# LogistiClima - Prototipo Local
+# LogistiClima - Prototipo local
 
 ## Descripción
 Algoritmo de optimización de rutas logísticas que integra predicciones climáticas para naves industriales usando el algoritmo de Recocido Simulado. Este prototipo constituye el núcleo computacional del sistema LogistiClima, responsable del procesamiento de datos, generación de matrices de distancias y optimización de rutas.
 
 ## Características
-- **Optimización de rutas** mediante algoritmo de Recocido Simulado implementado en C
-- **Predicciones climáticas** en tiempo real con modelo de Machine Learning
+- **Optimización de rutas** mediante algoritmo de recocido simulado implementado en C
+- **Predicciones climáticas** en tiempo real con modelo de machine learning
 - **Procesamiento de datos** automatizado para limpieza y preparación
 - **Generación de matrices de distancias** utilizando APIs de ruteo real
 - **Penalización dinámica** de rutas según condiciones climáticas
@@ -67,7 +67,7 @@ gcc -shared -o ../../lib/librecocido.so -fPIC Main.c Funciones.c
 
 ## Uso
 
-### Flujo Principal
+### Flujo principal
 
 1. **Preprocesamiento de datos** (si hay nuevos datos)
 ```bash
@@ -110,13 +110,13 @@ uvicorn src.api.API_Logisticlima:app --reload --port 8000
 - Aplica factores de penalización por clima
 - Genera ruta optimizada con estadísticas
 
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 Prototipo_1/
 ├── src/
 │   ├── c/                          # Código C del algoritmo
-│   │   ├── Main.c                 # Implementación del Recocido Simulado
+│   │   ├── Main.c                 # Implementación del recocido simulado
 │   │   ├── Funciones.c            # Funciones auxiliares
 │   │   └── Bibliotecas.h          # Headers y definiciones
 │   ├── python/                     # Scripts Python principales
@@ -150,26 +150,26 @@ Prototipo_1/
 └── README.md                      # Este archivo
 ```
 
-## Componentes Principales
+## Componentes principales
 
-### Recocido Simulado (src/c/)
+### Recocido simulado (src/c/)
 Algoritmo de optimización metaheurístico implementado en C para máximo rendimiento.
 - **Parámetros ajustables**: temperatura, tasa de enfriamiento, número de generaciones
 - **Heurística de abruptos**: heuristíca "k-neighbours"
 - **Métrica**: Distancia total del recorrido
 
-### Predicción Climática (models/)
-Modelo Random Forest entrenado para clasificar 10 categorías de condiciones climáticas.
+### Predicción climática (models/)
+Modelo random forest entrenado para clasificar 10 categorías de condiciones climáticas.
 - Input: Hora, temperatura, punto de rocío, humedad, dirección/velocidad del viento
 - Output: Categoría de clima con factor de penalización (1.0 a 1.9)
 
-### Generador de Matrices (src/python/Crear_Matriz_Distancias.py)
+### Generador de matrices (src/python/Crear_Matriz_Distancias.py)
 Construye matriz de distancias reales por carretera usando API OpenRouteService.
 - Procesamiento por lotes para evitar límites de API
 - Distancias en kilómetros
 - Cálculo simétrico de la matriz
 
-### Orquestador Principal (src/python/Main.py)
+### Orquestador principal (src/python/Main.py)
 Integra todos los componentes en un flujo unificado.
 - Carga datos y modelos
 - Permite selección interactiva de naves
@@ -177,27 +177,27 @@ Integra todos los componentes en un flujo unificado.
 - Ejecuta optimización
 - Exporta resultados en JSON
 
-## Tecnologías Utilizadas
+## Tecnologías utilizadas
 
 - **Backend**: Python 3.8+, Pandas, NumPy, Scikit-learn
-- **Optimización**: Algoritmo de Recocido Simulado en C
-- **Machine Learning**: Random Forest (predicciones climáticas)
+- **Optimización**: Algoritmo de recocido simulado en C
+- **Machine learning**: Random forest (predicciones climáticas)
 - **APIs Externas**: 
   - WeatherAPI: Datos climáticos en tiempo real
   - OpenRouteService: Matrices de distancias reales
 - **Serialización**: Joblib (modelos), JSON (resultados)
 - **Notebooks**: Jupyter para análisis exploratorio y procesamiento de datos
 
-## Notas de Desarrollo
+## Notas de desarrollo
 
 - Las predicciones climáticas requieren conexión a internet
 - La generación de matrices es costosa en API
-- El algoritmo de Recocido puede optimizarse con tuning de parámetros
+- El algoritmo de recocido puede optimizarse con tuning de parámetros
 - Los datos están enfocados en el Estado de México
 - Las librerías compiladas deben coincidir con el sistema operativo
 - Las rutas relativas funcionan desde cualquier ubicación de ejecución
 
-## Parámetros de Optimización
+## Parámetros de optimización
 
 Edita estos valores en `Main.py` para ajustar el comportamiento del algoritmo:
 
