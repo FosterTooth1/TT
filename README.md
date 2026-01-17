@@ -79,7 +79,7 @@ Aplicación web lista para producción:
 | `templates/` | Plantillas HTML de la interfaz |
 
 ### Funcionalidades del sistema:
-- Optimización de rutas con Recocido Simulado
+- Optimización de rutas con recocido simulado
 - Predicciones climáticas en tiempo real
 - Visualización geográfica de rutas
 - Sistema de autenticación (registro/login)
